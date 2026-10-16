@@ -266,14 +266,25 @@
                     });
                 },
 
-                setToday() { this.selectedDate = new Date().toISOString().slice(0, 10); },
+                setToday() { this.selectedDate = new Date().toISOString().slice(0, 10); this.updateLocationByDate(); },
                 changeDate(days) {
+                    let d = new Date(this.selectedDate);
+                    d.setDate(d.getDate() + days);
+                    this.selectedDate = d.toISOString().slice(0, 10);
+                    this.updateLocationByDate();
+                },
                     let d = new Date(this.selectedDate);
                     d.setDate(d.getDate() + days);
                     this.selectedDate = d.toISOString().slice(0, 10);
                 },
                 getLocationTitle() { return 'Журнал: ' + this.currentLocation; },
                 getLocationSchedule() { return 'Расписание'; },
+                updateLocationByDate() {
+                    let day = new Date(this.selectedDate).getDay();
+                    if (day === 1 || day === 3) { this.currentLocation = 'zarya'; }
+                    else if (day === 2 || day === 4) { this.currentLocation = 'pole'; }
+                    else if (day === 6 || day === 0) { this.currentLocation = 'online'; }
+                },
                 getClientsForLocation() { 
                     return this.clients.filter(c => c.locations && c.locations.includes(this.currentLocation)); 
                 },
@@ -285,7 +296,11 @@
                     let sub = this.getClientActiveSubscription(client);
                     return sub.left > 0 ? `${sub.left} зан.` : 'Нет';
                 },
-                getRazovPrice() { return '500 ₽'; },
+                getRazovPrice() {
+                    if (this.currentLocation === 'zarya') return '700 ₽';
+                    if (this.currentLocation === 'pole') return '600 ₽';
+                    return '500 ₽';
+                },
                 getAttendanceStatus(clientId) {
                     if (!this.attendance[this.selectedDate]) return null;
                     return this.attendance[this.selectedDate][clientId] || null;
@@ -312,7 +327,10 @@
                     
                     let monthKey = this.selectedDate.slice(0, 7);
                     if (!this.finances[monthKey]) this.finances[monthKey] = 0;
-                    if(status === 'razov') this.finances[monthKey] += 500;
+                    if(status === 'razov') {
+                        let price = this.currentLocation === 'zarya' ? 700 : (this.currentLocation === 'pole' ? 600 : 500);
+                        this.finances[monthKey] += price;
+                    }
 
                     this.syncToFirebase();
                 },
@@ -379,7 +397,7 @@
                 changeMonth(dir) {
                     let [y, m] = this.currentMonth.split('-').map(Number);
                     let d = new Date(y, m - 1 + dir, 1);
-                    this.currentMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                    this.currentMonth = `d.getFullYear()-{String(d.getMonth() + 1).padStart(2, '0')}`;
                 },
                 formatMonthName(monthStr) {
                     let [y, m] = monthStr.split('-');
@@ -387,10 +405,25 @@
                     return `${months[Number(m)-1]} ${y} г.`;
                 },
                 getMonthIncome() { return this.finances[this.currentMonth] || 0; },
-                getMonthRent() { return 10000; },
+                getMonthRent() {
+                    let [year, month] = this.currentMonth.split('-').map(Number);
+                    let daysInMonth = new Date(year, month, 0).getDate();
+                    let totalRent = 0;
+                    for (let day = 1; day <= daysInMonth; day++) {
+                        let currentDate = new Date(year, month - 1, day);
+                        let dayOfWeek = currentDate.getDay();
+                        if (dayOfWeek === 1 || dayOfWeek === 3) {
+                            if (currentDate >= new Date('2026-09-07')) { totalRent += 1000; }
+                        } else if (dayOfWeek === 2 || dayOfWeek === 4) {
+                            if (currentDate >= new Date('2026-09-01')) { totalRent += 1000; }
+                        }
+                    }
+                    return totalRent;
+                },
                 getMonthProfit() { return this.getMonthIncome() - this.getMonthRent(); }
             }
         }
     </script>
 </body>
 </html>
+
