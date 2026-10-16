@@ -38,7 +38,7 @@
                 <button @click="activeTab = 'clients'" :class="activeTab === 'clients' ? 'bg-emerald-600 text-white' : 'text-slate-300 hover:bg-slate-700'" class="px-3 py-1.5 rounded-lg text-sm font-medium transition">Клиенты</button>
                 <button @click="activeTab = 'finances'" :class="activeTab === 'finances' ? 'bg-emerald-600 text-white' : 'text-slate-300 hover:bg-slate-700'" class="px-3 py-1.5 rounded-lg text-sm font-medium transition">Финансы</button>
             </nav>
-            <div class="flex items-center space-x-2 pl-2 border-l border-slate-700" x-cloak>
+            <div class="flex items-center space-x-2 pl-2 border-l border-slate-700">
                 <template x-if="currentUser">
                     <div class="flex items-center space-x-2">
                         <span class="text-xs text-slate-300 hidden sm:inline" x-text="currentUser.displayName || currentUser.email"></span>
