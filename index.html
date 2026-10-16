@@ -110,6 +110,7 @@
                             <div class="flex justify-between items-start">
                                 <h3 class="font-bold text-white text-base" x-text="client.name"></h3>
                                 <button @click="editClient(client)" class="text-slate-400 hover:text-white text-xs bg-slate-700 px-2 py-1 rounded-lg">Изменить</button>
+                                <button @click="deleteClient(client.id)" class="text-rose-400 hover:text-rose-300 text-xs bg-slate-700/60 hover:bg-slate-700 px-2 py-1 rounded-lg transition ml-1.5">Удалить</button>
                             </div>
                             <p class="text-xs text-slate-400 mt-1" x-text="'Телефон: ' + (client.phone || 'не указан')"></p>
                             <div class="mt-2 flex flex-wrap gap-1">
@@ -124,6 +125,7 @@
                                 <span class="text-sm font-semibold text-emerald-400" x-text="getClientSubInfo(client)"></span>
                             </div>
                             <button @click="openSubModal(client)" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-xl text-xs font-medium transition">+ Продать абонемент</button>
+                            <button x-show="client.subscriptions && client.subscriptions.length > 0" @click="deleteSubscription(client)" class="text-rose-400 hover:text-rose-300 bg-slate-700/60 hover:bg-slate-700 px-2.5 py-1.5 rounded-xl text-xs font-medium transition ml-1.5" title="Удалить абонемент">✕</button>
                         </div>
                     </div>
                 </template>
@@ -205,6 +207,11 @@
                             История посещений пока пуста
                         </div>
                     </div>
+                </div>
+            </template>
+            <template x-if="editingClient">
+                <div class="pt-2">
+                    <button @click="deleteClient(editingClient.id)" class="w-full text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 px-4 py-2 rounded-xl text-xs font-medium transition">🗑 Удалить клиента</button>
                 </div>
             </template>
             <div class="flex justify-end space-x-3 pt-2">
@@ -393,7 +400,18 @@
                     localStorage.setItem('fitpp_clients', JSON.stringify(this.clients));
                     this.showClientModal = false;
                 },
+                deleteClient(id) {
+                    if (!confirm('Вы уверены, что хотите удалить клиента?')) return;
+                    this.clients = this.clients.filter(c => c.id !== id);
+                    localStorage.setItem('fitpp_clients', JSON.stringify(this.clients));
+                    this.showClientModal = false;
+                },
                 openSubModal(client) {
+                deleteSubscription(client) {
+                    if (!confirm('Вы уверены, что хотите удалить абонемент?')) return;
+                    client.subscriptions = [];
+                    localStorage.setItem('fitpp_clients', JSON.stringify(this.clients));
+                },
                     this.subClient = client;
                     this.subForm = { type: client.locations[0] || 'zarya', startDate: new Date().toISOString().slice(0, 10) };
                     this.showSubModal = true;
