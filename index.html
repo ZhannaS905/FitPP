@@ -313,6 +313,51 @@
                 showSubModal: false,
                 subClient: null,
                 subForm: { type: 'zarya', date: new Date().toISOString().slice(0, 10) },
+                updateLocationByDate() {
+                    let d = new Date(this.selectedDate);
+                    let day = d.getDay();
+                    if (day === 1 || day === 3) this.currentLocation = 'zarya';
+                    else if (day === 2 || day === 4) this.currentLocation = 'pole';
+                    else if (day === 6 || day === 0) this.currentLocation = 'online';
+                },
+                changeDate(dir) {
+                    let d = new Date(this.selectedDate);
+                    d.setDate(d.getDate() + dir);
+                    this.selectedDate = d.toISOString().slice(0, 10);
+                    this.updateLocationByDate();
+                },
+                setToday() {
+                    this.selectedDate = new Date().toISOString().slice(0, 10);
+                    this.updateLocationByDate();
+                },
+                getLocationTitle() {
+                    if (this.currentLocation === 'zarya') return 'мкр. Заря (Пн, Ср 20:00)';
+                    if (this.currentLocation === 'pole') return 'Поле чудес (Вт, Чт 18:30)';
+                    return 'Онлайн тренировки (Сб, Вс 18:00)';
+                },
+                getLocationSchedule() {
+                    return 'Дата: ' + this.selectedDate;
+                },
+                getClientsForLocation() {
+                    return this.clients.filter(c => c.locations && c.locations.includes(this.currentLocation));
+                },
+                getClientActiveSubscription(client) {
+                    if (!client.subscriptions || client.subscriptions.length === 0) return { left: 0, expires: 'нет' };
+                    let active = client.subscriptions.filter(s => s.left > 0);
+                    if (active.length === 0) return client.subscriptions[client.subscriptions.length - 1];
+                    return active[active.length - 1];
+                },
+                getClientSubInfo(client) {
+                    let sub = this.getClientActiveSubscription(client);
+                    return sub.left > 0 ? (sub.left + ' зан. (до ' + sub.expires + ')') : 'Нет активного абонемента';
+                },
+                getAttendanceStatus(clientId) {
+                    if (!this.attendance[this.selectedDate]) return null;
+                    return this.attendance[this.selectedDate][clientId] || null;
+                },
+                getRazovPrice() {
+                    return this.currentLocation === 'zarya' ? 700 : (this.currentLocation === 'pole' ? 600 : 500);
+                },
 
                 init() {
                     firebase.auth().onAuthStateChanged((user) => {
