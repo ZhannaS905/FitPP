@@ -172,7 +172,7 @@
     </main>
     <!-- Client Modal -->
     <div x-show="showClientModal" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-        <div class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4">
+        <div class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <h3 class="text-lg font-bold" x-text="editingClient ? 'Редактировать клиента' : 'Новый клиент'"></h3>
             <div>
                 <label class="text-xs text-slate-400 block mb-1">Имя и фамилия</label>
@@ -190,6 +190,23 @@
                     <label class="flex items-center space-x-2 text-sm"><input type="checkbox" value="online" x-model="clientForm.locations" class="rounded bg-slate-900 border-slate-600 text-emerald-600"><span>Онлайн тренировки</span></label>
                 </div>
             </div>
+            <!-- История посещений в модальном окне редактирования -->
+            <template x-if="editingClient">
+                <div class="pt-3 border-t border-slate-700/60">
+                    <label class="text-xs text-slate-400 block mb-2">История посещений:</label>
+                    <div class="max-h-40 overflow-y-auto space-y-1.5 pr-1">
+                        <template x-for="item in getClientAttendanceHistory(editingClient.id)">
+                            <div class="flex justify-between items-center bg-slate-900 border border-slate-700/60 px-3 py-1.5 rounded-xl text-xs">
+                                <span class="text-slate-300 font-medium" x-text="item.date"></span>
+                                <span class="border px-2 py-0.5 rounded-lg" :class="item.badgeClass" x-text="item.text"></span>
+                            </div>
+                        </template>
+                        <div x-show="getClientAttendanceHistory(editingClient ? editingClient.id : null).length === 0" class="text-xs text-slate-500 text-center py-2">
+                            История посещений пока пуста
+                        </div>
+                    </div>
+                </div>
+            </template>
             <div class="flex justify-end space-x-3 pt-2">
                 <button @click="showClientModal = false" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl text-sm font-medium transition">Отмена</button>
                 <button @click="saveClient()" class="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-xl text-sm font-semibold transition">Сохранить</button>
@@ -292,6 +309,33 @@
                     if (!this.attendance[this.selectedDate]) return null;
                     return this.attendance[this.selectedDate][clientId] || null;
                 },
+                getClientAttendanceHistory(clientId) {
+                    let history = [];
+                    for (let date in this.attendance) {
+                        if (this.attendance[date][clientId]) {
+                            let status = this.attendance[date][clientId];
+                            let statusText = '';
+                            let badgeClass = '';
+                            
+                            if (status === 'attended') {
+                                statusText = 'Был (-1 зан.)';
+                                badgeClass = 'bg-emerald-600/20 text-emerald-400 border-emerald-500/30';
+                            } else if (status === 'razov') {
+                                statusText = 'Разовое посещение';
+                                badgeClass = 'bg-blue-600/20 text-blue-400 border-blue-500/30';
+                            } else if (status === 'missed') {
+                                statusText = 'Сгорело занятие';
+                                badgeClass = 'bg-rose-600/20 text-rose-400 border-rose-500/30';
+                            } else if (status === 'excused') {
+                                statusText = 'Уважительная причина';
+                                badgeClass = 'bg-amber-600/20 text-amber-400 border-amber-500/30';
+                            }
+                            
+                            history.push({ date: date, text: statusText, badgeClass: badgeClass });
+                        }
+                    }
+                    return history.sort((a, b) => new Date(b.date) - new Date(a.date));
+                },
                 markAttendance(clientId, status) {
                     if (!this.attendance[this.selectedDate]) {
                         this.attendance[this.selectedDate] = {};
@@ -301,7 +345,6 @@
                     let activeSub = client.subscriptions && client.subscriptions.length > 0 
                         ? client.subscriptions[client.subscriptions.length - 1] 
                         : null;
-
                     if (prevStatus === status) {
                         this.attendance[this.selectedDate][clientId] = null;
                         if (prevStatus === 'attended' && activeSub) {
@@ -313,7 +356,6 @@
                         }
                         
                         this.attendance[this.selectedDate][clientId] = status;
-
                         if (status === 'attended') {
                             if (activeSub && activeSub.left > 0) {
                                 activeSub.left--;
@@ -321,13 +363,11 @@
                                 alert('У клиента нет активных занятий в абонементе!');
                             }
                         }
-
                         if (status === 'razov') {
                             let amount = this.currentLocation === 'zarya' ? 700 : (this.currentLocation === 'pole' ? 600 : 500);
                             this.addFinanceRecord(amount, `Разовое посещение: ${client.name}`);
                         }
                     }
-
                     localStorage.setItem('fitpp_attendance', JSON.stringify(this.attendance));
                     localStorage.setItem('fitpp_clients', JSON.stringify(this.clients));
                 },
@@ -457,4 +497,3 @@
     </script>
 </body>
 </html>
-
