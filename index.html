@@ -273,10 +273,6 @@
                     this.selectedDate = d.toISOString().slice(0, 10);
                     this.updateLocationByDate();
                 },
-                    let d = new Date(this.selectedDate);
-                    d.setDate(d.getDate() + days);
-                    this.selectedDate = d.toISOString().slice(0, 10);
-                },
                 getLocationTitle() { return 'Журнал: ' + this.currentLocation; },
                 getLocationSchedule() { return 'Расписание'; },
                 updateLocationByDate() {
