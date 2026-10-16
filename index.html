@@ -249,269 +249,266 @@
                 selectedDate: new Date().toISOString().slice(0, 10),
                 currentLocation: 'zarya',
                 currentMonth: new Date().toISOString().slice(0, 7),
-                
                 clients: JSON.parse(localStorage.getItem('fitpp_clients')) || [
-                    { id: 1, name: 'Анна Смирнова', phone: '+7 999 111-22-33', locations: ['zarya'], subscriptions: [{ type: 'zarya', left: 8, expires: '2026-11-15', price: 4400 }] },
-                    { id: 2, name: 'Елена Петрова', phone: '+7 999 222-33-44', locations: ['pole'], subscriptions: [{ type: 'pole', left: 8, expires: '2026-10-31', price: 3800 }] }
-                ],
-                attendance: JSON.parse(localStorage.getItem('fitpp_attendance')) || {},
-                finances: JSON.parse(localStorage.getItem('fitpp_finances')) || {},
-                showClientModal: false,
-                editingClient: null,
-                clientForm: { id: null, name: '', phone: '', locations: ['zarya'] },
-                showSubModal: false,
-                subClient: null,
-                subForm: { type: 'zarya', startDate: new Date().toISOString().slice(0, 10) },
-                init() {
-                    this.updateLocationByDate();
-                },
-                setToday() {
-                    this.selectedDate = new Date().toISOString().slice(0, 10);
-                    this.updateLocationByDate();
-                },
-                changeDate(days) {
-                    let d = new Date(this.selectedDate);
-                    d.setDate(d.getDate() + days);
-                    this.selectedDate = d.toISOString().slice(0, 10);
-                    this.updateLocationByDate();
-                },
-                updateLocationByDate() {
-                    let day = new Date(this.selectedDate).getDay();
-                    if (day === 1 || day === 3) this.currentLocation = 'zarya'; // Пн, Ср
-                    else if (day === 2 || day === 4) this.currentLocation = 'pole'; // Вт, Чт
-                    else if (day === 6 || day === 0) this.currentLocation = 'online'; // Сб, Вс
-                },
-                getLocationTitle() {
-                    if (this.currentLocation === 'zarya') return 'Журнал: мкр. Заря';
-                    if (this.currentLocation === 'pole') return 'Журнал: Поле чудес (зал)';
-                    return 'Журнал: Онлайн тренировки';
-                },
-                getLocationSchedule() {
-                    if (this.currentLocation === 'zarya') return 'Понедельник, Среда 20:00';
-                    if (this.currentLocation === 'pole') return 'Вторник, Четверг 18:30';
-                    return 'Суббота, Воскресенье 18:00';
-                },
-                getLocationName(loc) {
-                    if (loc === 'zarya') return 'Заря';
-                    if (loc === 'pole') return 'Поле чудес';
-                    return 'Онлайн';
-                },
-                getClientsForLocation() {
-                    return this.clients.filter(c => c.locations.includes(this.currentLocation));
-                },
-                getClientActiveSubscription(client) {
-                    if (!client.subscriptions || client.subscriptions.length === 0) return { left: 0, expires: 'нет' };
-                    return client.subscriptions[client.subscriptions.length - 1];
-                },
-                getClientSubInfo(client) {
-                    let sub = this.getClientActiveSubscription(client);
-                    return sub.left > 0 ? `${sub.left} зан. (до ${sub.expires})` : 'Нет абонемента';
-                },
-                getRazovPrice() {
-                    if (this.currentLocation === 'zarya') return '700 ₽';
-                    if (this.currentLocation === 'pole') return '600 ₽';
-                    return '500 ₽';
-                },
-                getAttendanceStatus(clientId) {
-                    if (!this.attendance[this.selectedDate]) return null;
-                    return this.attendance[this.selectedDate][clientId] || null;
-                },
-                getClientAttendanceHistory(clientId) {
-                    let history = [];
-                    for (let date in this.attendance) {
-                        if (this.attendance[date][clientId]) {
-                            let status = this.attendance[date][clientId];
-                            let statusText = '';
-                            let badgeClass = '';
-                            
-                            if (status === 'attended') {
-                                statusText = 'Был (-1 зан.)';
-                                badgeClass = 'bg-emerald-600/20 text-emerald-400 border-emerald-500/30';
-                            } else if (status === 'razov') {
-                                statusText = 'Разовое посещение';
-                                badgeClass = 'bg-blue-600/20 text-blue-400 border-blue-500/30';
-                            } else if (status === 'missed') {
-                                statusText = 'Сгорело занятие';
-                                badgeClass = 'bg-rose-600/20 text-rose-400 border-rose-500/30';
-                            } else if (status === 'excused') {
-                                statusText = 'Уважительная причина';
-                                badgeClass = 'bg-amber-600/20 text-amber-400 border-amber-500/30';
-                            }
-                            
-                            history.push({ date: date, text: statusText, badgeClass: badgeClass });
-                        }
-                    }
-                    return history.sort((a, b) => new Date(b.date) - new Date(a.date));
-                },
-                markAttendance(clientId, status) {
-                    if (!this.attendance[this.selectedDate]) {
-                        this.attendance[this.selectedDate] = {};
-                    }
-                    let prevStatus = this.attendance[this.selectedDate][clientId];
-                    let client = this.clients.find(c => c.id === clientId);
-                    let activeSub = client.subscriptions && client.subscriptions.length > 0 
-                        ? client.subscriptions[client.subscriptions.length - 1] 
-                        : null;
-                    if (prevStatus === status) {
-                        this.attendance[this.selectedDate][clientId] = null;
-                        if (prevStatus === 'attended' && activeSub) {
-                            activeSub.left++;
-                        }
-                    } else {
-                        if (prevStatus === 'attended' && activeSub) {
-                            activeSub.left++;
+                { id: 1, name: 'Анна Смирнова', phone: '+7 999 111-22-33', locations: ['zarya'], subscriptions: [{ type: 'zarya', left: 8, expires: '2026-11-15', price: 4400 }] },
+                { id: 2, name: 'Елена Петрова', phone: '+7 999 222-33-44', locations: ['pole'], subscriptions: [{ type: 'pole', left: 8, expires: '2026-10-31', price: 3800 }] }
+            ],
+            attendance: JSON.parse(localStorage.getItem('fitpp_attendance')) || {},
+            finances: JSON.parse(localStorage.getItem('fitpp_finances')) || {},
+            showClientModal: false,
+            editingClient: null,
+            clientForm: { id: null, name: '', phone: '', locations: ['zarya'] },
+            showSubModal: false,
+            subClient: null,
+            subForm: { type: 'zarya', startDate: new Date().toISOString().slice(0, 10) },
+            init() {
+                this.updateLocationByDate();
+            },
+            setToday() {
+                this.selectedDate = new Date().toISOString().slice(0, 10);
+                this.updateLocationByDate();
+            },
+            changeDate(days) {
+                let d = new Date(this.selectedDate);
+                d.setDate(d.getDate() + days);
+                this.selectedDate = d.toISOString().slice(0, 10);
+                this.updateLocationByDate();
+            },
+            updateLocationByDate() {
+                let day = new Date(this.selectedDate).getDay();
+                if (day === 1 || day === 3) this.currentLocation = 'zarya'; // Пн, Ср
+                else if (day === 2 || day === 4) this.currentLocation = 'pole'; // Вт, Чт
+                else if (day === 6 || day === 0) this.currentLocation = 'online'; // Сб, Вс
+            },
+            getLocationTitle() {
+                if (this.currentLocation === 'zarya') return 'Журнал: мкр. Заря';
+                if (this.currentLocation === 'pole') return 'Журнал: Поле чудес (зал)';
+                return 'Журнал: Онлайн тренировки';
+            },
+            getLocationSchedule() {
+                if (this.currentLocation === 'zarya') return 'Понедельник, Среда 20:00';
+                if (this.currentLocation === 'pole') return 'Вторник, Четверг 18:30';
+                return 'Суббота, Воскресенье 18:00';
+            },
+            getLocationName(loc) {
+                if (loc === 'zarya') return 'Заря';
+                if (loc === 'pole') return 'Поле чудес';
+                return 'Онлайн';
+            },
+            getClientsForLocation() {
+                return this.clients.filter(c => c.locations.includes(this.currentLocation));
+            },
+            getClientActiveSubscription(client) {
+                if (!client.subscriptions || client.subscriptions.length === 0) return { left: 0, expires: 'нет' };
+                return client.subscriptions[client.subscriptions.length - 1];
+            },
+            getClientSubInfo(client) {
+                let sub = this.getClientActiveSubscription(client);
+                return sub.left > 0 ? `${sub.left} зан. (до ${sub.expires})` : 'Нет абонемента';
+            },
+            getRazovPrice() {
+                if (this.currentLocation === 'zarya') return '700 ₽';
+                if (this.currentLocation === 'pole') return '600 ₽';
+                return '500 ₽';
+            },
+            getAttendanceStatus(clientId) {
+                if (!this.attendance[this.selectedDate]) return null;
+                return this.attendance[this.selectedDate][clientId] || null;
+            },
+            getClientAttendanceHistory(clientId) {
+                let history = [];
+                for (let date in this.attendance) {
+                    if (this.attendance[date][clientId]) {
+                        let status = this.attendance[date][clientId];
+                        let statusText = '';
+                        let badgeClass = '';
+                        
+                        if (status === 'attended') {
+                            statusText = 'Был (-1 зан.)';
+                            badgeClass = 'bg-emerald-600/20 text-emerald-400 border-emerald-500/30';
+                        } else if (status === 'razov') {
+                            statusText = 'Разовое посещение';
+                            badgeClass = 'bg-blue-600/20 text-blue-400 border-blue-500/30';
+                        } else if (status === 'missed') {
+                            statusText = 'Сгорело занятие';
+                            badgeClass = 'bg-rose-600/20 text-rose-400 border-rose-500/30';
+                        } else if (status === 'excused') {
+                            statusText = 'Уважительная причина';
+                            badgeClass = 'bg-amber-600/20 text-amber-400 border-amber-500/30';
                         }
                         
-                        this.attendance[this.selectedDate][clientId] = status;
-                        if (status === 'attended') {
-                            if (activeSub && activeSub.left > 0) {
-                                activeSub.left--;
-                            } else {
-                                alert('У клиента нет активных занятий в абонементе!');
-                            }
-                        }
-                        if (status === 'razov') {
-                            let amount = this.currentLocation === 'zarya' ? 700 : (this.currentLocation === 'pole' ? 600 : 500);
-                            this.addFinanceRecord(amount, `Разовое посещение: ${client.name}`);
-                        }
+                        history.push({ date: date, text: statusText, badgeClass: badgeClass });
                     }
-                    localStorage.setItem('fitpp_attendance', JSON.stringify(this.attendance));
-                    localStorage.setItem('fitpp_clients', JSON.stringify(this.clients));
-                },
-                openClientModal() {
-                    this.editingClient = null;
-                    this.clientForm = { id: Date.now(), name: '', phone: '', locations: [this.currentLocation] };
-                    this.showClientModal = true;
-                },
-                editClient(client) {
-                    this.editingClient = client;
-                    this.clientForm = JSON.parse(JSON.stringify(client));
-                    this.showClientModal = true;
-                },
-                saveClient() {
-                    if (!this.clientForm.name.trim()) return;
-                    if (this.editingClient) {
-                        let idx = this.clients.findIndex(c => c.id === this.editingClient.id);
-                        if (idx !== -1) this.clients[idx] = JSON.parse(JSON.stringify(this.clientForm));
-                    } else {
-                        this.clientForm.subscriptions = [];
-                        this.clients.push(JSON.parse(JSON.stringify(this.clientForm)));
-                    }
-                    localStorage.setItem('fitpp_clients', JSON.stringify(this.clients));
-                    this.showClientModal = false;
-                },
-                deleteClient(id) {
-                    if (!confirm('Вы уверены, что хотите удалить клиента?')) return;
-                    this.clients = this.clients.filter(c => c.id !== id);
-                    localStorage.setItem('fitpp_clients', JSON.stringify(this.clients));
-                    this.showClientModal = false;
-                },
-                openSubModal(client) {
-                deleteSubscription(client) {
-                    if (!confirm('Вы уверены, что хотите удалить абонемент?')) return;
-                    client.subscriptions = [];
-                    localStorage.setItem('fitpp_clients', JSON.stringify(this.clients));
-                },
-                    this.subClient = client;
-                    this.subForm = { type: client.locations[0] || 'zarya', startDate: new Date().toISOString().slice(0, 10) };
-                    this.showSubModal = true;
-                },
-                saveSubscription() {
-                    if (!this.subClient) return;
-                    let price = this.subForm.type === 'zarya' ? 4400 : 3800;
-                    let expires = '';
-                    
-                    let startD = new Date(this.subForm.startDate);
-                    if (this.subForm.type === 'zarya') {
-                        startD.setDate(startD.getDate() + 28);
-                        expires = startD.toISOString().slice(0, 10);
-                    } else {
-                        let y = startD.getFullYear();
-                        let m = startD.getMonth() + 1;
-                        let lastDay = new Date(y, m, 0).getDate();
-                        expires = `${y}-${String(m).padStart(2, '0')}-${lastDay}`;
-                    }
-                    if (!this.subClient.subscriptions) this.subClient.subscriptions = [];
-                    this.subClient.subscriptions.push({ type: this.subForm.type, left: 8, expires: expires, price: price });
-                    
-                    localStorage.setItem('fitpp_clients', JSON.stringify(this.clients));
-                    this.addFinanceRecord(price, `Абонемент: ${this.subClient.name}`);
-                    this.showSubModal = false;
-                },
-                addFinanceRecord(amount, desc) {
-                    let monthKey = this.selectedDate.slice(0, 7);
-                    if (!this.finances[monthKey]) this.finances[monthKey] = { income: 0, items: [] };
-                    this.finances[monthKey].income += amount;
-                    this.finances[monthKey].items.push({ date: this.selectedDate, amount: amount, desc: desc });
-                    localStorage.setItem('fitpp_finances', JSON.stringify(this.finances));
-                },
-                changeMonth(dir) {
-                    let [y, m] = this.currentMonth.split('-').map(Number);
-                    let d = new Date(y, m - 1 + dir, 1);
-                    this.currentMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-                },
-                formatMonthName(monthStr) {
-                    let [y, m] = monthStr.split('-');
-                    let months = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
-                    return `${months[Number(m)-1]} ${y} г.`;
-                },
-                getMonthIncome() {
-                    return this.finances[this.currentMonth] ? this.finances[this.currentMonth].income : 0;
-                },
-                getMonthRent() {
-                    if (this.currentMonth === '2026-09') {
-                        return 6400 + 4800;
-                    }
-                    if (this.currentMonth === '2026-10') {
-                        return 6800 + 5200;
-                    }
-                    return 10000;
-                },
-                getMonthProfit() {
-                    return this.getMonthIncome() - this.getMonthRent();
-                },
-                exportData() {
-                    const data = {
-                        clients: this.clients,
-                        attendance: this.attendance,
-                        finances: this.finances
-                    };
-                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `fitpp_backup_${new Date().toISOString().slice(0, 10)}.json`;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                },
-                importData(event) {
-                    const file = event.target.files[0];
-                    if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        try {
-                            const data = JSON.parse(e.target.result);
-                            if (data.clients) {
-                                this.clients = data.clients;
-                                localStorage.setItem('fitpp_clients', JSON.stringify(this.clients));
-                            }
-                            if (data.attendance) {
-                                this.attendance = data.attendance;
-                                localStorage.setItem('fitpp_attendance', JSON.stringify(this.attendance));
-                            }
-                            if (data.finances) {
-                                this.finances = data.finances;
-                                localStorage.setItem('fitpp_finances', JSON.stringify(this.finances));
-                            }
-                            alert('Данные успешно импортированы!');
-                        } catch (err) {
-                            alert('Ошибка при чтении файла JSON');
-                        }
-                    };
-                    reader.readAsText(file);
                 }
+                return history.sort((a, b) => new Date(b.date) - new Date(a.date));
+            },
+            markAttendance(clientId, status) {
+                if (!this.attendance[this.selectedDate]) {
+                    this.attendance[this.selectedDate] = {};
+                }
+                let prevStatus = this.attendance[this.selectedDate][clientId];
+                let client = this.clients.find(c => c.id === clientId);
+                let activeSub = client.subscriptions && client.subscriptions.length > 0 
+                    ? client.subscriptions[client.subscriptions.length - 1] 
+                    : null;
+                if (prevStatus === status) {
+                    this.attendance[this.selectedDate][clientId] = null;
+                    if (prevStatus === 'attended' && activeSub) {
+                        activeSub.left++;
+                    }
+                } else {
+                    if (prevStatus === 'attended' && activeSub) {
+                        activeSub.left++;
+                    }
+                    
+                    this.attendance[this.selectedDate][clientId] = status;
+                    if (status === 'attended') {
+                        if (activeSub && activeSub.left > 0) {
+                            activeSub.left--;
+                        } else {
+                            alert('У клиента нет активных занятий в абонементе!');
+                        }
+                    }
+                    if (status === 'razov') {
+                        let amount = this.currentLocation === 'zarya' ? 700 : (this.currentLocation === 'pole' ? 600 : 500);
+                        this.addFinanceRecord(amount, `Разовое посещение: ${client.name}`);
+                    }
+                }
+                localStorage.setItem('fitpp_attendance', JSON.stringify(this.attendance));
+                localStorage.setItem('fitpp_clients', JSON.stringify(this.clients));
+            },
+            openClientModal() {
+                this.editingClient = null;
+                this.clientForm = { id: Date.now(), name: '', phone: '', locations: [this.currentLocation] };
+                this.showClientModal = true;
+            },
+            editClient(client) {
+                this.editingClient = client;
+                this.clientForm = JSON.parse(JSON.stringify(client));
+                this.showClientModal = true;
+            },
+            saveClient() {
+                if (!this.clientForm.name.trim()) return;
+                if (this.editingClient) {
+                    let idx = this.clients.findIndex(c => c.id === this.editingClient.id);
+                    if (idx !== -1) this.clients[idx] = JSON.parse(JSON.stringify(this.clientForm));
+                } else {
+                    this.clientForm.subscriptions = [];
+                    this.clients.push(JSON.parse(JSON.stringify(this.clientForm)));
+                }
+                localStorage.setItem('fitpp_clients', JSON.stringify(this.clients));
+                this.showClientModal = false;
+            },
+            deleteClient(id) {
+                if (!confirm('Вы уверены, что хотите удалить клиента?')) return;
+                this.clients = this.clients.filter(c => c.id !== id);
+                localStorage.setItem('fitpp_clients', JSON.stringify(this.clients));
+                this.showClientModal = false;
+            },
+            deleteSubscription(client) {
+                if (!confirm('Вы уверены, что хотите удалить абонемент?')) return;
+                client.subscriptions = [];
+                localStorage.setItem('fitpp_clients', JSON.stringify(this.clients));
+            },
+            openSubModal(client) {
+                this.subClient = client;
+                this.subForm = { type: client.locations[0] || 'zarya', startDate: new Date().toISOString().slice(0, 10) };
+                this.showSubModal = true;
+            },
+            saveSubscription() {
+                if (!this.subClient) return;
+                let price = this.subForm.type === 'zarya' ? 4400 : 3800;
+                let expires = '';
+                
+                let startD = new Date(this.subForm.startDate);
+                if (this.subForm.type === 'zarya') {
+                    startD.setDate(startD.getDate() + 28);
+                    expires = startD.toISOString().slice(0, 10);
+                } else {
+                    let y = startD.getFullYear();
+                    let m = startD.getMonth() + 1;
+                    let lastDay = new Date(y, m, 0).getDate();
+                    expires = `${y}-${String(m).padStart(2, '0')}-${lastDay}`;
+                }
+                if (!this.subClient.subscriptions) this.subClient.subscriptions = [];
+                this.subClient.subscriptions.push({ type: this.subForm.type, left: 8, expires: expires, price: price });
+                
+                localStorage.setItem('fitpp_clients', JSON.stringify(this.clients));
+                this.addFinanceRecord(price, `Абонемент: ${this.subClient.name}`);
+                this.showSubModal = false;
+            },
+            addFinanceRecord(amount, desc) {
+                let monthKey = this.selectedDate.slice(0, 7);
+                if (!this.finances[monthKey]) this.finances[monthKey] = { income: 0, items: [] };
+                this.finances[monthKey].income += amount;
+                this.finances[monthKey].items.push({ date: this.selectedDate, amount: amount, desc: desc });
+                localStorage.setItem('fitpp_finances', JSON.stringify(this.finances));
+            },
+            changeMonth(dir) {
+                let [y, m] = this.currentMonth.split('-').map(Number);
+                let d = new Date(y, m - 1 + dir, 1);
+                this.currentMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            },
+            formatMonthName(monthStr) {
+                let [y, m] = monthStr.split('-');
+                let months = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
+                return `${months[Number(m)-1]} ${y} г.`;
+            },
+            getMonthIncome() {
+                return this.finances[this.currentMonth] ? this.finances[this.currentMonth].income : 0;
+            },
+            getMonthRent() {
+                if (this.currentMonth === '2026-09') {
+                    return 6400 + 4800;
+                }
+                if (this.currentMonth === '2026-10') {
+                    return 6800 + 5200;
+                }
+                return 10000;
+            },
+            getMonthProfit() {
+                return this.getMonthIncome() - this.getMonthRent();
+            },
+            exportData() {
+                const data = {
+                    clients: this.clients,
+                    attendance: this.attendance,
+                    finances: this.finances
+                };
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `fitpp_backup_${new Date().toISOString().slice(0, 10)}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+            },
+            importData(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        if (data.clients) {
+                            this.clients = data.clients;
+                            localStorage.setItem('fitpp_clients', JSON.stringify(this.clients));
+                        }
+                        if (data.attendance) {
+                            this.attendance = data.attendance;
+                            localStorage.setItem('fitpp_attendance', JSON.stringify(this.attendance));
+                        }
+                        if (data.finances) {
+                            this.finances = data.finances;
+                            localStorage.setItem('fitpp_finances', JSON.stringify(this.finances));
+                        }
+                        alert('Данные успешно импортированы!');
+                    } catch (err) {
+                        alert('Ошибка при чтении файла JSON');
+                    }
+                };
+                reader.readAsText(file);
             }
         }
-    </script>
-</body>
-</html>
+    }
+</script>
