@@ -16,8 +16,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>[x-cloak] { display: none !important; }</style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased" x-data="trainerApp()">
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased" x-data="trainerApp()" x-init="init()">
     <!-- Header -->
     <!-- Auth Banner -->
     <div x-show="!currentUser" class="bg-amber-600/20 border-b border-amber-500/30 px-4 py-2.5 text-center text-sm flex justify-between items-center max-w-4xl mx-auto" x-cloak>
