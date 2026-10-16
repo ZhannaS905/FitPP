@@ -425,7 +425,7 @@
 },
 markAttendance(clientId, status) {
                     if (!this.attendance[this.selectedDate]) this.attendance[this.selectedDate] = {};
-                    let client = this.clients.find(c => <unsafe_url>c.id</unsafe_url> === clientId);
+                    let client = this.clients.find(c => c.id === clientId);
                     if (!client) return;
                     
                     let sub = this.getClientActiveSubscription(client);
