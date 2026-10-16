@@ -129,6 +129,11 @@
             <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg space-y-4">
                 <div class="flex justify-between items-center">
                     <h2 class="text-lg font-bold">Финансовый отчёт и аренда</h2>
+                    <div class="flex items-center space-x-2 bg-slate-900 border border-slate-700 px-3 py-1 rounded-xl">
+                        <button @click="changeMonth(-1)" class="text-slate-400 hover:text-white">❮</button>
+                        <span class="text-sm font-semibold text-emerald-400" x-text="formatMonthName(currentMonth)"></span>
+                        <button @click="changeMonth(1)" class="text-slate-400 hover:text-white">❯</button>
+                    </div>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
                     <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl">
@@ -228,10 +233,11 @@
             return {
                 activeTab: 'journal',
                 selectedDate: new Date().toISOString().slice(0, 10),
+                currentMonth: new Date().toISOString().slice(0, 7),
                 currentLocation: 'zarya',
                 clients: [],
                 attendance: {},
-                finances: 0,
+                finances: {},
                 showClientModal: false,
                 editingClient: null,
                 clientForm: { id: null, name: '', phone: '', locations: ['zarya'] },
@@ -247,7 +253,7 @@
                             const data = doc.data();
                             this.clients = data.clients || [];
                             this.attendance = data.attendance || {};
-                            this.finances = data.finances || 0;
+                            this.finances = data.finances || {};
                         }
                     });
                 },
@@ -286,8 +292,28 @@
                 },
                 markAttendance(clientId, status) {
                     if (!this.attendance[this.selectedDate]) this.attendance[this.selectedDate] = {};
+                    
+                    let client = this.clients.find(c => c.id === clientId);
+                    let sub = this.getClientActiveSubscription(client);
+                    let prevStatus = this.attendance[this.selectedDate][clientId];
+
+                    // Возврат занятия, если статус меняется
+                    if (prevStatus === 'attended' && sub.left !== undefined) sub.left++;
+
+                    // Списание или начисление
+                    if (status === 'attended' && sub.left > 0) {
+                        sub.left--;
+                    } else if (status === 'attended') {
+                        alert('Нет доступных занятий в абонементе!');
+                        return;
+                    }
+
                     this.attendance[this.selectedDate][clientId] = status;
-                    if(status === 'razov') this.finances += 500;
+                    
+                    let monthKey = this.selectedDate.slice(0, 7);
+                    if (!this.finances[monthKey]) this.finances[monthKey] = 0;
+                    if(status === 'razov') this.finances[monthKey] += 500;
+
                     this.syncToFirebase();
                 },
                 getClientAttendanceHistory(clientId) {
@@ -342,11 +368,25 @@
                     if(!this.subClient.subscriptions) this.subClient.subscriptions = [];
                     let price = this.subForm.type === 'zarya' ? 4400 : 3800;
                     this.subClient.subscriptions.push({ left: 8, expires: '28 дней', price: price });
-                    this.finances += price;
+                    
+                    let monthKey = this.selectedDate.slice(0, 7);
+                    if (!this.finances[monthKey]) this.finances[monthKey] = 0;
+                    this.finances[monthKey] += price;
+
                     this.syncToFirebase();
                     this.showSubModal = false;
                 },
-                getMonthIncome() { return this.finances; },
+                changeMonth(dir) {
+                    let [y, m] = this.currentMonth.split('-').map(Number);
+                    let d = new Date(y, m - 1 + dir, 1);
+                    this.currentMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                },
+                formatMonthName(monthStr) {
+                    let [y, m] = monthStr.split('-');
+                    let months = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
+                    return `${months[Number(m)-1]} ${y} г.`;
+                },
+                getMonthIncome() { return this.finances[this.currentMonth] || 0; },
                 getMonthRent() { return 10000; },
                 getMonthProfit() { return this.getMonthIncome() - this.getMonthRent(); }
             }
