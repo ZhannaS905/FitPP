@@ -342,12 +342,15 @@
                     return this.clients.filter(c => c.locations && c.locations.includes(this.currentLocation));
                 },
                 getClientActiveSubscription(client) {
-                    if (!client.subscriptions || client.subscriptions.length === 0) return { left: 0, expires: 'нет' };
+                    // Защита: если у клиента вообще нет поля subscriptions
+                    if (!client || !client.subscriptions || client.subscriptions.length === 0) return { left: 0, expires: 'нет' };
                     let active = client.subscriptions.filter(s => s.left > 0);
                     if (active.length === 0) return client.subscriptions[client.subscriptions.length - 1];
                     return active[active.length - 1];
                 },
+
                 getClientSubInfo(client) {
+                    if (!client) return 'Нет данных';
                     let sub = this.getClientActiveSubscription(client);
                     return sub.left > 0 ? (sub.left + ' зан. (до ' + sub.expires + ')') : 'Нет активного абонемента';
                 },
