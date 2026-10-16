@@ -383,7 +383,9 @@
                     if (!this.subClient) return;
                     if (!this.subClient.subscriptions) this.subClient.subscriptions = [];
                     let price = this.subForm.type === 'zarya' ? 4400 : 3800;
-                    this.subClient.subscriptions.push({ left: 8, expires: '28 дней', price: price });
+                    let endDate = new Date(this.selectedDate);
+                    endDate.setDate(endDate.getDate() + 28);
+                    this.subClient.subscriptions.push({ left: 8, startDate: this.selectedDate, expires: endDate.toISOString().slice(0, 10), price: price });
                     
                     let monthKey = this.selectedDate.slice(0, 7);
                     if (!this.finances[monthKey]) this.finances[monthKey] = 0;
