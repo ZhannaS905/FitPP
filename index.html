@@ -151,7 +151,10 @@
                 activeTab: 'journal',
                 selectedDate: new Date().toISOString().slice(0, 10),
                 currentLocation: 'zarya',
-                clients: [],
+                clients: [
+                    { id: '1', name: 'Иван Иванов', phone: '+7 999 123-45-67', subscriptions: [{ left: 8, expires: '01.11.2026' }] },
+                    { id: '2', name: 'Мария Смирнова', phone: '+7 999 765-43-21', subscriptions: [{ left: 4, expires: '15.11.2026' }] }
+                ],
                 attendance: {},
                 
                 init() {
@@ -164,7 +167,7 @@
                     db.collection('appData').doc('main').onSnapshot((doc) => {
                         if (doc.exists) {
                             const data = doc.data();
-                            if (data.clients) this.clients = data.clients;
+                            if (data.clients && data.clients.length > 0) this.clients = data.clients;
                             if (data.attendance) this.attendance = data.attendance;
                         }
                     });
