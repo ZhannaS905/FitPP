@@ -335,97 +335,28 @@
                         console.error("Ошибка авторизации:", error);
                         this.authError = error.message;
                     }
-                },
-                logout() {
-                    firebase.auth().signOut().catch((error) => {
-                        console.error("Ошибка при выходе:", error);
-                    });
-                },
-
-                loadFromFirebase() {
-                    db.collection('appData').doc('main').onSnapshot((doc) => {
-                        if (doc.exists) {
-                            const data = doc.data();
-                            this.clients = data.clients || [];
-                            this.attendance = data.attendance || {};
-                            this.finances = { ...this.finances, ...data.finances };
-                        }
-                    });
-                },
-
-                syncToFirebase() {
-                    if (!this.currentUser) return;
-                    db.collection('appData').doc('main').set({
-                        clients: this.clients,
-                        attendance: this.attendance,
-                        finances: this.finances
-                    });
-                },
-
-                setToday() { this.selectedDate = new Date().toISOString().slice(0, 10); this.updateLocationByDate(); },
-                changeDate(days) {
-                    let d = new Date(this.selectedDate);
-                    d.setDate(d.getDate() + days);
-                    this.selectedDate = d.toISOString().slice(0, 10);
-                    this.updateLocationByDate();
-                },
-                getLocationTitle() { let names = { zarya: 'мкр. Заря', pole: 'Поле чудес', online: 'Онлайн', none: 'Выходной' }; return 'Журнал: ' + (names[this.currentLocation] || this.currentLocation); },
-                getLocationSchedule() { return 'Расписание'; },
-                updateLocationByDate() {
-                    let day = new Date(this.selectedDate).getDay();
-                    if (day === 1 || day === 3) { this.currentLocation = 'zarya'; }
-                    else if (day === 2 || day === 4) { this.currentLocation = 'pole'; }
-                    else if (day === 6 || day === 0) { this.currentLocation = 'online'; }
-                    else if (day === 5) { this.currentLocation = 'none'; }
-                },
-                getClientsForLocation() { 
-                    return this.clients.filter(c => c.locations && c.locations.includes(this.currentLocation)); 
-                },
-                getClientActiveSubscription(client) {
-                    if (!client.subscriptions || client.subscriptions.length === 0) return { left: 0, expires: 'нет' };
-                    return client.subscriptions[client.subscriptions.length - 1];
-                },
-                getClientSubInfo(client) {
-                    let sub = this.getClientActiveSubscription(client);
-                    return (sub && sub.left !== undefined) ? `${sub.left} зан.` : 'Нет';
-                },
-                getRazovPrice() {
-                    if (this.currentLocation === 'zarya') return '700 ₽';
-                    if (this.currentLocation === 'pole') return '600 ₽';
-                    return '500 ₽';
-                },
-                getAttendanceStatus(clientId) {
-                    if (!this.attendance[this.selectedDate]) return null;
-                    return this.attendance[this.selectedDate][clientId] || null;
-                },
                 markAttendance(clientId, status) {
                     if (!this.attendance[this.selectedDate]) this.attendance[this.selectedDate] = {};
-                    
                     let client = this.clients.find(c => c.id === clientId);
                     if (!client) return;
                     let sub = this.getClientActiveSubscription(client);
                     let prevStatus = this.attendance[this.selectedDate][clientId];
-                    // Возврат занятия, если статус меняется
                     if (prevStatus === 'attended' && sub.left !== undefined) sub.left++;
-
-                    // Списание или начисление
                     if (status === 'attended' && sub && sub.left > 0) {
                         sub.left--;
                     } else if (status === 'attended') {
                         if (confirm('У клиента нет доступных занятий в абонементе. Оформить новый абонемент?')) {
                             this.openSubModal(client);
                         }
-
+                    }
                     this.attendance[this.selectedDate][clientId] = status;
-                    
                     let monthKey = this.selectedDate.slice(0, 7);
                     if (!this.finances[monthKey]) this.finances[monthKey] = 0;
-                    if(status === 'razov') {
+                    if (status === 'razov') {
                         let price = this.currentLocation === 'zarya' ? 700 : (this.currentLocation === 'pole' ? 600 : 500);
                         this.finances[monthKey] = (this.finances[monthKey] || 0) + price;
                     }
-                        this.finances = { ...this.finances };
-
+                    this.finances = { ...this.finances };
                     this.syncToFirebase();
                 },
                 getClientAttendanceHistory(clientId) {
