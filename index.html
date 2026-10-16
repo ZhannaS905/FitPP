@@ -425,7 +425,7 @@
 },
                 markAttendance(clientId, status) {
                     if (!this.attendance[this.selectedDate]) this.attendance[this.selectedDate] = {};
-                    let client = this.clients.find(c => <unsafe_url>c.id</unsafe_url> === clientId);
+                    let client = this.clients.find(c =&gt; c.id === clientId);
                     if (!client) return;
                     let sub = this.getClientActiveSubscription(client);
                     let prevStatus = this.attendance[this.selectedDate][clientId];
@@ -526,7 +526,7 @@
                 changeMonth(dir) {
                     let [y, m] = this.currentMonth.split('-').map(Number);
                     let d = new Date(y, m - 1 + dir, 1);
-                    this.currentMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                    this.currentMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, &apos;0&apos;)}`;
                 },
                 formatMonthName(monthStr) {
                     let [y, m] = monthStr.split('-');
@@ -563,4 +563,6 @@
     </script>
 </body>
 </html>
+
+
 
