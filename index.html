@@ -343,13 +343,12 @@
                     return this.clients.filter(c => c.locations && c.locations.includes(this.currentLocation));
                 },
                 getClientActiveSubscription(client) {
-                    // Защита: если у клиента вообще нет поля subscriptions
-                    if (!client || !client.subscriptions || client.subscriptions.length === 0) return { left: 0, expires: 'нет' };
-                    let active = client.subscriptions.filter(s => s.left > 0);
-                    if (active.length === 0) return client.subscriptions[client.subscriptions.length - 1];
-                    return active[active.length - 1];
+                    if (!client || !client.subscriptions || client.subscriptions.length === 0) return null;
+                    // Ищем первый абонемент, где есть занятия
+                    let active = client.subscriptions.find(s => s.left > 0);
+                    // Если такого нет, возвращаем последний, чтобы показать "0"
+                    return active || client.subscriptions[client.subscriptions.length - 1];
                 },
-
                 getClientSubInfo(client) {
                     if (!client) return 'Нет данных';
                     let sub = this.getClientActiveSubscription(client);
@@ -424,35 +423,58 @@
         this.authError = error.message;
     }
 },
-                markAttendance(clientId, status) {
+markAttendance(clientId, status) {
                     if (!this.attendance[this.selectedDate]) this.attendance[this.selectedDate] = {};
-                    let client = this.clients.find(c => c.id === clientId);
+                    let client = this.clients.find(c => <unsafe_url>c.id</unsafe_url> === clientId);
                     if (!client) return;
+                    
                     let sub = this.getClientActiveSubscription(client);
                     let prevStatus = this.attendance[this.selectedDate][clientId];
-                    if (prevStatus === status) return;
-                    if (prevStatus === 'attended' && sub && sub.left !== undefined) {
-                        sub.left++;
-                    }
-                    if (status === 'attended') {
-                        if (sub && sub.left > 0) {
-                            sub.left--;
-                        } else {
-                            if (confirm('У клиента нет доступных занятий в абонементе. Оформить новый абонемент?')) {
-                                this.openSubModal(client);
+                    
+                    // Если нажали на ту же кнопку — отменяем действие
+                    if (prevStatus === status) {
+                        if (status === 'attended' && sub && sub.left !== undefined) {
+                            sub.left++; // Возвращаем занятие
+                        }
+                        if (status === 'razov') {
+                            let price = this.getRazovPrice();
+                            let monthKey = this.selectedDate.slice(0, 7);
+                            if (this.finances[monthKey]) {
+                                this.finances[monthKey] = Math.max(0, this.finances[monthKey] - price);
                             }
                         }
+                        delete this.attendance[this.selectedDate][clientId];
+                    } else {
+                        // Возврат, если меняем статус с "Был" на другой
+                        if (prevStatus === 'attended' && sub && sub.left !== undefined) {
+                            sub.left++;
+                        }
+                        
+                        // Списание, если ставим "Был"
+                        if (status === 'attended') {
+                            if (sub && sub.left > 0) {
+                                sub.left--;
+                            } else {
+                                if (confirm('У клиента нет доступных занятий в абонементе. Оформить новый абонемент?')) {
+                                    this.openSubModal(client);
+                                }
+                                return; // Прерываем, если нет абонемента
+                            }
+                        }
+                        
+                        this.attendance[this.selectedDate][clientId] = status;
+                        
+                        // Логика финансов для разовых
+                        let monthKey = this.selectedDate.slice(0, 7);
+                        if (!this.finances[monthKey]) this.finances[monthKey] = 0;
+                        
+                        if (status === 'razov' && prevStatus !== 'razov') {
+                            this.finances[monthKey] += this.getRazovPrice();
+                        } else if (prevStatus === 'razov' && status !== 'razov') {
+                            this.finances[monthKey] = Math.max(0, this.finances[monthKey] - this.getRazovPrice());
+                        }
                     }
-                    this.attendance[this.selectedDate][clientId] = status;
-                    let monthKey = this.selectedDate.slice(0, 7);
-                    if (!this.finances[monthKey]) this.finances[monthKey] = 0;
-                    if (status === 'razov' && prevStatus !== 'razov') {
-                        let price = this.getRazovPrice();
-                        this.finances[monthKey] = (this.finances[monthKey] || 0) + price;
-                    } else if (prevStatus === 'razov' && status !== 'razov') {
-                        let price = this.getRazovPrice();
-                        this.finances[monthKey] = Math.max(0, (this.finances[monthKey] || 0) - price);
-                    }
+                    
                     this.clients = [...this.clients];
                     this.attendance = { ...this.attendance };
                     this.finances = { ...this.finances };
