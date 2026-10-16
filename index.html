@@ -385,6 +385,23 @@
                         const doc = await db.collection('trainers').doc(this.currentUser.uid).get();
                         if (doc.exists) {
                             const data = doc.data();
+                            if (this.clients.length > 0 || Object.keys(this.attendance).length > 0 || Object.keys(this.finances).length > 0) {
+                                await this.syncToFirebase();
+                            } else {
+                                this.clients = data.clients || [];
+                                this.attendance = data.attendance || {};
+                                this.finances = data.finances || {};
+                            }
+                        } else {
+                            if (this.clients.length > 0 || Object.keys(this.attendance).length > 0 || Object.keys(this.finances).length > 0) {
+                                await this.syncToFirebase();
+                            }
+                        }
+                    if (!this.currentUser) return;
+                    try {
+                        const doc = await db.collection('trainers').doc(this.currentUser.uid).get();
+                        if (doc.exists) {
+                            const data = doc.data();
                             this.clients = data.clients || [];
                             this.attendance = data.attendance || {};
                             this.finances = data.finances || {};
@@ -429,24 +446,33 @@
                     if (!client) return;
                     let sub = this.getClientActiveSubscription(client);
                     let prevStatus = this.attendance[this.selectedDate][clientId];
-                    if (prevStatus === 'attended' && sub.left !== undefined) sub.left++;
-                    if (status === 'attended' && sub && sub.left > 0) {
-                        sub.left--;
-                    } else if (status === 'attended') {
-                        if (confirm('У клиента нет доступных занятий в абонементе. Оформить новый абонемент?')) {
-                            this.openSubModal(client);
+                    if (prevStatus === status) return;
+                    if (prevStatus === 'attended' && sub && sub.left !== undefined) {
+                        sub.left++;
+                    }
+                    if (status === 'attended') {
+                        if (sub && sub.left > 0) {
+                            sub.left--;
+                        } else {
+                            if (confirm('У клиента нет доступных занятий в абонементе. Оформить новый абонемент?')) {
+                                this.openSubModal(client);
+                            }
                         }
                     }
                     this.attendance[this.selectedDate][clientId] = status;
                     let monthKey = this.selectedDate.slice(0, 7);
                     if (!this.finances[monthKey]) this.finances[monthKey] = 0;
-                    if (status === 'razov') {
-                        let price = this.currentLocation === 'zarya' ? 700 : (this.currentLocation === 'pole' ? 600 : 500);
+                    if (status === 'razov' && prevStatus !== 'razov') {
+                        let price = this.getRazovPrice();
                         this.finances[monthKey] = (this.finances[monthKey] || 0) + price;
+                    } else if (prevStatus === 'razov' && status !== 'razov') {
+                        let price = this.getRazovPrice();
+                        this.finances[monthKey] = Math.max(0, (this.finances[monthKey] || 0) - price);
                     }
+                    this.clients = [...this.clients];
+                    this.attendance = { ...this.attendance };
                     this.finances = { ...this.finances };
                     this.syncToFirebase();
-                },
                 getClientAttendanceHistory(clientId) {
                     let history = [];
                     for (let date in this.attendance) {
