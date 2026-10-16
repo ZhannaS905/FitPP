@@ -290,7 +290,7 @@
                 },
                 getClientSubInfo(client) {
                     let sub = this.getClientActiveSubscription(client);
-                    return sub.left > 0 ? `${sub.left} зан.` : 'Нет';
+                    return (sub && sub.left !== undefined) ? `${sub.left} зан.` : 'Нет';
                 },
                 getRazovPrice() {
                     if (this.currentLocation === 'zarya') return '700 ₽';
@@ -305,14 +305,14 @@
                     if (!this.attendance[this.selectedDate]) this.attendance[this.selectedDate] = {};
                     
                     let client = this.clients.find(c => c.id === clientId);
+                    if (!client) return;
                     let sub = this.getClientActiveSubscription(client);
                     let prevStatus = this.attendance[this.selectedDate][clientId];
-
                     // Возврат занятия, если статус меняется
                     if (prevStatus === 'attended' && sub.left !== undefined) sub.left++;
 
                     // Списание или начисление
-                    if (status === 'attended' && sub.left > 0) {
+                    if (status === 'attended' && sub && sub.left > 0) {
                         sub.left--;
                     } else if (status === 'attended') {
                         alert('Нет доступных занятий в абонементе!');
@@ -379,8 +379,8 @@
                     this.showSubModal = true;
                 },
                 saveSubscription() {
-                    if(!this.subClient.subscriptions) this.subClient.subscriptions = [];
-                    let price = this.subForm.type === 'zarya' ? 4400 : 3800;
+                    if (!this.subClient) return;
+                    if (!this.subClient.subscriptions) this.subClient.subscriptions = [];
                     this.subClient.subscriptions.push({ left: 8, expires: '28 дней', price: price });
                     
                     let monthKey = this.selectedDate.slice(0, 7);
@@ -393,7 +393,7 @@
                 changeMonth(dir) {
                     let [y, m] = this.currentMonth.split('-').map(Number);
                     let d = new Date(y, m - 1 + dir, 1);
-                    this.currentMonth = `d.getFullYear()-{String(d.getMonth() + 1).padStart(2, '0')}`;
+                    this.currentMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
                 },
                 formatMonthName(monthStr) {
                     let [y, m] = monthStr.split('-');
@@ -409,9 +409,9 @@
                         let currentDate = new Date(year, month - 1, day);
                         let dayOfWeek = currentDate.getDay();
                         if (dayOfWeek === 1 || dayOfWeek === 3) {
-                            if (currentDate >= new Date('2026-09-07')) { totalRent += 1000; }
+                            if (currentDate >= new Date('2026-09-07T00:00:00')) { totalRent += 1000; }
                         } else if (dayOfWeek === 2 || dayOfWeek === 4) {
-                            if (currentDate >= new Date('2026-09-01')) { totalRent += 1000; }
+                            if (currentDate >= new Date('2026-09-01T00:00:00')) { totalRent += 1000; }
                         }
                     }
                     return totalRent;
