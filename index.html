@@ -322,6 +322,43 @@
                         }
                     });
                 },
+                async syncToFirebase() {
+                    if (!this.currentUser) return;
+                    try {
+                        await db.collection('trainers').doc(this.currentUser.uid).set({
+                            clients: this.clients,
+                            attendance: this.attendance,
+                            finances: this.finances
+                        }, { merge: true });
+                    } catch (error) {
+                        console.error("Ошибка сохранения в Firebase:", error);
+                    }
+                },
+                async loadFromFirebase() {
+                    if (!this.currentUser) return;
+                    try {
+                        const doc = await db.collection('trainers').doc(this.currentUser.uid).get();
+                        if (doc.exists) {
+                            const data = doc.data();
+                            this.clients = data.clients || [];
+                            this.attendance = data.attendance || {};
+                            this.finances = data.finances || {};
+                        }
+                    } catch (error) {
+                        console.error("Ошибка загрузки из Firebase:", error);
+                    }
+                },
+                async logout() {
+                    try {
+                        await firebase.auth().signOut();
+                        this.currentUser = null;
+                        this.clients = [];
+                        this.attendance = {};
+                        this.finances = {};
+                    } catch (error) {
+                        console.error("Ошибка при выходе:", error);
+                    }
+                },
                 async handleAuth() {
                     this.authError = '';
                     try {
