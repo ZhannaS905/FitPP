@@ -4,12 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FitPP — Тренер CRM</title>
+    <!-- PWA Manifest & Meta -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#10b981">
     <link rel="apple-touch-icon" href="icon-192.png">
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased" x-data="trainerApp()">
@@ -23,55 +27,130 @@
             <nav class="flex space-x-1 sm:space-x-2">
                 <button @click="activeTab = 'journal'" :class="activeTab === 'journal' ? 'bg-emerald-600 text-white' : 'text-slate-300 hover:bg-slate-700'" class="px-3 py-1.5 rounded-lg text-sm font-medium transition">Журнал</button>
                 <button @click="activeTab = 'clients'" :class="activeTab === 'clients' ? 'bg-emerald-600 text-white' : 'text-slate-300 hover:bg-slate-700'" class="px-3 py-1.5 rounded-lg text-sm font-medium transition">Клиенты</button>
+                <button @click="activeTab = 'finances'" :class="activeTab === 'finances' ? 'bg-emerald-600 text-white' : 'text-slate-300 hover:bg-slate-700'" class="px-3 py-1.5 rounded-lg text-sm font-medium transition">Финансы</button>
             </nav>
         </div>
     </header>
-
+    <!-- Main Content -->
     <main class="max-w-4xl mx-auto px-4 py-6 pb-24">
         <!-- TAB 1: JOURNAL -->
         <div x-show="activeTab === 'journal'" class="space-y-6">
+            <!-- Date & Location Selector -->
             <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg">
                 <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
                     <div class="flex items-center space-x-3">
                         <button @click="changeDate(-1)" class="p-2 bg-slate-700 hover:bg-slate-600 rounded-xl transition">❮</button>
                         <div class="text-center">
                             <span class="text-xs text-slate-400 block">Дата тренировки</span>
-                            <input type="date" x-model="selectedDate" @change="loadDayData()" class="bg-slate-900 border border-slate-600 text-white px-3 py-1 rounded-lg text-sm font-semibold focus:outline-none focus:border-emerald-500">
+                            <input type="date" x-model="selectedDate" class="bg-slate-900 border border-slate-600 text-white px-3 py-1 rounded-lg text-sm font-semibold focus:outline-none focus:border-emerald-500">
                         </div>
                         <button @click="changeDate(1)" class="p-2 bg-slate-700 hover:bg-slate-600 rounded-xl transition">❯</button>
                     </div>
+                    <button @click="setToday()" class="text-xs bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-xl hover:bg-emerald-600/30 transition">Сегодня</button>
+                </div>
+                <!-- Location Auto-Detector & Manual Switch -->
+                <div>
+                    <span class="text-xs text-slate-400 block mb-2">Локация:</span>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <button @click="currentLocation = 'zarya'" :class="currentLocation === 'zarya' ? 'bg-emerald-600 text-white border-emerald-500' : 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-700'" class="border p-2.5 rounded-xl text-sm font-medium text-left transition flex justify-between items-center">
+                            <span>мкр. Заря</span>
+                            <span class="text-xs opacity-75">Пн, Ср 20:00</span>
+                        </button>
+                        <button @click="currentLocation = 'pole'" :class="currentLocation === 'pole' ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-700'" class="border p-2.5 rounded-xl text-sm font-medium text-left transition flex justify-between items-center">
+                            <span>Поле чудес</span>
+                            <span class="text-xs opacity-75">Вт, Чт 18:30</span>
+                        </button>
+                        <button @click="currentLocation = 'online'" :class="currentLocation === 'online' ? 'bg-amber-600 text-white border-amber-500' : 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-700'" class="border p-2.5 rounded-xl text-sm font-medium text-left transition flex justify-between items-center">
+                            <span>Онлайн</span>
+                            <span class="text-xs opacity-75">Сб, Вс 18:00</span>
+                        </button>
+                    </div>
                 </div>
             </div>
-            
+            <!-- Attendance List -->
             <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg">
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h2 class="text-lg font-bold" x-text="getLocationTitle()"></h2>
+                        <p class="text-xs text-slate-400" x-text="getLocationSchedule()"></p>
+                    </div>
+                    <span class="text-xs bg-slate-700 px-3 py-1 rounded-full text-slate-300" x-text="getClientsForLocation().length + ' клиентов'"></span>
+                </div>
                 <div class="space-y-3">
-                    <template x-for="client in clients" :key="<unsafe_url>client.id</unsafe_url>">
-                        <div class="bg-slate-900 border border-slate-700/60 p-3.5 rounded-xl flex justify-between items-center">
+                    <template x-for="client in getClientsForLocation()" :key="<unsafe_url>client.id</unsafe_url>">
+                        <div class="bg-slate-900 border border-slate-700/60 p-3.5 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                             <div>
                                 <h3 class="font-semibold text-white" x-text="client.name"></h3>
-                                <span class="text-xs text-emerald-400" x-text="'Остаток: ' + getClientActiveSubscription(client).left"></span>
+                                <div class="flex items-center space-x-2 text-xs mt-1">
+                                    <span class="text-emerald-400 font-medium" x-text="'Остаток: ' + getClientActiveSubscription(client).left + ' зан.'"></span>
+                                    <span class="text-slate-400" x-text="'До: ' + getClientActiveSubscription(client).expires"></span>
+                                </div>
                             </div>
-                            <div class="flex gap-1.5">
-                                <button @click="markAttendance(<unsafe_url>client.id</unsafe_url>, 'attended')" :class="getAttendanceStatus(<unsafe_url>client.id</unsafe_url>) === 'attended' ? 'bg-emerald-600' : 'bg-slate-800'" class="px-2.5 py-1.5 rounded-lg text-xs">Был</button>
-                                <button @click="markAttendance(<unsafe_url>client.id</unsafe_url>, 'missed')" :class="getAttendanceStatus(<unsafe_url>client.id</unsafe_url>) === 'missed' ? 'bg-rose-600' : 'bg-slate-800'" class="px-2.5 py-1.5 rounded-lg text-xs">Сгорело</button>
+                            <div class="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
+                                <button @click="markAttendance(<unsafe_url>client.id</unsafe_url>, 'attended')" :class="getAttendanceStatus(<unsafe_url>client.id</unsafe_url>) === 'attended' ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'" class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition">✓ Был (-1)</button>
+                                <button @click="markAttendance(<unsafe_url>client.id</unsafe_url>, 'razov')" :class="getAttendanceStatus(<unsafe_url>client.id</unsafe_url>) === 'razov' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'" class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition" x-text="'₽ Разово (' + getRazovPrice() + ')'"></button>
+                                <button @click="markAttendance(<unsafe_url>client.id</unsafe_url>, 'missed')" :class="getAttendanceStatus(<unsafe_url>client.id</unsafe_url>) === 'missed' ? 'bg-rose-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'" class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition">Сгорело</button>
+                                <button @click="markAttendance(<unsafe_url>client.id</unsafe_url>, 'excused')" :class="getAttendanceStatus(<unsafe_url>client.id</unsafe_url>) === 'excused' ? 'bg-amber-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'" class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition">Уваж.</button>
                             </div>
                         </div>
                     </template>
                 </div>
             </div>
         </div>
-
         <!-- TAB 2: CLIENTS -->
         <div x-show="activeTab === 'clients'" class="space-y-6">
-            <button @click="openClientModal()" class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm">+ Новый клиент</button>
-            <template x-for="client in clients" :key="<unsafe_url>client.id</unsafe_url>">
-                <div class="bg-slate-800 p-4 rounded-2xl flex justify-between items-center">
-                    <span x-text="client.name"></span>
-                    <button @click="deleteClient(<unsafe_url>client.id</unsafe_url>)" class="text-rose-400 text-xs">Удалить</button>
-                </div>
-            </template>
+            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg flex justify-between items-center">
+                <h2 class="text-lg font-bold">База клиентов</h2>
+                <button @click="openClientModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-semibold transition">+ Новый клиент</button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <template x-for="client in clients" :key="<unsafe_url>client.id</unsafe_url>">
+                    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-start">
+                                <h3 class="font-bold text-white text-base" x-text="client.name"></h3>
+                                <button @click="editClient(client)" class="text-slate-400 hover:text-white text-xs bg-slate-700 px-2 py-1 rounded-lg">Изменить</button>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-1" x-text="'Телефон: ' + (client.phone || 'не указан')"></p>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-slate-700/60 flex justify-between items-center">
+                            <div>
+                                <span class="text-xs text-slate-400 block">Абонемент:</span>
+                                <span class="text-sm font-semibold text-emerald-400" x-text="getClientSubInfo(client)"></span>
+                            </div>
+                            <button @click="openSubModal(client)" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-xl text-xs font-medium transition">+ Продать</button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+        <!-- TAB 3: FINANCES -->
+        <div x-show="activeTab === 'finances'" class="space-y-6">
+            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg">
+                <h2 class="text-lg font-bold mb-4">Финансовый отчёт</h2>
+                <div class="text-slate-400 text-sm">Синхронизировано с Firebase.</div>
+            </div>
         </div>
     </main>
+
+    <!-- Client Modal -->
+    <div x-show="showClientModal" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <h3 class="text-lg font-bold" x-text="editingClient ? 'Редактировать клиента' : 'Новый клиент'"></h3>
+            <div>
+                <label class="text-xs text-slate-400 block mb-1">Имя и фамилия</label>
+                <input type="text" x-model="clientForm.name" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+            </div>
+            <div>
+                <label class="text-xs text-slate-400 block mb-1">Телефон</label>
+                <input type="text" x-model="clientForm.phone" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+            </div>
+            <div class="flex justify-end space-x-3 pt-2">
+                <button @click="showClientModal = false" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl text-sm font-medium transition">Отмена</button>
+                <button @click="saveClient()" class="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-xl text-sm font-semibold transition">Сохранить</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         const firebaseConfig = {
@@ -82,6 +161,7 @@
             messagingSenderId: "1075119383188",
             appId: "1:1075119383188:web:21494fbfc98b331b92ca81"
         };
+        
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
@@ -89,11 +169,17 @@
             return {
                 activeTab: 'journal',
                 selectedDate: new Date().toISOString().slice(0, 10),
+                currentLocation: 'zarya',
                 clients: [],
                 attendance: {},
-                
-                init() { this.loadFromFirebase(); },
-                loadDayData() {},
+                showClientModal: false,
+                editingClient: null,
+                clientForm: { id: null, name: '', phone: '', locations: ['zarya'] },
+
+                init() {
+                    this.loadFromFirebase();
+                },
+
                 loadFromFirebase() {
                     db.collection('appData').doc('main').onSnapshot((doc) => {
                         if (doc.exists) {
@@ -103,46 +189,62 @@
                         }
                     });
                 },
+
                 syncToFirebase() {
-                    db.collection('appData').doc('main').set({ clients: this.clients, attendance: this.attendance });
+                    db.collection('appData').doc('main').set({
+                        clients: this.clients,
+                        attendance: this.attendance
+                    });
                 },
+
+                setToday() { this.selectedDate = new Date().toISOString().slice(0, 10); },
                 changeDate(days) {
                     let d = new Date(this.selectedDate);
                     d.setDate(d.getDate() + days);
                     this.selectedDate = d.toISOString().slice(0, 10);
                 },
+                getLocationTitle() { return 'Журнал: ' + this.currentLocation; },
+                getLocationSchedule() { return 'Расписание'; },
+                getClientsForLocation() { return this.clients; },
                 getClientActiveSubscription(client) {
-                    return client.subscriptions && client.subscriptions.length > 0 ? client.subscriptions[client.subscriptions.length - 1] : { left: 0 };
+                    if (!client.subscriptions || client.subscriptions.length === 0) return { left: 0, expires: 'нет' };
+                    return client.subscriptions[client.subscriptions.length - 1];
                 },
+                getClientSubInfo(client) {
+                    let sub = this.getClientActiveSubscription(client);
+                    return sub.left > 0 ? `${sub.left} зан.` : 'Нет';
+                },
+                getRazovPrice() { return '500 ₽'; },
                 getAttendanceStatus(clientId) {
-                    return this.attendance[this.selectedDate] ? this.attendance[this.selectedDate][clientId] : null;
+                    if (!this.attendance[this.selectedDate]) return null;
+                    return this.attendance[this.selectedDate][clientId] || null;
                 },
                 markAttendance(clientId, status) {
                     if (!this.attendance[this.selectedDate]) this.attendance[this.selectedDate] = {};
-                    let client = this.clients.find(c => <unsafe_url>c.id</unsafe_url> === clientId);
-                    let sub = this.getClientActiveSubscription(client);
-                    
-                    if (this.attendance[this.selectedDate][clientId] === status) {
-                        this.attendance[this.selectedDate][clientId] = null;
-                        if (status === 'attended') sub.left++;
-                    } else {
-                        if (this.attendance[this.selectedDate][clientId] === 'attended') sub.left++;
-                        this.attendance[this.selectedDate][clientId] = status;
-                        if (status === 'attended') sub.left--;
-                    }
+                    this.attendance[this.selectedDate][clientId] = status;
                     this.syncToFirebase();
                 },
                 openClientModal() {
-                    let name = prompt("Имя клиента:");
-                    if (name) {
-                        this.clients.push({ id: Date.now(), name: name, subscriptions: [{ left: 8 }] });
-                        this.syncToFirebase();
-                    }
+                    this.editingClient = null;
+                    this.clientForm = { id: Date.now(), name: '', phone: '', locations: ['zarya'] };
+                    this.showClientModal = true;
                 },
-                deleteClient(id) {
-                    this.clients = this.clients.filter(c => <unsafe_url>c.id</unsafe_url> !== id);
+                editClient(client) {
+                    this.editingClient = client;
+                    this.clientForm = { ...client };
+                    this.showClientModal = true;
+                },
+                saveClient() {
+                    if (this.editingClient) {
+                        let idx = this.clients.findIndex(c => <unsafe_url>c.id</unsafe_url> === <unsafe_url>this.editingClient.id</unsafe_url>);
+                        if (idx !== -1) this.clients[idx] = { ...this.clientForm };
+                    } else {
+                        this.clients.push({ ...this.clientForm });
+                    }
                     this.syncToFirebase();
-                }
+                    this.showClientModal = false;
+                },
+                openSubModal(client) { alert('Продажа абонемента'); }
             }
         }
     </script>
