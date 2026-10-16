@@ -343,6 +343,10 @@
                             this.clients = data.clients || [];
                             this.attendance = data.attendance || {};
                             this.finances = data.finances || {};
+                        } else {
+                            this.clients = [];
+                            this.attendance = {};
+                            this.finances = {};
                         }
                     } catch (error) {
                         console.error("Ошибка загрузки из Firebase:", error);
