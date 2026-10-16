@@ -21,7 +21,7 @@
     <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50">
         <div class="max-w-4xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
             <div class="flex items-center space-x-2">
-                <span class="text-2xl">🧘🏻‍♀️</span>
+                <span class="text-2xl">🧘‍♀️</span>
                 <h1 class="text-xl font-bold tracking-wide bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">FitPP</h1>
             </div>
             <nav class="flex space-x-1 sm:space-x-2">
@@ -385,20 +385,6 @@
                     this.showSubModal = true;
                 },
                 saveSubscription() {
-                    if (!this.subClient) return;
-                    if (!this.subClient.subscriptions) this.subClient.subscriptions = [];
-                    let price = this.subForm.type === 'zarya' ? 4400 : 3800;
-                    let subDate = this.subForm.date || this.selectedDate;
-                    let endDate = new Date(subDate);
-                    endDate.setDate(endDate.getDate() + 28);
-                    this.subClient.subscriptions.push({ left: 8, startDate: subDate, expires: endDate.toISOString().slice(0, 10), price: price });
-                    
-                    let monthKey = subDate.slice(0, 7);
-                    if (!this.finances[monthKey]) this.finances[monthKey] = 0;
-                    this.finances[monthKey] += price;
-                    this.syncToFirebase();
-                    this.showSubModal = false;
-                },
                     if (!this.subClient) return;
                     if (!this.subClient.subscriptions) this.subClient.subscriptions = [];
                     let price = this.subForm.type === 'zarya' ? 4400 : 3800;
