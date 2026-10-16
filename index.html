@@ -126,9 +126,24 @@
         </div>
         <!-- TAB 3: FINANCES -->
         <div x-show="activeTab === 'finances'" class="space-y-6">
-            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg">
-                <h2 class="text-lg font-bold mb-4">Финансовый отчёт</h2>
-                <div class="text-slate-400 text-sm">Синхронизировано с Firebase.</div>
+            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg space-y-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-lg font-bold">Финансовый отчёт и аренда</h2>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                    <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl">
+                        <span class="text-xs text-slate-400 block">Доходы (Всего)</span>
+                        <span class="text-xl font-bold text-emerald-400 mt-1 block" x-text="getMonthIncome() + ' ₽'"></span>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl">
+                        <span class="text-xs text-slate-400 block">Расходы (Аренда залов)</span>
+                        <span class="text-xl font-bold text-rose-400 mt-1 block" x-text="getMonthRent() + ' ₽'"></span>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl">
+                        <span class="text-xs text-slate-400 block">Чистая прибыль</span>
+                        <span class="text-xl font-bold text-teal-300 mt-1 block" x-text="getMonthProfit() + ' ₽'"></span>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
@@ -153,6 +168,20 @@
                     <label class="flex items-center space-x-2 text-sm"><input type="checkbox" value="online" x-model="clientForm.locations" class="rounded bg-slate-900 border-slate-600 text-emerald-600"><span>Онлайн тренировки</span></label>
                 </div>
             </div>
+            <!-- История посещений -->
+            <template x-if="editingClient">
+                <div class="pt-3 border-t border-slate-700/60">
+                    <label class="text-xs text-slate-400 block mb-2">История посещений:</label>
+                    <div class="max-h-40 overflow-y-auto space-y-1.5 pr-1">
+                        <template x-for="item in getClientAttendanceHistory(editingClient.id)">
+                            <div class="flex justify-between items-center bg-slate-900 border border-slate-700/60 px-3 py-1.5 rounded-xl text-xs">
+                                <span class="text-slate-300 font-medium" x-text="item.date"></span>
+                                <span class="border px-2 py-0.5 rounded-lg" :class="item.badgeClass" x-text="item.text"></span>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </template>
             <div class="flex justify-end space-x-3 pt-2">
                 <button @click="showClientModal = false" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl text-sm font-medium transition">Отмена</button>
                 <button @click="saveClient()" class="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-xl text-sm font-semibold transition">Сохранить</button>
@@ -180,13 +209,12 @@
                 currentLocation: 'zarya',
                 clients: [],
                 attendance: {},
+                finances: 0,
                 showClientModal: false,
                 editingClient: null,
                 clientForm: { id: null, name: '', phone: '', locations: ['zarya'] },
 
-                init() {
-                    this.loadFromFirebase();
-                },
+                init() { this.loadFromFirebase(); },
 
                 loadFromFirebase() {
                     db.collection('appData').doc('main').onSnapshot((doc) => {
@@ -194,12 +222,7 @@
                             const data = doc.data();
                             this.clients = data.clients || [];
                             this.attendance = data.attendance || {};
-                        } else {
-                            this.clients = [
-                                { id: 1, name: 'Анна Смирнова', phone: '+7 999 111-22-33', locations: ['zarya'], subscriptions: [{ type: 'zarya', left: 8, expires: '2026-11-15', price: 4400 }] },
-                                { id: 2, name: 'Елена Петрова', phone: '+7 999 222-33-44', locations: ['pole'], subscriptions: [{ type: 'pole', left: 8, expires: '2026-10-31', price: 3800 }] }
-                            ];
-                            this.syncToFirebase();
+                            this.finances = data.finances || 0;
                         }
                     });
                 },
@@ -207,7 +230,8 @@
                 syncToFirebase() {
                     db.collection('appData').doc('main').set({
                         clients: this.clients,
-                        attendance: this.attendance
+                        attendance: this.attendance,
+                        finances: this.finances
                     });
                 },
 
@@ -238,7 +262,24 @@
                 markAttendance(clientId, status) {
                     if (!this.attendance[this.selectedDate]) this.attendance[this.selectedDate] = {};
                     this.attendance[this.selectedDate][clientId] = status;
+                    if(status === 'razov') this.finances += 500;
                     this.syncToFirebase();
+                },
+                getClientAttendanceHistory(clientId) {
+                    let history = [];
+                    for (let date in this.attendance) {
+                        if (this.attendance[date][clientId]) {
+                            let status = this.attendance[date][clientId];
+                            let statusText = '';
+                            let badgeClass = '';
+                            if (status === 'attended') { statusText = 'Был'; badgeClass = 'bg-emerald-600/20 text-emerald-400'; }
+                            else if (status === 'razov') { statusText = 'Разовое'; badgeClass = 'bg-blue-600/20 text-blue-400'; }
+                            else if (status === 'missed') { statusText = 'Сгорело'; badgeClass = 'bg-rose-600/20 text-rose-400'; }
+                            else if (status === 'excused') { statusText = 'Уваж.'; badgeClass = 'bg-amber-600/20 text-amber-400'; }
+                            history.push({ date: date, text: statusText, badgeClass: badgeClass });
+                        }
+                    }
+                    return history.sort((a, b) => new Date(b.date) - new Date(a.date));
                 },
                 openClientModal() {
                     this.editingClient = null;
@@ -261,7 +302,10 @@
                     this.syncToFirebase();
                     this.showClientModal = false;
                 },
-                openSubModal(client) { alert('Продажа абонемента'); }
+                openSubModal(client) { alert('Продажа абонемента'); },
+                getMonthIncome() { return this.finances; },
+                getMonthRent() { return 10000; },
+                getMonthProfit() { return this.getMonthIncome() - this.getMonthRent(); }
             }
         }
     </script>
