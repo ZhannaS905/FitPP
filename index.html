@@ -380,40 +380,23 @@
                     }
                 },
                 async loadFromFirebase() {
-                    if (!this.currentUser) return;
-                    try {
-                        const doc = await db.collection('trainers').doc(this.currentUser.uid).get();
-                        if (doc.exists) {
-                            const data = doc.data();
-                            if (this.clients.length > 0 || Object.keys(this.attendance).length > 0 || Object.keys(this.finances).length > 0) {
-                                await this.syncToFirebase();
-                            } else {
-                                this.clients = data.clients || [];
-                                this.attendance = data.attendance || {};
-                                this.finances = data.finances || {};
-                            }
-                        } else {
-                            if (this.clients.length > 0 || Object.keys(this.attendance).length > 0 || Object.keys(this.finances).length > 0) {
-                                await this.syncToFirebase();
-                            }
-                        }
-                    if (!this.currentUser) return;
-                    try {
-                        const doc = await db.collection('trainers').doc(this.currentUser.uid).get();
-                        if (doc.exists) {
-                            const data = doc.data();
-                            this.clients = data.clients || [];
-                            this.attendance = data.attendance || {};
-                            this.finances = data.finances || {};
-                        } else {
-                            this.clients = [];
-                            this.attendance = {};
-                            this.finances = {};
-                        }
-                    } catch (error) {
-                        console.error("Ошибка загрузки из Firebase:", error);
-                    }
-                },
+    if (!this.currentUser) return;
+    try {
+        const doc = await db.collection('trainers').doc(this.currentUser.uid).get();
+        if (doc.exists) {
+            const data = doc.data();
+            this.clients = data.clients || [];
+            this.attendance = data.attendance || {};
+            this.finances = data.finances || {};
+        } else {
+            this.clients = [];
+            this.attendance = {};
+            this.finances = {};
+        }
+    } catch (error) {
+        console.error("Ошибка загрузки из Firebase:", error);
+    }
+},
                 async logout() {
                     try {
                         await firebase.auth().signOut();
@@ -426,20 +409,17 @@
                     }
                 },
                 async handleAuth() {
-                    this.authError = '';
-                    try {
-                        if (this.authMode === 'login') {
-                            await firebase.auth().signInWithEmailAndPassword(this.authForm.email, this.authForm.password);
-                        } else {
-                            await firebase.auth().createUserWithEmailAndPassword(this.authForm.email, this.authForm.password);
-                        }
-                        this.showAuthModal = false;
-                        this.authForm = { email: '', password: '' };
-                    } catch (error) {
-                        console.error("Ошибка авторизации:", error);
-                        this.authError = error.message;
-                    }
-                },
+    this.authError = '';
+    try {
+        // Оставляем только вход по email и паролю
+        await firebase.auth().signInWithEmailAndPassword(this.authForm.email, this.authForm.password);
+        this.showAuthModal = false;
+        this.authForm = { email: '', password: '' };
+    } catch (error) {
+        console.error("Ошибка авторизации:", error);
+        this.authError = error.message;
+    }
+},
                 markAttendance(clientId, status) {
                     if (!this.attendance[this.selectedDate]) this.attendance[this.selectedDate] = {};
                     let client = this.clients.find(c => c.id === clientId);
@@ -472,7 +452,8 @@
                     this.clients = [...this.clients];
                     this.attendance = { ...this.attendance };
                     this.finances = { ...this.finances };
-                    this.syncToFirebase();
+    this.syncToFirebase();
+},
                 getClientAttendanceHistory(clientId) {
                     let history = [];
                     for (let date in this.attendance) {
