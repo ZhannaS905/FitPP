@@ -527,8 +527,7 @@
                 changeMonth(dir) {
                     let [y, m] = this.currentMonth.split('-').map(Number);
                     let d = new Date(y, m - 1 + dir, 1);
-                    this.currentMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, &apos;0&apos;)}`;
-                },
+this.currentMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;                },
                 formatMonthName(monthStr) {
                     let [y, m] = monthStr.split('-');
                     let months = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
