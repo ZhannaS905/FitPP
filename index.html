@@ -11,8 +11,8 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Firebase SDKs -->
-    <script src="<unsafe_url>https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js</unsafe_url>"></script>
-    <script src="<unsafe_url>https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js</unsafe_url>"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
@@ -42,7 +42,7 @@
                         <button @click="changeDate(-1)" class="p-2 bg-slate-700 hover:bg-slate-600 rounded-xl transition">❮</button>
                         <div class="text-center">
                             <span class="text-xs text-slate-400 block">Дата тренировки</span>
-                            <input type="date" x-model="selectedDate" @change="loadDayData()" class="bg-slate-900 border border-slate-600 text-white px-3 py-1 rounded-lg text-sm font-semibold focus:outline-none focus:border-emerald-500">
+                            <input type="date" x-model="selectedDate" @change="updateLocationByDate()" class="bg-slate-900 border border-slate-600 text-white px-3 py-1 rounded-lg text-sm font-semibold focus:outline-none focus:border-emerald-500">
                         </div>
                         <button @click="changeDate(1)" class="p-2 bg-slate-700 hover:bg-slate-600 rounded-xl transition">❯</button>
                     </div>
@@ -249,6 +249,13 @@
                             if (data.clients) this.clients = data.clients;
                             if (data.attendance) this.attendance = data.attendance;
                             if (data.finances) this.finances = data.finances;
+                        } else {
+                            // Тестовые данные, если база пуста
+                            this.clients = [
+                                { id: 1, name: 'Анна Смирнова', phone: '+7 999 111-22-33', locations: ['zarya'], subscriptions: [{ type: 'zarya', left: 8, expires: '2026-11-15', price: 4400 }] },
+                                { id: 2, name: 'Елена Петрова', phone: '+7 999 222-33-44', locations: ['pole'], subscriptions: [{ type: 'pole', left: 8, expires: '2026-10-31', price: 3800 }] }
+                            ];
+                            this.syncToFirebase();
                         }
                     });
                 },
