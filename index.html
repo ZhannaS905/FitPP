@@ -422,7 +422,7 @@
 },
                 markAttendance(clientId, status) {
                     if (!this.attendance[this.selectedDate]) this.attendance[this.selectedDate] = {};
-                    let client = this.clients.find(c => c.id === clientId);
+                    let client = this.clients.find(c => <unsafe_url>c.id</unsafe_url> === clientId);
                     if (!client) return;
                     let sub = this.getClientActiveSubscription(client);
                     let prevStatus = this.attendance[this.selectedDate][clientId];
@@ -452,7 +452,8 @@
                     this.clients = [...this.clients];
                     this.attendance = { ...this.attendance };
                     this.finances = { ...this.finances };
-    this.syncToFirebase();
+                    this.syncToFirebase();
+                },
 
                 getClientAttendanceHistory(clientId) {
                     let history = [];
