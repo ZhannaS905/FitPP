@@ -10,6 +10,9 @@
     <link rel="apple-touch-icon" href="icon-192.png">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Firebase SDKs -->
+    <script src="<unsafe_url>https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js</unsafe_url>"></script>
+    <script src="<unsafe_url>https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js</unsafe_url>"></script>
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
@@ -74,7 +77,7 @@
                     <span class="text-xs bg-slate-700 px-3 py-1 rounded-full text-slate-300" x-text="getClientsForLocation().length + ' клиентов'"></span>
                 </div>
                 <div class="space-y-3">
-                    <template x-for="client in getClientsForLocation()" :key="client.id">
+                    <template x-for="client in getClientsForLocation()" :key="<unsafe_url>client.id</unsafe_url>">
                         <div class="bg-slate-900 border border-slate-700/60 p-3.5 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                             <div>
                                 <h3 class="font-semibold text-white" x-text="client.name"></h3>
@@ -84,10 +87,10 @@
                                 </div>
                             </div>
                             <div class="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
-                                <button @click="markAttendance(client.id, 'attended')" :class="getAttendanceStatus(client.id) === 'attended' ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'" class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition">✓ Был (-1)</button>
-                                <button @click="markAttendance(client.id, 'razov')" :class="getAttendanceStatus(client.id) === 'razov' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'" class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition" x-text="'₽ Разово (' + getRazovPrice() + ')'"></button>
-                                <button @click="markAttendance(client.id, 'missed')" :class="getAttendanceStatus(client.id) === 'missed' ? 'bg-rose-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'" class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition">Сгорело</button>
-                                <button @click="markAttendance(client.id, 'excused')" :class="getAttendanceStatus(client.id) === 'excused' ? 'bg-amber-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'" class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition">Уваж.</button>
+                                <button @click="markAttendance(<unsafe_url>client.id</unsafe_url>, 'attended')" :class="getAttendanceStatus(<unsafe_url>client.id</unsafe_url>) === 'attended' ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'" class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition">✓ Был (-1)</button>
+                                <button @click="markAttendance(<unsafe_url>client.id</unsafe_url>, 'razov')" :class="getAttendanceStatus(<unsafe_url>client.id</unsafe_url>) === 'razov' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'" class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition" x-text="'₽ Разово (' + getRazovPrice() + ')'"></button>
+                                <button @click="markAttendance(<unsafe_url>client.id</unsafe_url>, 'missed')" :class="getAttendanceStatus(<unsafe_url>client.id</unsafe_url>) === 'missed' ? 'bg-rose-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'" class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition">Сгорело</button>
+                                <button @click="markAttendance(<unsafe_url>client.id</unsafe_url>, 'excused')" :class="getAttendanceStatus(<unsafe_url>client.id</unsafe_url>) === 'excused' ? 'bg-amber-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'" class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition">Уваж.</button>
                             </div>
                         </div>
                     </template>
@@ -104,13 +107,13 @@
                 <button @click="openClientModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-semibold transition">+ Новый клиент</button>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <template x-for="client in clients" :key="client.id">
+                <template x-for="client in clients" :key="<unsafe_url>client.id</unsafe_url>">
                     <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg flex flex-col justify-between">
                         <div>
                             <div class="flex justify-between items-start">
                                 <h3 class="font-bold text-white text-base" x-text="client.name"></h3>
                                 <button @click="editClient(client)" class="text-slate-400 hover:text-white text-xs bg-slate-700 px-2 py-1 rounded-lg">Изменить</button>
-                                <button @click="deleteClient(client.id)" class="text-rose-400 hover:text-rose-300 text-xs bg-slate-700/60 hover:bg-slate-700 px-2 py-1 rounded-lg transition ml-1.5">Удалить</button>
+                                <button @click="deleteClient(<unsafe_url>client.id</unsafe_url>)" class="text-rose-400 hover:text-rose-300 text-xs bg-slate-700/60 hover:bg-slate-700 px-2 py-1 rounded-lg transition ml-1.5">Удалить</button>
                             </div>
                             <p class="text-xs text-slate-400 mt-1" x-text="'Телефон: ' + (client.phone || 'не указан')"></p>
                             <div class="mt-2 flex flex-wrap gap-1">
@@ -142,14 +145,6 @@
                         <button @click="changeMonth(1)" class="text-slate-400 hover:text-white">❯</button>
                     </div>
                 </div>
-                <!-- Backup & Restore Buttons -->
-                <div class="flex flex-wrap gap-2 pt-2 border-t border-slate-700/60">
-                    <button @click="exportData()" class="bg-slate-700 hover:bg-slate-600 text-xs px-3 py-2 rounded-xl text-slate-200 transition font-medium flex items-center gap-1.5">📥 Экспорт JSON</button>
-                    <label class="bg-slate-700 hover:bg-slate-600 text-xs px-3 py-2 rounded-xl text-slate-200 transition font-medium cursor-pointer flex items-center gap-1.5">
-                        📤 Импорт JSON
-                        <input type="file" @change="importData($event)" accept=".json" class="hidden">
-                    </label>
-                </div>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
                     <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl">
                         <span class="text-xs text-slate-400 block">Доходы (Абонементы + Разовые)</span>
@@ -163,11 +158,6 @@
                         <span class="text-xs text-slate-400 block">Чистая прибыль</span>
                         <span class="text-xl font-bold text-teal-300 mt-1 block" x-text="getMonthProfit() + ' ₽'"></span>
                     </div>
-                </div>
-                <div class="bg-slate-900/50 border border-slate-700/60 p-4 rounded-xl text-xs text-slate-400 space-y-1">
-                    <p>• <strong>мкр. Заря:</strong> аренда 800 ₽ / тренировка (в сентябре расчет с 7 числа).</p>
-                    <p>• <strong>Поле чудес:</strong> аренда 600 ₽ / тренировка (списывается автоматически 1-го числа).</p>
-                    <p>• Абонементы: Заря (4400 ₽ за 8 зан. / 28 дней), Поле чудес (3800 ₽ за 8 зан. / календарный месяц), Онлайн (разовое 500 ₽).</p>
                 </div>
             </div>
         </div>
@@ -192,28 +182,6 @@
                     <label class="flex items-center space-x-2 text-sm"><input type="checkbox" value="online" x-model="clientForm.locations" class="rounded bg-slate-900 border-slate-600 text-emerald-600"><span>Онлайн тренировки</span></label>
                 </div>
             </div>
-            <!-- История посещений в модальном окне редактирования -->
-            <template x-if="editingClient">
-                <div class="pt-3 border-t border-slate-700/60">
-                    <label class="text-xs text-slate-400 block mb-2">История посещений:</label>
-                    <div class="max-h-40 overflow-y-auto space-y-1.5 pr-1">
-                        <template x-for="item in getClientAttendanceHistory(editingClient.id)">
-                            <div class="flex justify-between items-center bg-slate-900 border border-slate-700/60 px-3 py-1.5 rounded-xl text-xs">
-                                <span class="text-slate-300 font-medium" x-text="item.date"></span>
-                                <span class="border px-2 py-0.5 rounded-lg" :class="item.badgeClass" x-text="item.text"></span>
-                            </div>
-                        </template>
-                        <div x-show="getClientAttendanceHistory(editingClient ? editingClient.id : null).length === 0" class="text-xs text-slate-500 text-center py-2">
-                            История посещений пока пуста
-                        </div>
-                    </div>
-                </div>
-            </template>
-            <template x-if="editingClient">
-                <div class="pt-2">
-                    <button @click="deleteClient(editingClient.id)" class="w-full text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 px-4 py-2 rounded-xl text-xs font-medium transition">🗑 Удалить клиента</button>
-                </div>
-            </template>
             <div class="flex justify-end space-x-3 pt-2">
                 <button @click="showClientModal = false" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl text-sm font-medium transition">Отмена</button>
                 <button @click="saveClient()" class="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-xl text-sm font-semibold transition">Сохранить</button>
@@ -229,7 +197,7 @@
                 <label class="text-xs text-slate-400 block mb-1">Тип абонемента / тариф</label>
                 <select x-model="subForm.type" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
                     <option value="zarya">мкр. Заря (8 занятий, 28 дней) — 4400 ₽</option>
-<option value="pole">Поле чудес (8 занятий, 28 дней) — 3800 ₽</option>
+                    <option value="pole">Поле чудес (8 занятий, 28 дней) — 3800 ₽</option>
                 </select>
             </div>
             <div>
@@ -243,280 +211,206 @@
         </div>
     </div>
     <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyD29YmR0LiS-YaV2GZ2c5tXM8t1ibNhJKk",
+            authDomain: "<unsafe_url>fitpp-crm.firebaseapp.com</unsafe_url>",
+            projectId: "fitpp-crm",
+            storageBucket: "fitpp-crm.firebasestorage.app",
+            messagingSenderId: "1075119383188",
+            appId: "1:1075119383188:web:21494fbfc98b331b92ca81"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
         function trainerApp() {
             return {
                 activeTab: 'journal',
                 selectedDate: new Date().toISOString().slice(0, 10),
                 currentLocation: 'zarya',
                 currentMonth: new Date().toISOString().slice(0, 7),
-                clients: JSON.parse(localStorage.getItem('fitpp_clients')) || [
-                { id: 1, name: 'Анна Смирнова', phone: '+7 999 111-22-33', locations: ['zarya'], subscriptions: [{ type: 'zarya', left: 8, expires: '2026-11-15', price: 4400 }] },
-                { id: 2, name: 'Елена Петрова', phone: '+7 999 222-33-44', locations: ['pole'], subscriptions: [{ type: 'pole', left: 8, expires: '2026-10-31', price: 3800 }] }
-            ],
-            attendance: JSON.parse(localStorage.getItem('fitpp_attendance')) || {},
-            finances: JSON.parse(localStorage.getItem('fitpp_finances')) || {},
-            showClientModal: false,
-            editingClient: null,
-            clientForm: { id: null, name: '', phone: '', locations: ['zarya'] },
-            showSubModal: false,
-            subClient: null,
-            subForm: { type: 'zarya', startDate: new Date().toISOString().slice(0, 10) },
-            init() {
-                this.updateLocationByDate();
-            },
-            setToday() {
-                this.selectedDate = new Date().toISOString().slice(0, 10);
-                this.updateLocationByDate();
-            },
-            changeDate(days) {
-                let d = new Date(this.selectedDate);
-                d.setDate(d.getDate() + days);
-                this.selectedDate = d.toISOString().slice(0, 10);
-                this.updateLocationByDate();
-            },
-            updateLocationByDate() {
-                let day = new Date(this.selectedDate).getDay();
-                if (day === 1 || day === 3) this.currentLocation = 'zarya'; // Пн, Ср
-                else if (day === 2 || day === 4) this.currentLocation = 'pole'; // Вт, Чт
-                else if (day === 6 || day === 0) this.currentLocation = 'online'; // Сб, Вс
-            },
-            getLocationTitle() {
-                if (this.currentLocation === 'zarya') return 'Журнал: мкр. Заря';
-                if (this.currentLocation === 'pole') return 'Журнал: Поле чудес (зал)';
-                return 'Журнал: Онлайн тренировки';
-            },
-            getLocationSchedule() {
-                if (this.currentLocation === 'zarya') return 'Понедельник, Среда 20:00';
-                if (this.currentLocation === 'pole') return 'Вторник, Четверг 18:30';
-                return 'Суббота, Воскресенье 18:00';
-            },
-            getLocationName(loc) {
-                if (loc === 'zarya') return 'Заря';
-                if (loc === 'pole') return 'Поле чудес';
-                return 'Онлайн';
-            },
-            getClientsForLocation() {
-                return this.clients.filter(c => c.locations.includes(this.currentLocation));
-            },
-            getClientActiveSubscription(client) {
-                if (!client.subscriptions || client.subscriptions.length === 0) return { left: 0, expires: 'нет' };
-                return client.subscriptions[client.subscriptions.length - 1];
-            },
-            getClientSubInfo(client) {
-                let sub = this.getClientActiveSubscription(client);
-                return sub.left > 0 ? `${sub.left} зан. (до ${sub.expires})` : 'Нет абонемента';
-            },
-            getRazovPrice() {
-                if (this.currentLocation === 'zarya') return '700 ₽';
-                if (this.currentLocation === 'pole') return '600 ₽';
-                return '500 ₽';
-            },
-            getAttendanceStatus(clientId) {
-                if (!this.attendance[this.selectedDate]) return null;
-                return this.attendance[this.selectedDate][clientId] || null;
-            },
-            getClientAttendanceHistory(clientId) {
-                let history = [];
-                for (let date in this.attendance) {
-                    if (this.attendance[date][clientId]) {
-                        let status = this.attendance[date][clientId];
-                        let statusText = '';
-                        let badgeClass = '';
-                        
-                        if (status === 'attended') {
-                            statusText = 'Был (-1 зан.)';
-                            badgeClass = 'bg-emerald-600/20 text-emerald-400 border-emerald-500/30';
-                        } else if (status === 'razov') {
-                            statusText = 'Разовое посещение';
-                            badgeClass = 'bg-blue-600/20 text-blue-400 border-blue-500/30';
-                        } else if (status === 'missed') {
-                            statusText = 'Сгорело занятие';
-                            badgeClass = 'bg-rose-600/20 text-rose-400 border-rose-500/30';
-                        } else if (status === 'excused') {
-                            statusText = 'Уважительная причина';
-                            badgeClass = 'bg-amber-600/20 text-amber-400 border-amber-500/30';
+                clients: [],
+                attendance: {},
+                finances: {},
+                showClientModal: false,
+                editingClient: null,
+                clientForm: { id: null, name: '', phone: '', locations: ['zarya'] },
+                showSubModal: false,
+                subClient: null,
+                subForm: { type: 'zarya', startDate: new Date().toISOString().slice(0, 10) },
+                
+                init() {
+                    this.updateLocationByDate();
+                    this.loadFromFirebase();
+                },
+                loadFromFirebase() {
+                    db.collection('appData').doc('main').onSnapshot((doc) => {
+                        if (doc.exists) {
+                            const data = doc.data();
+                            if (data.clients) this.clients = data.clients;
+                            if (data.attendance) this.attendance = data.attendance;
+                            if (data.finances) this.finances = data.finances;
                         }
-                        
-                        history.push({ date: date, text: statusText, badgeClass: badgeClass });
-                    }
-                }
-                return history.sort((a, b) => new Date(b.date) - new Date(a.date));
-            },
-            markAttendance(clientId, status) {
-                if (!this.attendance[this.selectedDate]) {
-                    this.attendance[this.selectedDate] = {};
-                }
-                let prevStatus = this.attendance[this.selectedDate][clientId];
-                let client = this.clients.find(c => c.id === clientId);
-                let activeSub = client.subscriptions && client.subscriptions.length > 0 
-                    ? client.subscriptions[client.subscriptions.length - 1] 
-                    : null;
-                if (prevStatus === status) {
-                    this.attendance[this.selectedDate][clientId] = null;
-                    if (prevStatus === 'attended' && activeSub) {
-                        activeSub.left++;
-                    }
-                } else {
-                    if (prevStatus === 'attended' && activeSub) {
-                        activeSub.left++;
-                    }
+                    });
+                },
+                syncToFirebase() {
+                    db.collection('appData').doc('main').set({
+                        clients: this.clients,
+                        attendance: this.attendance,
+                        finances: this.finances
+                    });
+                },
+                setToday() {
+                    this.selectedDate = new Date().toISOString().slice(0, 10);
+                    this.updateLocationByDate();
+                },
+                changeDate(days) {
+                    let d = new Date(this.selectedDate);
+                    d.setDate(d.getDate() + days);
+                    this.selectedDate = d.toISOString().slice(0, 10);
+                    this.updateLocationByDate();
+                },
+                updateLocationByDate() {
+                    let day = new Date(this.selectedDate).getDay();
+                    if (day === 1 || day === 3) this.currentLocation = 'zarya';
+                    else if (day === 2 || day === 4) this.currentLocation = 'pole';
+                    else if (day === 6 || day === 0) this.currentLocation = 'online';
+                },
+                getLocationTitle() {
+                    if (this.currentLocation === 'zarya') return 'Журнал: мкр. Заря';
+                    if (this.currentLocation === 'pole') return 'Журнал: Поле чудес (зал)';
+                    return 'Журнал: Онлайн тренировки';
+                },
+                getLocationSchedule() {
+                    if (this.currentLocation === 'zarya') return 'Понедельник, Среда 20:00';
+                    if (this.currentLocation === 'pole') return 'Вторник, Четверг 18:30';
+                    return 'Суббота, Воскресенье 18:00';
+                },
+                getLocationName(loc) {
+                    if (loc === 'zarya') return 'Заря';
+                    if (loc === 'pole') return 'Поле чудес';
+                    return 'Онлайн';
+                },
+                getClientsForLocation() {
+                    return this.clients.filter(c => c.locations.includes(this.currentLocation));
+                },
+                getClientActiveSubscription(client) {
+                    if (!client.subscriptions || client.subscriptions.length === 0) return { left: 0, expires: 'нет' };
+                    return client.subscriptions[client.subscriptions.length - 1];
+                },
+                getClientSubInfo(client) {
+                    let sub = this.getClientActiveSubscription(client);
+                    return sub.left > 0 ? `${sub.left} зан. (до ${sub.expires})` : 'Нет абонемента';
+                },
+                getRazovPrice() {
+                    if (this.currentLocation === 'zarya') return '700 ₽';
+                    if (this.currentLocation === 'pole') return '600 ₽';
+                    return '500 ₽';
+                },
+                getAttendanceStatus(clientId) {
+                    if (!this.attendance[this.selectedDate]) return null;
+                    return this.attendance[this.selectedDate][clientId] || null;
+                },
+                markAttendance(clientId, status) {
+                    if (!this.attendance[this.selectedDate]) this.attendance[this.selectedDate] = {};
+                    let prevStatus = this.attendance[this.selectedDate][clientId];
+                    let client = this.clients.find(c => <unsafe_url>c.id</unsafe_url> === clientId);
+                    let activeSub = client.subscriptions && client.subscriptions.length > 0 ? client.subscriptions[client.subscriptions.length - 1] : null;
                     
-                    this.attendance[this.selectedDate][clientId] = status;
-                    if (status === 'attended') {
-                        if (activeSub && activeSub.left > 0) {
-                            activeSub.left--;
-                        } else {
-                            alert('У клиента нет активных занятий в абонементе!');
+                    if (prevStatus === status) {
+                        this.attendance[this.selectedDate][clientId] = null;
+                        if (prevStatus === 'attended' && activeSub) activeSub.left++;
+                    } else {
+                        if (prevStatus === 'attended' && activeSub) activeSub.left++;
+                        this.attendance[this.selectedDate][clientId] = status;
+                        if (status === 'attended') {
+                            if (activeSub && activeSub.left > 0) activeSub.left--;
+                            else alert('У клиента нет активных занятий в абонементе!');
+                        }
+                        if (status === 'razov') {
+                            let amount = this.currentLocation === 'zarya' ? 700 : (this.currentLocation === 'pole' ? 600 : 500);
+                            this.addFinanceRecord(amount, `Разовое посещение: ${client.name}`);
                         }
                     }
-                    if (status === 'razov') {
-                        let amount = this.currentLocation === 'zarya' ? 700 : (this.currentLocation === 'pole' ? 600 : 500);
-                        this.addFinanceRecord(amount, `Разовое посещение: ${client.name}`);
+                    this.syncToFirebase();
+                },
+                openClientModal() {
+                    this.editingClient = null;
+                    this.clientForm = { id: Date.now(), name: '', phone: '', locations: [this.currentLocation] };
+                    this.showClientModal = true;
+                },
+                editClient(client) {
+                    this.editingClient = client;
+                    this.clientForm = JSON.parse(JSON.stringify(client));
+                    this.showClientModal = true;
+                },
+                saveClient() {
+                    if (!this.clientForm.name.trim()) return;
+                    if (this.editingClient) {
+                        let idx = this.clients.findIndex(c => <unsafe_url>c.id</unsafe_url> === <unsafe_url>this.editingClient.id</unsafe_url>);
+                        if (idx !== -1) this.clients[idx] = JSON.parse(JSON.stringify(this.clientForm));
+                    } else {
+                        this.clientForm.subscriptions = [];
+                        this.clients.push(JSON.parse(JSON.stringify(this.clientForm)));
                     }
-                }
-                localStorage.setItem('fitpp_attendance', JSON.stringify(this.attendance));
-                localStorage.setItem('fitpp_clients', JSON.stringify(this.clients));
-            },
-            openClientModal() {
-                this.editingClient = null;
-                this.clientForm = { id: Date.now(), name: '', phone: '', locations: [this.currentLocation] };
-                this.showClientModal = true;
-            },
-            editClient(client) {
-                this.editingClient = client;
-                this.clientForm = JSON.parse(JSON.stringify(client));
-                this.showClientModal = true;
-            },
-            saveClient() {
-                if (!this.clientForm.name.trim()) return;
-                if (this.editingClient) {
-                    let idx = this.clients.findIndex(c => c.id === this.editingClient.id);
-                    if (idx !== -1) this.clients[idx] = JSON.parse(JSON.stringify(this.clientForm));
-                } else {
-                    this.clientForm.subscriptions = [];
-                    this.clients.push(JSON.parse(JSON.stringify(this.clientForm)));
-                }
-                localStorage.setItem('fitpp_clients', JSON.stringify(this.clients));
-                this.showClientModal = false;
-            },
-            deleteClient(id) {
-                if (!confirm('Вы уверены, что хотите удалить клиента?')) return;
-                this.clients = this.clients.filter(c => c.id !== id);
-                localStorage.setItem('fitpp_clients', JSON.stringify(this.clients));
-                this.showClientModal = false;
-            },
-            deleteSubscription(client) {
-                if (!confirm('Вы уверены, что хотите удалить абонемент?')) return;
-                client.subscriptions = [];
-                localStorage.setItem('fitpp_clients', JSON.stringify(this.clients));
-            },
-            openSubModal(client) {
-                this.subClient = client;
-                this.subForm = { type: client.locations[0] || 'zarya', startDate: new Date().toISOString().slice(0, 10) };
-                this.showSubModal = true;
-            },
-            saveSubscription() {
+                    this.syncToFirebase();
+                    this.showClientModal = false;
+                },
+                deleteClient(id) {
+                    if (!confirm('Вы уверены, что хотите удалить клиента?')) return;
+                    this.clients = this.clients.filter(c => <unsafe_url>c.id</unsafe_url> !== id);
+                    this.syncToFirebase();
+                    this.showClientModal = false;
+                },
+                deleteSubscription(client) {
+                    if (!confirm('Вы уверены, что хотите удалить абонемент?')) return;
+                    client.subscriptions = [];
+                    this.syncToFirebase();
+                },
+                openSubModal(client) {
+                    this.subClient = client;
+                    this.subForm = { type: client.locations[0] || 'zarya', startDate: new Date().toISOString().slice(0, 10) };
+                    this.showSubModal = true;
+                },
+                saveSubscription() {
                     if (!this.subClient) return;
                     let price = this.subForm.type === 'zarya' ? 4400 : 3800;
-                    
                     let startD = new Date(this.subForm.startDate);
-                    
-                    // Теперь для обоих абонементов прибавляем 28 дней
                     startD.setDate(startD.getDate() + 28);
                     let expires = startD.toISOString().slice(0, 10);
 
                     if (!this.subClient.subscriptions) this.subClient.subscriptions = [];
                     this.subClient.subscriptions.push({ type: this.subForm.type, left: 8, expires: expires, price: price });
                     
-                    localStorage.setItem('fitpp_clients', JSON.stringify(this.clients));
                     this.addFinanceRecord(price, `Абонемент: ${this.subClient.name}`);
+                    this.syncToFirebase();
                     this.showSubModal = false;
                 },
-            addFinanceRecord(amount, desc) {
-                let monthKey = this.selectedDate.slice(0, 7);
-                if (!this.finances[monthKey]) this.finances[monthKey] = { income: 0, items: [] };
-                this.finances[monthKey].income += amount;
-                this.finances[monthKey].items.push({ date: this.selectedDate, amount: amount, desc: desc });
-                localStorage.setItem('fitpp_finances', JSON.stringify(this.finances));
-            },
-            changeMonth(dir) {
-                let [y, m] = this.currentMonth.split('-').map(Number);
-                let d = new Date(y, m - 1 + dir, 1);
-                this.currentMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-            },
-            formatMonthName(monthStr) {
-                let [y, m] = monthStr.split('-');
-                let months = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
-                return `${months[Number(m)-1]} ${y} г.`;
-            },
-            getMonthIncome() {
-                return this.finances[this.currentMonth] ? this.finances[this.currentMonth].income : 0;
-            },
-            getMonthRent() {
-                if (this.currentMonth === '2026-09') {
-                    return 6400 + 4800;
-                }
-                if (this.currentMonth === '2026-10') {
-                    return 6800 + 5200;
-                }
-                return 10000;
-            },
-            getMonthProfit() {
-                return this.getMonthIncome() - this.getMonthRent();
-            },
-            exportData() {
-                const data = {
-                    clients: this.clients,
-                    attendance: this.attendance,
-                    finances: this.finances
-                };
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `fitpp_backup_${new Date().toISOString().slice(0, 10)}.json`;
-                a.click();
-                URL.revokeObjectURL(url);
-            },
-            importData(event) {
-                const file = event.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        const data = JSON.parse(e.target.result);
-                        if (data.clients) {
-                            this.clients = data.clients;
-                            localStorage.setItem('fitpp_clients', JSON.stringify(this.clients));
-                        }
-                        if (data.attendance) {
-                            this.attendance = data.attendance;
-                            localStorage.setItem('fitpp_attendance', JSON.stringify(this.attendance));
-                        }
-                        if (data.finances) {
-                            this.finances = data.finances;
-                            localStorage.setItem('fitpp_finances', JSON.stringify(this.finances));
-                        }
-                        alert('Данные успешно импортированы!');
-                    } catch (err) {
-                        alert('Ошибка при чтении файла JSON');
-                    }
-                };
-                reader.readAsText(file);
+                addFinanceRecord(amount, desc) {
+                    let monthKey = this.selectedDate.slice(0, 7);
+                    if (!this.finances[monthKey]) this.finances[monthKey] = { income: 0, items: [] };
+                    this.finances[monthKey].income += amount;
+                    this.finances[monthKey].items.push({ date: this.selectedDate, amount: amount, desc: desc });
+                },
+                changeMonth(dir) {
+                    let [y, m] = this.currentMonth.split('-').map(Number);
+                    let d = new Date(y, m - 1 + dir, 1);
+                    this.currentMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                },
+                formatMonthName(monthStr) {
+                    let [y, m] = monthStr.split('-');
+                    let months = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
+                    return `${months[Number(m)-1]} ${y} г.`;
+                },
+                getMonthIncome() { return this.finances[this.currentMonth] ? this.finances[this.currentMonth].income : 0; },
+                getMonthRent() { return 10000; },
+                getMonthProfit() { return this.getMonthIncome() - this.getMonthRent(); }
             }
         }
-    }
-</script>
+    </script>
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then((registration) => {
-              console.log('ServiceWorker успешно зарегистрирован');
-            })
-            .catch((error) => {
-              console.log('Ошибка регистрации ServiceWorker:', error);
-            });
+          navigator.serviceWorker.register('/sw.js');
         });
       }
     </script>
