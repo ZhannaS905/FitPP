@@ -21,7 +21,7 @@
     <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50">
         <div class="max-w-4xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
             <div class="flex items-center space-x-2">
-                <span class="text-2xl">🧘‍♀️</span>
+                <span class="text-2xl">🧘🏻‍♀️</span>
                 <h1 class="text-xl font-bold tracking-wide bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">FitPP</h1>
             </div>
             <nav class="flex space-x-1 sm:space-x-2">
@@ -42,7 +42,7 @@
                         <button @click="changeDate(-1)" class="p-2 bg-slate-700 hover:bg-slate-600 rounded-xl transition">❮</button>
                         <div class="text-center">
                             <span class="text-xs text-slate-400 block">Дата тренировки</span>
-                            <input type="date" x-model="selectedDate" class="bg-slate-900 border border-slate-600 text-white px-3 py-1 rounded-lg text-sm font-semibold focus:outline-none focus:border-emerald-500">
+                            <input type="date" x-model="selectedDate" @change="updateLocationByDate()" class="bg-slate-900 border border-slate-600 text-white px-3 py-1 rounded-lg text-sm font-semibold focus:outline-none focus:border-emerald-500">
                         </div>
                         <button @click="changeDate(1)" class="p-2 bg-slate-700 hover:bg-slate-600 rounded-xl transition">❯</button>
                     </div>
