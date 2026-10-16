@@ -319,7 +319,8 @@
                         this.currentUser = user;
                         if (user) {
                             this.loadFromFirebase();
-                        }                    });
+                        }
+                    });
                 },
                 async handleAuth() {
                     this.authError = '';
@@ -335,6 +336,7 @@
                         console.error("Ошибка авторизации:", error);
                         this.authError = error.message;
                     }
+                },
                 markAttendance(clientId, status) {
                     if (!this.attendance[this.selectedDate]) this.attendance[this.selectedDate] = {};
                     let client = this.clients.find(c => c.id === clientId);
