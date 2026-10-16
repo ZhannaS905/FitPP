@@ -229,7 +229,7 @@
                 <label class="text-xs text-slate-400 block mb-1">Тип абонемента / тариф</label>
                 <select x-model="subForm.type" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
                     <option value="zarya">мкр. Заря (8 занятий, 28 дней) — 4400 ₽</option>
-                    <option value="pole">Поле чудес (8 занятий, кал. месяц) — 3800 ₽</option>
+<option value="pole">Поле чудес (8 занятий, 28 дней) — 3800 ₽</option>
                 </select>
             </div>
             <div>
@@ -416,27 +416,22 @@
                 this.showSubModal = true;
             },
             saveSubscription() {
-                if (!this.subClient) return;
-                let price = this.subForm.type === 'zarya' ? 4400 : 3800;
-                let expires = '';
-                
-                let startD = new Date(this.subForm.startDate);
-                if (this.subForm.type === 'zarya') {
+                    if (!this.subClient) return;
+                    let price = this.subForm.type === 'zarya' ? 4400 : 3800;
+                    
+                    let startD = new Date(this.subForm.startDate);
+                    
+                    // Теперь для обоих абонементов прибавляем 28 дней
                     startD.setDate(startD.getDate() + 28);
-                    expires = startD.toISOString().slice(0, 10);
-                } else {
-                    let y = startD.getFullYear();
-                    let m = startD.getMonth() + 1;
-                    let lastDay = new Date(y, m, 0).getDate();
-                    expires = `${y}-${String(m).padStart(2, '0')}-${lastDay}`;
-                }
-                if (!this.subClient.subscriptions) this.subClient.subscriptions = [];
-                this.subClient.subscriptions.push({ type: this.subForm.type, left: 8, expires: expires, price: price });
-                
-                localStorage.setItem('fitpp_clients', JSON.stringify(this.clients));
-                this.addFinanceRecord(price, `Абонемент: ${this.subClient.name}`);
-                this.showSubModal = false;
-            },
+                    let expires = startD.toISOString().slice(0, 10);
+
+                    if (!this.subClient.subscriptions) this.subClient.subscriptions = [];
+                    this.subClient.subscriptions.push({ type: this.subForm.type, left: 8, expires: expires, price: price });
+                    
+                    localStorage.setItem('fitpp_clients', JSON.stringify(this.clients));
+                    this.addFinanceRecord(price, `Абонемент: ${this.subClient.name}`);
+                    this.showSubModal = false;
+                },
             addFinanceRecord(amount, desc) {
                 let monthKey = this.selectedDate.slice(0, 7);
                 if (!this.finances[monthKey]) this.finances[monthKey] = { income: 0, items: [] };
@@ -512,3 +507,18 @@
         }
     }
 </script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+              console.log('ServiceWorker успешно зарегистрирован');
+            })
+            .catch((error) => {
+              console.log('Ошибка регистрации ServiceWorker:', error);
+            });
+        });
+      }
+    </script>
+</body>
+</html>
