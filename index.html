@@ -171,13 +171,13 @@
                     </div>
                 </div>
             </div>
-        </div>
             <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg space-y-4">
                 <div class="flex justify-between items-center">
                     <h3 class="text-md font-bold text-rose-400">Опасная зона</h3>
                     <button @click="clearDatabase()" class="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-xl text-sm font-semibold transition">Сбросить базу данных</button>
                 </div>
             </div>
+        </div>
     </main>
 
     <!-- Client Modal -->
@@ -359,7 +359,7 @@
                     this.selectedDate = d.toISOString().slice(0, 10);
                     this.updateLocationByDate();
                 },
-                getLocationTitle() { let names = { zarya: 'мкр. Заря', pole: 'Поле чудес', online: 'Онлайн' }; return 'Журнал: ' + (names[this.currentLocation] || this.currentLocation); },
+                getLocationTitle() { let names = { zarya: 'мкр. Заря', pole: 'Поле чудес', online: 'Онлайн', none: 'Выходной' }; return 'Журнал: ' + (names[this.currentLocation] || this.currentLocation); },
                 getLocationSchedule() { return 'Расписание'; },
                 updateLocationByDate() {
                     let day = new Date(this.selectedDate).getDay();
