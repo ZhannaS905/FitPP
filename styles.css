@@ -614,3 +614,29 @@ header nav button {
 .summary > div {
   padding: 12px 9px;
 }
+
+/* Compact client list: readable metadata and 44px touch targets. */
+.client-grid { gap: 10px !important; }
+.client-tile { padding: 12px !important; }
+.client-tile-top { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; gap: 9px; }
+.client-tile .avatar { width: 36px; height: 36px; font-size: 14px; }
+.client-tile-identity { min-width: 0; }
+.client-tile .client-name { min-height: 44px; width: 100%; font-size: 15px; line-height: 1.3; display: flex; align-items: center; }
+.client-tile .client-name::after { margin-left: auto; padding-left: 6px; }
+.client-phone { margin: -2px 0 0; color: var(--muted); font-size: 13px; line-height: 1.4; overflow-wrap: anywhere; }
+.client-action { min-height: 44px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 12px; background: #102537; color: #c4dbea; font-size: 13px; line-height: 1.2; white-space: nowrap; }
+.client-action:hover { background: #19394b; }
+.client-tile-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px solid var(--border); margin-top: 8px; padding-top: 8px; }
+.client-subscription { display: flex; flex-wrap: wrap; gap: 2px 10px; min-width: 0; font-size: 13px; line-height: 1.5; }
+.client-balance { color: var(--green); font-weight: 600; }
+.client-expiry { color: var(--muted); }
+.client-sell { color: var(--green); background: #073329; border-color: #14634d; }
+@media (max-width: 767px) {
+  header nav { display: none !important; }
+  header > div { gap: 0 !important; padding: 10px 16px !important; }
+  header > div > div:last-child button { min-height: 44px; }
+}
+@media (min-width: 768px) {
+  .bottom-nav { display: none; }
+  main { padding-bottom: 32px !important; }
+}

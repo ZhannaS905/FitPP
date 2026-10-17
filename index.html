@@ -150,27 +150,23 @@
                 <button @click="openClientModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-semibold transition">+ Новый клиент</button>
             </div>
             <div x-show="clients.length === 0" class="empty-state"><strong>Ваша команда начинается здесь</strong>Добавьте первого клиента, чтобы вести журнал тренировок.</div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="client-grid grid grid-cols-1 md:grid-cols-2 gap-4">
                 <template x-for="client in clients" :key="client.id">
-                    <div class="client-tile bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg flex flex-col justify-between">
-                        <div>
-                            <div class="flex justify-between items-start">
-                                <div class="client-heading"><span class="avatar" aria-hidden="true" x-text="getInitials(client.name)"></span><button class="client-name" @click="openClientDetail(client)" x-text="client.name"></button></div>
-                                <button @click="editClient(client)" class="text-slate-400 hover:text-white text-xs bg-slate-700 px-2 py-1 rounded-lg">Изменить</button>
+                    <div class="client-tile bg-slate-800 border border-slate-700 rounded-2xl">
+                        <div class="client-tile-top">
+                            <span class="avatar" aria-hidden="true" x-text="getInitials(client.name)"></span>
+                            <div class="client-tile-identity">
+                                <button class="client-name" @click="openClientDetail(client)" x-text="client.name"></button>
+                                <p class="client-phone" x-text="client.phone || 'Телефон не указан'"></p>
                             </div>
-                            <p class="text-xs text-slate-400 mt-1" x-text="'Телефон: ' + (client.phone || 'не указан')"></p>
+                            <button class="client-action" @click="editClient(client)">Изменить</button>
                         </div>
-                        <div class="mt-4 pt-3 border-t border-slate-700/60 flex justify-between items-center">
-                            <div>
-                                <span class="text-xs text-slate-400 block">Абонемент:</span>
-<div class="flex items-center gap-1.5">
-    <span class="text-sm font-semibold text-emerald-400" x-text="getClientSubInfo(client)"></span>
-    <span x-show="(getClientActiveSubscription(client)?.left ?? 0) === 1" class="text-amber-400 text-xs font-semibold bg-amber-400/10 border border-amber-400/30 px-1.5 py-0.5 rounded flex items-center gap-1" title="Осталось 1 занятие">
-        ⚠️ 1 зан.
-    </span>
-</div>
+                        <div class="client-tile-footer">
+                            <div class="client-subscription">
+                                <span class="client-balance" x-text="'Остаток: ' + (getClientActiveSubscription(client)?.left ?? 0) + ' зан.'"></span>
+                                <span class="client-expiry" x-text="'До: ' + (getClientActiveSubscription(client)?.expires || '—')"></span>
                             </div>
-                            <button @click="openSubModal(client)" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-xl text-xs font-medium transition">+ Продать</button>
+                            <button class="client-action client-sell" @click="openSubModal(client)">+ Продать</button>
                         </div>
                     </div>
                 </template>
