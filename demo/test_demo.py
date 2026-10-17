@@ -67,6 +67,7 @@ async def main():
     await expect(page.locator('header nav')).to_be_hidden() if width < 768 else await expect(page.locator('header nav')).to_be_visible()
     assert await page.evaluate('document.documentElement.scrollWidth <= innerWidth'),(width,tab)
     if tab == 'Клиенты':
+     await expect(page.locator('.client-tile').first).to_be_visible()
      metrics = await page.locator('.client-tile').first.evaluate('''el => ({height:el.getBoundingClientRect().height,buttons:[...el.querySelectorAll('button')].map(b=>({h:b.getBoundingClientRect().height,font:parseFloat(getComputedStyle(b).fontSize)})),phone:el.querySelector('.client-phone').textContent,sub:el.querySelector('.client-subscription').textContent})''')
      assert all(b['h'] >= 44 and b['font'] >= 13 for b in metrics['buttons']),metrics
      assert 'Остаток:' in metrics['sub'] and 'До:' in metrics['sub'],metrics
