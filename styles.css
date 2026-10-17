@@ -663,3 +663,9 @@ header .desktop-nav { display: none !important; }
   .month-switcher { width: 260px; flex-shrink: 0; }
   .desktop-add { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; color: var(--green); font-size: 28px; }
 }
+
+button:disabled { opacity: .45; cursor: not-allowed; }
+.sync-message, .sync-status { position: fixed; left: 50%; transform: translateX(-50%); width: min(calc(100% - 24px), 700px); bottom: calc(90px + env(safe-area-inset-bottom)); z-index: 60; padding: 12px 14px; border-radius: 14px; border: 1px solid #a54c56; background: #391b27; color: #ffe0e4; font-size: 14px; box-shadow: 0 6px 24px #0008; }
+.sync-message button { min-height: 44px; display: block; color: #c8f9ea; text-decoration: underline; }
+.sync-status { pointer-events: none; width: auto; max-width: calc(100% - 24px); padding: 8px 12px; border-color: #14634d; background: #073329; color: #adffe1; font-size: 12px; }
+@media(min-width:768px) { .sync-message, .sync-status { bottom: 20px; } }

@@ -1,8 +1,9 @@
-const CACHE_NAME = "fitpp-cache-v5";
+const CACHE_NAME = "fitpp-cache-safe-v1";
 const ASSETS = [
   "/",
   "./index.html",
   "./styles.css",
+  "./persistence.js",
   "/manifest.json",
   "/icon-192.png",
   "/icon-512.png",
