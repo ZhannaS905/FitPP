@@ -3,13 +3,13 @@ import shutil
 import tempfile
 from pathlib import Path
 
-DEMO = Path(__file__).resolve().parent / "index.html"
+DEMO = Path(__file__).resolve().parent / "fitpp-demo-v3.html"
 SCREENSHOTS = Path(tempfile.mkdtemp(prefix="fitpp-demo-check-"))
 from playwright.async_api import async_playwright,expect
 async def main():
  async with async_playwright() as p:
   b=await p.chromium.launch(executable_path=shutil.which('chromium') or p.chromium.executable_path,args=['--no-sandbox'])
-  c=await b.new_context(viewport={'width':390,'height':844},offline=True)
+  c=await b.new_context(viewport={'width':390,'height':844},is_mobile=True,has_touch=True,offline=True)
   page=await c.new_page();errors=[];requests=[]
   page.on('pageerror',lambda e:errors.append(str(e)))
   page.on('request',lambda r:requests.append(r.url))
@@ -17,6 +17,10 @@ async def main():
   await page.goto('http://127.0.0.1:8001/')
   await page.wait_for_function('window.Alpine && Alpine.$data(document.body).clients.length === 6')
   await expect(page.locator('.client-row')).to_have_count(3)
+  await expect(page.locator('header .desktop-nav')).to_be_hidden()
+  assert await page.locator('header .desktop-nav').evaluate('e=>e.getBoundingClientRect().height') == 0
+  assert await page.locator('.bottom-nav button').count() == 4
+  assert await page.evaluate('parseFloat(getComputedStyle(document.querySelector("main")).paddingTop)') <= 12
   assert await page.evaluate('typeof firebase')=='undefined'
   row=page.locator('.client-row').first
   await row.get_by_role('button',name='✓ Был (-1)',exact=True).click()
