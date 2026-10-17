@@ -50,6 +50,7 @@
                 <button @click="activeTab = 'finances'" :class="activeTab === 'finances' ? 'bg-emerald-600 text-white' : 'text-slate-300 hover:bg-slate-700'" class="px-3 py-1.5 rounded-lg text-sm font-medium transition">Финансы</button>
             </nav>
             <div class="flex items-center space-x-2 pl-2 border-l border-slate-700">
+                <button class="desktop-add" @click="openClientModal()" aria-label="Добавить клиента">+</button>
                 <template x-if="currentUser">
                     <div class="flex items-center space-x-2">
                         <span class="text-xs text-slate-300 hidden sm:inline" x-text="currentUser.displayName || currentUser.email"></span>
@@ -144,11 +145,7 @@
             </div>
         </div>
         <!-- TAB 2: CLIENTS -->
-        <div x-show="activeTab === 'clients'" class="space-y-6">
-            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg flex justify-between items-center">
-                <h2 class="text-lg font-bold">База клиентов</h2>
-                <button @click="openClientModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-semibold transition">+ Новый клиент</button>
-            </div>
+        <div x-show="activeTab === 'clients'" class="client-list">
             <div x-show="clients.length === 0" class="empty-state"><strong>Ваша команда начинается здесь</strong>Добавьте первого клиента, чтобы вести журнал тренировок.</div>
             <div class="client-grid grid grid-cols-1 md:grid-cols-2 gap-4">
                 <template x-for="client in clients" :key="client.id">
@@ -175,12 +172,12 @@
         <!-- TAB 3: FINANCES -->
         <div x-show="activeTab === 'finances'" class="space-y-6">
             <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg space-y-4">
-                <div class="flex justify-between items-center">
+                <div class="finance-toolbar">
                     <h2 class="text-lg font-bold">Финансовый отчёт и аренда</h2>
-                    <div class="flex items-center space-x-2 bg-slate-900 border border-slate-700 px-3 py-1 rounded-xl">
-                        <button @click="changeMonth(-1)" class="text-slate-400 hover:text-white">❮</button>
+                    <div class="month-switcher bg-slate-900 border border-slate-700 rounded-xl" aria-label="Отчётный месяц">
+                        <button aria-label="Предыдущий месяц" @click="changeMonth(-1)" class="text-slate-400 hover:text-white">❮</button>
                         <span class="text-sm font-semibold text-emerald-400" x-text="formatMonthName(currentMonth)"></span>
-                        <button @click="changeMonth(1)" class="text-slate-400 hover:text-white">❯</button>
+                        <button aria-label="Следующий месяц" @click="changeMonth(1)" class="text-slate-400 hover:text-white">❯</button>
                     </div>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
@@ -196,12 +193,6 @@
                         <span class="text-xs text-slate-400 block">Чистая прибыль</span>
                         <span class="text-xl font-bold text-teal-300 mt-1 block" x-text="getMonthProfit() + ' ₽'"></span>
                     </div>
-                </div>
-            </div>
-            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg space-y-4">
-                <div class="flex justify-between items-center">
-                    <h3 class="text-md font-bold text-rose-400">Опасная зона</h3>
-                    <button @click="clearDatabase()" class="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-xl text-sm font-semibold transition">Сбросить базу данных</button>
                 </div>
             </div>
         </div>
