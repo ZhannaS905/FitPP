@@ -17,6 +17,164 @@
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>[x-cloak] { display: none !important; }</style>
+
+
+<style id="fitpp-refresh-v1">
+  :root {
+    color-scheme: dark;
+    --fitpp-bg: #07111f;
+    --fitpp-panel: #0d1b2a;
+    --fitpp-card: #0a1624;
+    --fitpp-border: #1d354a;
+    --fitpp-green: #19e6a0;
+    --fitpp-muted: #9db0c4;
+  }
+
+  body {
+    background:
+      radial-gradient(ellipse at 50% -18%, rgba(16,185,129,.13), transparent 42%),
+      var(--fitpp-bg) !important;
+  }
+
+  header {
+    background: rgba(8, 19, 32, .94) !important;
+    border-color: var(--fitpp-border) !important;
+    backdrop-filter: blur(14px);
+  }
+
+  header > div:first-child {
+    padding-top: .65rem !important;
+    padding-bottom: .65rem !important;
+    gap: .65rem !important;
+  }
+
+  header h1 {
+    letter-spacing: -.035em !important;
+    font-weight: 800 !important;
+  }
+
+  header nav button {
+    border-radius: 999px !important;
+    padding: .55rem .9rem !important;
+    transition: background .18s ease, transform .18s ease !important;
+  }
+
+  header nav button:active,
+  main button:active {
+    transform: scale(.98);
+  }
+
+  main {
+    padding-top: 1rem !important;
+  }
+
+  main .bg-slate-800.border {
+    background: linear-gradient(145deg, rgba(17, 34, 51, .98), rgba(11, 25, 40, .98)) !important;
+    border-color: var(--fitpp-border) !important;
+    box-shadow: 0 12px 28px rgba(0,0,0,.14) !important;
+  }
+
+  main .bg-slate-900.border {
+    background: linear-gradient(145deg, #0a1726, #0b1a2a) !important;
+    border-color: #1a3349 !important;
+  }
+
+  main .text-emerald-400 {
+    color: var(--fitpp-green) !important;
+  }
+
+  main .rounded-xl,
+  main .rounded-2xl {
+    border-radius: 1rem !important;
+  }
+
+  main button {
+    transition: background-color .18s ease, border-color .18s ease, transform .18s ease !important;
+  }
+
+ 
+  main button { -webkit-tap-highlight-color: transparent; }
+
+  @media (max-width: 640px) {
+    header > div:first-child {
+      display: grid !important;
+      grid-template-columns: 1fr auto;
+      justify-items: center;
+      padding: .45rem .75rem !important;
+    }
+
+    header > div:first-child > div:first-child {
+      justify-self: start;
+    }
+
+    header nav {
+      grid-column: 1 / -1;
+      grid-row: 2;
+      display: flex;
+      width: 100%;
+      justify-content: space-between;
+      gap: .25rem !important;
+    }
+
+    header nav button {
+      flex: 1;
+      padding: .55rem .35rem !important;
+      font-size: .82rem !important;
+      white-space: nowrap;
+    }
+
+    header > div:first-child > div:last-child {
+      border-left: 0 !important;
+      padding-left: 0 !important;
+      justify-self: end;
+    }
+
+    main {
+      padding: .85rem .75rem 5.5rem !important;
+    }
+
+    main > div {
+      gap: .85rem !important;
+    }
+
+    main .rounded-2xl.p-4 {
+      padding: .85rem !important;
+      border-radius: 1.1rem !important;
+    }
+
+    main .space-y-3 > div {
+      padding: .8rem !important;
+      gap: .65rem !important;
+      border-radius: 1rem !important;
+    }
+
+    main .space-y-3 > div > div:last-child {
+      gap: .4rem !important;
+    }
+
+    main .space-y-3 > div > div:last-child button {
+      padding: .55rem .65rem !important;
+      border-radius: .7rem !important;
+      font-size: .72rem !important;
+      line-height: 1.1rem !important;
+    }
+
+    main h2 {
+      letter-spacing: -.02em;
+    }
+
+    input[type="date"] {
+      max-width: 100%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      transition-duration: .01ms !important;
+      animation-duration: .01ms !important;
+    }
+  }
+</style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased" x-data="trainerApp()" x-init="init()">
     <!-- Header -->
