@@ -16,197 +16,33 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <style>[x-cloak] { display: none !important; }
-
-  body {
-    background-color: #07111f !important;
-  }
-
-  main > div > .bg-slate-800 {
-    background: linear-gradient(145deg, #102438, #0a1726) !important;
-    border: 1px solid #25445b !important;
-    border-radius: 18px !important;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22) !important;
-  }
-
-  main .bg-slate-900.border {
-    background-color: #0b1928 !important;
-    border-color: #25445b !important;
-  }
-</style>
 
 
-<style id="fitpp-refresh-v1">
-  :root {
-    color-scheme: dark;
-    --fitpp-bg: #07111f;
-    --fitpp-panel: #0d1b2a;
-    --fitpp-card: #0a1624;
-    --fitpp-border: #1d354a;
-    --fitpp-green: #19e6a0;
-    --fitpp-muted: #9db0c4;
-  }
 
-  body {
-    background:
-      radial-gradient(ellipse at 50% -18%, rgba(16,185,129,.13), transparent 42%),
-      var(--fitpp-bg) !important;
-  }
 
-  header {
-    background: rgba(8, 19, 32, .94) !important;
-    border-color: var(--fitpp-border) !important;
-    backdrop-filter: blur(14px);
-  }
-
-  header > div:first-child {
-    padding-top: .65rem !important;
-    padding-bottom: .65rem !important;
-    gap: .65rem !important;
-  }
-
-  header h1 {
-    letter-spacing: -.035em !important;
-    font-weight: 800 !important;
-  }
-
-  header nav button {
-    border-radius: 999px !important;
-    padding: .55rem .9rem !important;
-    transition: background .18s ease, transform .18s ease !important;
-  }
-
-  header nav button:active,
-  main button:active {
-    transform: scale(.98);
-  }
-
-  main {
-    padding-top: 1rem !important;
-  }
-
-  main .bg-slate-800.border {
-    background: linear-gradient(145deg, rgba(17, 34, 51, .98), rgba(11, 25, 40, .98)) !important;
-    border-color: var(--fitpp-border) !important;
-    box-shadow: 0 12px 28px rgba(0,0,0,.14) !important;
-  }
-
-  main .bg-slate-900.border {
-    background: linear-gradient(145deg, #0a1726, #0b1a2a) !important;
-    border-color: #1a3349 !important;
-  }
-
-  main .text-emerald-400 {
-    color: var(--fitpp-green) !important;
-  }
-
-  main .rounded-xl,
-  main .rounded-2xl {
-    border-radius: 1rem !important;
-  }
-
-  main button {
-    transition: background-color .18s ease, border-color .18s ease, transform .18s ease !important;
-  }
-
- 
-  main button { -webkit-tap-highlight-color: transparent; }
-
-  @media (max-width: 640px) {
-    header > div:first-child {
-      display: grid !important;
-      grid-template-columns: 1fr auto;
-      justify-items: center;
-      padding: .45rem .75rem !important;
-    }
-
-    header > div:first-child > div:first-child {
-      justify-self: start;
-    }
-
-    header nav {
-      grid-column: 1 / -1;
-      grid-row: 2;
-      display: flex;
-      width: 100%;
-      justify-content: space-between;
-      gap: .25rem !important;
-    }
-
-    header nav button {
-      flex: 1;
-      padding: .55rem .35rem !important;
-      font-size: .82rem !important;
-      white-space: nowrap;
-    }
-
-    header > div:first-child > div:last-child {
-      border-left: 0 !important;
-      padding-left: 0 !important;
-      justify-self: end;
-    }
-
-    main {
-      padding: .85rem .75rem 5.5rem !important;
-    }
-
-    main > div {
-      gap: .85rem !important;
-    }
-
-    main .rounded-2xl.p-4 {
-      padding: .85rem !important;
-      border-radius: 1.1rem !important;
-    }
-
-    main .space-y-3 > div {
-      padding: .8rem !important;
-      gap: .65rem !important;
-      border-radius: 1rem !important;
-    }
-
-    main .space-y-3 > div > div:last-child {
-      gap: .4rem !important;
-    }
-
-    main .space-y-3 > div > div:last-child button {
-      padding: .55rem .65rem !important;
-      border-radius: .7rem !important;
-      font-size: .72rem !important;
-      line-height: 1.1rem !important;
-    }
-
-    main h2 {
-      letter-spacing: -.02em;
-    }
-
-    input[type="date"] {
-      max-width: 100%;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-      transition-duration: .01ms !important;
-      animation-duration: .01ms !important;
-    }
-  }
-</style>
+<link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased" x-data="trainerApp()" x-init="init()">
+
+    <svg xmlns="http://www.w3.org/2000/svg" class="icon-sprite" aria-hidden="true"><defs>
+      <symbol id="icon-barbell" viewBox="0 0 24 24"><path d="M3 9v6m4-10v14m10-14v14m4-10v6M7 12h10"/></symbol>
+      <symbol id="icon-calendar" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="3"/><path d="M8 3v4m8-4v4M4 10h16m-12 4h1m3 0h1m3 0h1m-9 3h1m3 0h1"/></symbol>
+      <symbol id="icon-users" viewBox="0 0 24 24"><circle cx="10" cy="7" r="4"/><path d="M3 21v-3a7 7 0 0 1 14 0v3Zm15-17a4 4 0 0 1 0 8m2 3a6 6 0 0 1 2 6"/></symbol>
+      <symbol id="icon-wallet" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="4"/><path d="M3 9h18m-6 4h6m-6 4h2"/></symbol>
+    </defs></svg>
     <!-- Header -->
     <!-- Auth Banner -->
-    <div x-show="!currentUser" class="bg-amber-600/20 border-b border-amber-500/30 px-4 py-2.5 text-center text-sm flex justify-between items-center max-w-4xl mx-auto" x-cloak>
-        <span class="text-amber-200 font-medium">Вы не авторизованы. Войдите, чтобы сохранить или синхронизировать данные.</span>
+    <div x-show="!currentUser" class="auth-banner bg-amber-600/20 border-b border-amber-500/30 px-4 py-2.5 text-center text-sm flex justify-between items-center max-w-4xl mx-auto" x-cloak>
+        <span class="text-amber-200 font-medium">Войдите для сохранения и синхронизации данных</span>
         <button @click="showAuthModal = true" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow">
-            <span>Войти / Зарегистрироваться</span>
+            <span>Войти</span>
         </button>
     </div>
-    <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50">
+    <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-30">
         <div class="max-w-4xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
             <div class="flex items-center space-x-2">
                 <span class="text-2xl"></span>
-                <h1 class="text-xl font-bold tracking-wide bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">FitPP</h1>
+                <h1 class="text-xl font-bold tracking-wide bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent"><svg class="brand-icon" aria-hidden="true"><use href="#icon-barbell"/></svg>FitPP</h1>
             </div>
             <nav class="flex space-x-1 sm:space-x-2">
                 <button @click="activeTab = 'journal'" :class="activeTab === 'journal' ? 'bg-emerald-600 text-white' : 'text-slate-300 hover:bg-slate-700'" class="px-3 py-1.5 rounded-lg text-sm font-medium transition">Журнал</button>
@@ -233,22 +69,22 @@
         <!-- TAB 1: JOURNAL -->
         <div x-show="activeTab === 'journal'" class="space-y-6">
             <!-- Date & Location Selector -->
-            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg">
+            <div class="date-location bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg">
                 <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
                     <div class="flex items-center space-x-3">
-                        <button @click="changeDate(-1)" class="p-2 bg-slate-700 hover:bg-slate-600 rounded-xl transition">❮</button>
+                        <button aria-label="Предыдущий день" @click="changeDate(-1)" class="p-2 bg-slate-700 hover:bg-slate-600 rounded-xl transition">❮</button>
                         <div class="text-center">
                             <span class="text-xs text-slate-400 block">Дата тренировки</span>
-                            <input type="date" x-model="selectedDate" @change="updateLocationByDate()" class="bg-slate-900 border border-slate-600 text-white px-3 py-1 rounded-lg text-sm font-semibold focus:outline-none focus:border-emerald-500">
+                            <input type="date" aria-label="Дата тренировки" x-model="selectedDate" @change="updateLocationByDate()" class="bg-slate-900 border border-slate-600 text-white px-3 py-1 rounded-lg text-sm font-semibold focus:outline-none focus:border-emerald-500">
                         </div>
-                        <button @click="changeDate(1)" class="p-2 bg-slate-700 hover:bg-slate-600 rounded-xl transition">❯</button>
+                        <button aria-label="Следующий день" @click="changeDate(1)" class="p-2 bg-slate-700 hover:bg-slate-600 rounded-xl transition">❯</button>
                     </div>
                     <button @click="setToday()" class="text-xs bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-xl hover:bg-emerald-600/30 transition">Сегодня</button>
                 </div>
                 <!-- Location Auto-Detector & Manual Switch -->
                 <div>
                     <span class="text-xs text-slate-400 block mb-2">Локация:</span>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <div class="location-switch grid grid-cols-1 sm:grid-cols-3 gap-2">
                         <button @click="currentLocation = 'zarya'" :class="currentLocation === 'zarya' ? 'bg-emerald-600 text-white border-emerald-500' : 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-700'" class="border p-2.5 rounded-xl text-sm font-medium text-left transition flex justify-between items-center">
                             <span>мкр. Заря</span>
                             <span class="text-xs opacity-75">Пн, Ср 20:00</span>
@@ -264,8 +100,13 @@
                     </div>
                 </div>
             </div>
+            <div class="summary" aria-label="Сводка выбранного дня">
+                <div><span>Посещений</span><strong x-text="getClientsForLocation().filter(c => ['attended','razov'].includes(getAttendanceStatus(c.id))).length"></strong><span>за выбранный день</span></div>
+                <div><span>Клиентов</span><strong x-text="getClientsForLocation().length"></strong><span>в этой локации</span></div>
+                <div><span>Заканчивается</span><strong x-text="getClientsForLocation().filter(c => { const sub = getClientActiveSubscription(c); return sub && sub.left > 0 && sub.left <= 2; }).length"></strong><span>≤ 2 занятия</span></div>
+            </div>
             <!-- Attendance List -->
-            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg">
+            <div class="journal-panel bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg">
                 <div class="flex justify-between items-center mb-4">
                     <div>
                         <h2 class="text-lg font-bold" x-text="getLocationTitle()"></h2>
@@ -273,26 +114,29 @@
                     </div>
                     <span class="text-xs bg-slate-700 px-3 py-1 rounded-full text-slate-300" x-text="getClientsForLocation().length + ' клиентов'"></span>
                 </div>
+                <div x-show="getClientsForLocation().length === 0" class="empty-state"><strong>Пока нет клиентов</strong>Добавьте клиента и выберите для него эту локацию.<br><button @click="openClientModal()" class="text-emerald-400 mt-3">+ Добавить клиента</button></div>
                 <div class="space-y-3">
                     <template x-for="client in getClientsForLocation()" :key="client.id">
-                        <div class="bg-slate-900 border border-slate-700/60 p-3.5 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                            <div>
+                        <div class="client-row bg-slate-900 border border-slate-700/60 p-3.5 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                            <div class="client-heading">
+                                <span class="avatar" aria-hidden="true" x-text="getInitials(client.name)"></span><div>
 <div class="flex items-center gap-1.5">
-    <h3 class="font-semibold text-white" x-text="client.name"></h3>
-    <span x-show="getClientActiveSubscription(client).left === 1" class="text-amber-400 text-xs font-semibold bg-amber-400/10 border border-amber-400/30 px-1.5 py-0.5 rounded flex items-center gap-1" title="Осталось 1 занятие">
+    <button class="client-name" @click="openClientDetail(client)" x-text="client.name"></button>
+    <span x-show="(getClientActiveSubscription(client)?.left ?? 0) === 1" class="text-amber-400 text-xs font-semibold bg-amber-400/10 border border-amber-400/30 px-1.5 py-0.5 rounded flex items-center gap-1" title="Осталось 1 занятие">
         ⚠️ Осталось 1 зан.
     </span>
 </div>
                                 <div class="flex items-center space-x-2 text-xs mt-1">
-                                    <span class="text-emerald-400 font-medium" x-text="'Остаток: ' + getClientActiveSubscription(client).left + ' зан.'"></span>
-                                    <span class="text-slate-400" x-text="'До: ' + getClientActiveSubscription(client).expires"></span>
+                                    <span class="text-emerald-400 font-medium" x-text="'Остаток: ' + (getClientActiveSubscription(client)?.left ?? 0) + ' зан.'"></span>
+                                    <span class="text-slate-400" x-text="'До: ' + (getClientActiveSubscription(client)?.expires || '—')"></span>
                                 </div>
                             </div>
-                            <div class="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
-                                <button @click="markAttendance(client.id, 'attended')" :class="getAttendanceStatus(client.id) === 'attended' ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'" class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition">✓ Был (-1)</button>
-                                <button @click="markAttendance(client.id, 'razov')" :class="getAttendanceStatus(client.id) === 'razov' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'" class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition" x-text="'₽ Разово (' + getRazovPrice() + ')'"></button>
-                                <button @click="markAttendance(client.id, 'missed')" :class="getAttendanceStatus(client.id) === 'missed' ? 'bg-rose-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'" class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition">Сгорело</button>
-                                <button @click="markAttendance(client.id, 'excused')" :class="getAttendanceStatus(client.id) === 'excused' ? 'bg-amber-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'" class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition">Уваж.</button>
+                            </div>
+                            <div class="attendance-actions flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
+                                <button @click="markAttendance(client.id, 'attended')" :aria-pressed="getAttendanceStatus(client.id) === 'attended'" :class="getAttendanceStatus(client.id) === 'attended' ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'" class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition">✓ Был (-1)</button>
+                                <button @click="markAttendance(client.id, 'razov')" :aria-pressed="getAttendanceStatus(client.id) === 'razov'" :class="getAttendanceStatus(client.id) === 'razov' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'" class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition" x-text="'₽ Разово (' + getRazovPrice() + ')'"></button>
+                                <button @click="markAttendance(client.id, 'missed')" :aria-pressed="getAttendanceStatus(client.id) === 'missed'" :class="getAttendanceStatus(client.id) === 'missed' ? 'bg-rose-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'" class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition">Сгорело</button>
+                                <button @click="markAttendance(client.id, 'excused')" :aria-pressed="getAttendanceStatus(client.id) === 'excused'" :class="getAttendanceStatus(client.id) === 'excused' ? 'bg-amber-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'" class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition">Уваж.</button>
                             </div>
                         </div>
                     </template>
@@ -305,12 +149,13 @@
                 <h2 class="text-lg font-bold">База клиентов</h2>
                 <button @click="openClientModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-semibold transition">+ Новый клиент</button>
             </div>
+            <div x-show="clients.length === 0" class="empty-state"><strong>Ваша команда начинается здесь</strong>Добавьте первого клиента, чтобы вести журнал тренировок.</div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <template x-for="client in clients" :key="client.id">
-                    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg flex flex-col justify-between">
+                    <div class="client-tile bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg flex flex-col justify-between">
                         <div>
                             <div class="flex justify-between items-start">
-                                <h3 class="font-bold text-white text-base" x-text="client.name"></h3>
+                                <div class="client-heading"><span class="avatar" aria-hidden="true" x-text="getInitials(client.name)"></span><button class="client-name" @click="openClientDetail(client)" x-text="client.name"></button></div>
                                 <button @click="editClient(client)" class="text-slate-400 hover:text-white text-xs bg-slate-700 px-2 py-1 rounded-lg">Изменить</button>
                             </div>
                             <p class="text-xs text-slate-400 mt-1" x-text="'Телефон: ' + (client.phone || 'не указан')"></p>
@@ -320,7 +165,7 @@
                                 <span class="text-xs text-slate-400 block">Абонемент:</span>
 <div class="flex items-center gap-1.5">
     <span class="text-sm font-semibold text-emerald-400" x-text="getClientSubInfo(client)"></span>
-    <span x-show="getClientActiveSubscription(client).left === 1" class="text-amber-400 text-xs font-semibold bg-amber-400/10 border border-amber-400/30 px-1.5 py-0.5 rounded flex items-center gap-1" title="Осталось 1 занятие">
+    <span x-show="(getClientActiveSubscription(client)?.left ?? 0) === 1" class="text-amber-400 text-xs font-semibold bg-amber-400/10 border border-amber-400/30 px-1.5 py-0.5 rounded flex items-center gap-1" title="Осталось 1 занятие">
         ⚠️ 1 зан.
     </span>
 </div>
@@ -366,8 +211,29 @@
         </div>
     </main>
 
+
+    <nav class="bottom-nav" aria-label="Основная навигация">
+        <button @click="activeTab = 'journal'" :aria-current="activeTab === 'journal' ? 'page' : null"><span aria-hidden="true"><svg class="nav-icon"><use href="#icon-calendar"/></svg></span>Журнал</button>
+        <button @click="activeTab = 'clients'" :aria-current="activeTab === 'clients' ? 'page' : null"><span aria-hidden="true"><svg class="nav-icon"><use href="#icon-users"/></svg></span>Клиенты</button>
+        <button @click="activeTab = 'finances'" :aria-current="activeTab === 'finances' ? 'page' : null"><span aria-hidden="true"><svg class="nav-icon"><use href="#icon-wallet"/></svg></span>Финансы</button>
+        <button @click="openClientModal()" aria-label="Добавить клиента">+</button>
+    </nav>
+    <section class="client-detail" x-show="detailClient" x-cloak @keydown.escape.window="detailClient = null" aria-label="Карточка клиента">
+      <template x-if="detailClient"><div class="detail-shell">
+        <div class="detail-top"><button @click="detailClient = null" aria-label="Назад">‹</button>Клиент</div>
+        <div class="detail-card"><div class="client-heading"><span class="avatar" x-text="getInitials(detailClient.name)"></span><div><h2 x-text="detailClient.name"></h2><span class="text-xs text-emerald-400" x-text="(getClientActiveSubscription(detailClient)?.left ?? 0) > 0 ? '● Активный абонемент' : 'Нет активного абонемента'"></span><p><a class="detail-phone" :href="detailClient.phone ? 'tel:' + detailClient.phone.replace(/[^+0-9]/g, '') : null" x-text="detailClient.phone || 'Телефон не указан'"></a></p></div></div></div>
+        <div class="detail-card detail-stats"><div><span>Остаток занятий</span><strong x-text="getClientActiveSubscription(detailClient)?.left ?? 0"></strong><span>в текущем абонементе</span></div><div><span>Абонемент</span><p x-text="getClientSubInfo(detailClient)"></p><button @click="openSubModal(detailClient)" class="text-emerald-400 text-sm mt-3">+ Оформить</button></div></div>
+        <div class="detail-card"><span class="text-slate-400 text-sm">Локации · разовая тренировка</span><template x-for="loc in (detailClient.locations || [])" :key="loc"><p x-text="({zarya:'мкр. Заря — 700 ₽',pole:'Поле чудес — 600 ₽',online:'Онлайн — 500 ₽'})[loc]"></p></template></div>
+        <div class="detail-tabs" role="tablist" aria-label="Данные клиента"><template x-for="tab in [{id:'visits',label:'Посещения'},{id:'payments',label:'Оплаты'},{id:'subs',label:'Абонементы'}]"><button role="tab" :aria-selected="detailTab === tab.id" @click="detailTab = tab.id" x-text="tab.label"></button></template></div>
+        <div class="detail-card" x-show="detailTab === 'visits'"><h3 class="font-semibold">История посещений</h3><p x-show="getClientAttendanceHistory(detailClient.id).length === 0">Посещений пока нет</p><template x-for="item in getClientAttendanceHistory(detailClient.id)" :key="item.date"><div class="history-row"><span x-text="item.date.split('-').reverse().join('.')"></span><span class="rounded-lg px-2 py-1" :class="item.badgeClass" x-text="item.text"></span></div></template></div>
+        <div class="detail-card" x-show="detailTab === 'payments'"><h3 class="font-semibold">Оплаты абонементов</h3><p>Разовые оплаты учтены в общем финансовом отчёте. Историческая сумма разового платежа отдельно не сохраняется.</p><p x-show="!(detailClient.subscriptions || []).length">Оплат абонементов пока нет</p><template x-for="(sub, i) in (detailClient.subscriptions || [])" :key="i"><div class="history-row"><span x-text="sub.startDate || 'Дата не указана'"></span><span class="text-emerald-400" x-text="sub.price != null ? sub.price + ' ₽' : 'Сумма не указана'"></span></div></template></div>
+        <div class="detail-card" x-show="detailTab === 'subs'"><h3 class="font-semibold">Абонементы</h3><p x-show="!(detailClient.subscriptions || []).length">Абонементов пока нет</p><template x-for="(sub, i) in (detailClient.subscriptions || [])" :key="i"><div class="history-row"><span x-text="'До ' + (sub.expires || '—')"></span><span class="text-emerald-400" x-text="'Остаток: ' + sub.left"></span></div></template></div>
+        <button class="detail-edit" @click="editClient(detailClient)">✎ Редактировать клиента</button>
+      </div></template>
+    </section>
+
     <!-- Client Modal -->
-    <div x-show="showClientModal" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+    <div x-show="showClientModal" x-cloak class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
         <div class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <h3 class="text-lg font-bold" x-text="editingClient ? 'Редактировать клиента' : 'Новый клиент'"></h3>
             <div>
@@ -411,7 +277,7 @@
     </div>
 
     <!-- Subscription Modal -->
-    <div x-show="showSubModal" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+    <div x-show="showSubModal" x-cloak class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
         <div class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4">
             <h3 class="text-lg font-bold">Продажа абонемента</h3>
             <p class="text-xs text-slate-400" x-text="'Клиент: ' + (subClient ? subClient.name : '')"></p>
@@ -465,12 +331,21 @@
             messagingSenderId: "1075119383188",
             appId: "1:1075119383188:web:21494fbfc98b331b92ca81"
         };
-        
+
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
         function trainerApp() {
             return {
+                detailClient: null,
+                detailTab: 'visits',
+                getInitials(name) {
+                    return (name || '?').trim().split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase();
+                },
+                openClientDetail(client) {
+                    this.detailClient = client;
+                    this.detailTab = 'visits';
+                },
                 activeTab: 'journal',
                 selectedDate: new Date().toISOString().slice(0, 10),
                 currentMonth: new Date().toISOString().slice(0, 7),
@@ -527,7 +402,7 @@
                 getClientSubInfo(client) {
                     if (!client) return 'Нет данных';
                     let sub = this.getClientActiveSubscription(client);
-                    return sub.left > 0 ? (sub.left + ' зан. (до ' + sub.expires + ')') : 'Нет активного абонемента';
+                    return sub && sub.left > 0 ? (sub.left + ' зан. (до ' + sub.expires + ')') : 'Нет активного абонемента';
                 },
                 getAttendanceStatus(clientId) {
                     if (!this.attendance[this.selectedDate]) return null;
@@ -602,10 +477,10 @@ markAttendance(clientId, status) {
                     if (!this.attendance[this.selectedDate]) this.attendance[this.selectedDate] = {};
                     let client = this.clients.find(c => c.id === clientId);
                     if (!client) return;
-                    
+
                     let sub = this.getClientActiveSubscription(client);
                     let prevStatus = this.attendance[this.selectedDate][clientId];
-                    
+
                     // Если нажали на ту же кнопку — отменяем действие
                     if (prevStatus === status) {
                         if (status === 'attended' && sub && sub.left !== undefined) {
@@ -624,7 +499,7 @@ markAttendance(clientId, status) {
                         if (prevStatus === 'attended' && sub && sub.left !== undefined) {
                             sub.left++;
                         }
-                        
+
                         // Списание, если ставим "Был"
                         if (status === 'attended') {
                             if (sub && sub.left > 0) {
@@ -636,20 +511,20 @@ markAttendance(clientId, status) {
                                 return; // Прерываем, если нет абонемента
                             }
                         }
-                        
+
                         this.attendance[this.selectedDate][clientId] = status;
-                        
+
                         // Логика финансов для разовых
                         let monthKey = this.selectedDate.slice(0, 7);
                         if (!this.finances[monthKey]) this.finances[monthKey] = 0;
-                        
+
                         if (status === 'razov' && prevStatus !== 'razov') {
                             this.finances[monthKey] += this.getRazovPrice();
                         } else if (prevStatus === 'razov' && status !== 'razov') {
                             this.finances[monthKey] = Math.max(0, this.finances[monthKey] - this.getRazovPrice());
                         }
                     }
-                    
+
                     this.clients = [...this.clients];
                     this.attendance = { ...this.attendance };
                     this.finances = { ...this.finances };
@@ -686,7 +561,10 @@ markAttendance(clientId, status) {
                 saveClient() {
                     if (this.editingClient) {
                         let idx = this.clients.findIndex(c => c.id === this.editingClient.id);
-                        if (idx !== -1) this.clients[idx] = { ...this.clientForm };
+                        if (idx !== -1) {
+                            this.clients[idx] = { ...this.clientForm };
+                            if (this.detailClient?.id === this.editingClient.id) this.detailClient = this.clients[idx];
+                        }
                     } else {
                         this.clients.push({ ...this.clientForm });
                     }
@@ -696,6 +574,7 @@ markAttendance(clientId, status) {
                 deleteClient() {
                     if(confirm('Удалить клиента?')) {
                         this.clients = this.clients.filter(c => c.id !== this.editingClient.id);
+                        if (this.detailClient?.id === this.editingClient.id) this.detailClient = null;
                         this.syncToFirebase();
                         this.showClientModal = false;
                     }
@@ -713,7 +592,7 @@ markAttendance(clientId, status) {
                     let endDate = new Date(subDate);
                     endDate.setDate(endDate.getDate() + 28);
                     this.subClient.subscriptions.push({ left: 8, startDate: subDate, expires: endDate.toISOString().slice(0, 10), price: price });
-                    
+
                     let monthKey = subDate.slice(0, 7);
                     if (!this.finances[monthKey]) this.finances[monthKey] = 0;
                     this.finances[monthKey] = (this.finances[monthKey] || 0) + price;
