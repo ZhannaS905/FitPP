@@ -633,6 +633,32 @@ header nav button {
   padding: 12px 9px;
 }
 
+/* Compact client list: readable metadata and 44px touch targets. */
+.client-grid { gap: 10px !important; }
+.client-tile { padding: 12px !important; }
+.client-tile-top { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; gap: 9px; }
+.client-tile .avatar { width: 36px; height: 36px; font-size: 14px; }
+.client-tile-identity { min-width: 0; }
+.client-tile .client-name { min-height: 44px; width: 100%; font-size: 15px; line-height: 1.3; display: flex; align-items: center; }
+.client-tile .client-name::after { margin-left: auto; padding-left: 6px; }
+.client-phone { margin: -2px 0 0; color: var(--muted); font-size: 13px; line-height: 1.4; overflow-wrap: anywhere; }
+.client-action { min-height: 44px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 12px; background: #102537; color: #c4dbea; font-size: 13px; line-height: 1.2; white-space: nowrap; }
+.client-action:hover { background: #19394b; }
+.client-tile-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px solid var(--border); margin-top: 8px; padding-top: 8px; }
+.client-subscription { display: flex; flex-wrap: wrap; gap: 2px 10px; min-width: 0; font-size: 13px; line-height: 1.5; }
+.client-balance { color: var(--green); font-weight: 600; }
+.client-expiry { color: var(--muted); }
+.client-sell { color: var(--green); background: #073329; border-color: #14634d; }
+@media (max-width: 767px) {
+  header nav { display: none !important; }
+  header > div { gap: 0 !important; padding: 10px 16px !important; }
+  header > div > div:last-child button { min-height: 44px; }
+}
+@media (min-width: 768px) {
+  .bottom-nav { display: none; }
+  main { padding-bottom: 32px !important; }
+}
+
 .demo-note{max-width:800px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;background:#063c32;border-bottom:1px solid #117659;font-size:12px;color:#b0ffe3}.demo-note strong{display:block}.demo-note button{flex-shrink:0;padding:8px 12px;border:1px solid #16876a;border-radius:12px;background:#07513f}.demo-note small{color:#88cbb7;font-size:10px}</style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased" x-data="trainerApp()" x-init="init()">
@@ -753,27 +779,23 @@ header nav button {
                 <button @click="openClientModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-semibold transition">+ Новый клиент</button>
             </div>
             <div x-show="clients.length === 0" class="empty-state"><strong>Ваша команда начинается здесь</strong>Добавьте первого клиента, чтобы вести журнал тренировок.</div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="client-grid grid grid-cols-1 md:grid-cols-2 gap-4">
                 <template x-for="client in clients" :key="client.id">
-                    <div class="client-tile bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg flex flex-col justify-between">
-                        <div>
-                            <div class="flex justify-between items-start">
-                                <div class="client-heading"><span class="avatar" aria-hidden="true" x-text="getInitials(client.name)"></span><button class="client-name" @click="openClientDetail(client)" x-text="client.name"></button></div>
-                                <button @click="editClient(client)" class="text-slate-400 hover:text-white text-xs bg-slate-700 px-2 py-1 rounded-lg">Изменить</button>
+                    <div class="client-tile bg-slate-800 border border-slate-700 rounded-2xl">
+                        <div class="client-tile-top">
+                            <span class="avatar" aria-hidden="true" x-text="getInitials(client.name)"></span>
+                            <div class="client-tile-identity">
+                                <button class="client-name" @click="openClientDetail(client)" x-text="client.name"></button>
+                                <p class="client-phone" x-text="client.phone || 'Телефон не указан'"></p>
                             </div>
-                            <p class="text-xs text-slate-400 mt-1" x-text="'Телефон: ' + (client.phone || 'не указан')"></p>
+                            <button class="client-action" @click="editClient(client)">Изменить</button>
                         </div>
-                        <div class="mt-4 pt-3 border-t border-slate-700/60 flex justify-between items-center">
-                            <div>
-                                <span class="text-xs text-slate-400 block">Абонемент:</span>
-<div class="flex items-center gap-1.5">
-    <span class="text-sm font-semibold text-emerald-400" x-text="getClientSubInfo(client)"></span>
-    <span x-show="(getClientActiveSubscription(client)?.left ?? 0) === 1" class="text-amber-400 text-xs font-semibold bg-amber-400/10 border border-amber-400/30 px-1.5 py-0.5 rounded flex items-center gap-1" title="Осталось 1 занятие">
-        ⚠️ 1 зан.
-    </span>
-</div>
+                        <div class="client-tile-footer">
+                            <div class="client-subscription">
+                                <span class="client-balance" x-text="'Остаток: ' + (getClientActiveSubscription(client)?.left ?? 0) + ' зан.'"></span>
+                                <span class="client-expiry" x-text="'До: ' + (getClientActiveSubscription(client)?.expires || '—')"></span>
                             </div>
-                            <button @click="openSubModal(client)" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-xl text-xs font-medium transition">+ Продать</button>
+                            <button class="client-action client-sell" @click="openSubModal(client)">+ Продать</button>
                         </div>
                     </div>
                 </template>

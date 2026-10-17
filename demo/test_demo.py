@@ -62,8 +62,15 @@ async def main():
   for width in [320,390,768,1280]:
    await page.set_viewport_size({'width':width,'height':844})
    for tab in ['Журнал','Клиенты','Финансы']:
-    await page.locator('.bottom-nav').get_by_role('button',name=tab,exact=True).click()
+    nav = page.locator('.bottom-nav' if width < 768 else 'header nav')
+    await nav.get_by_role('button',name=tab,exact=True).click()
+    await expect(page.locator('header nav')).to_be_hidden() if width < 768 else await expect(page.locator('header nav')).to_be_visible()
     assert await page.evaluate('document.documentElement.scrollWidth <= innerWidth'),(width,tab)
+    if tab == 'Клиенты':
+     metrics = await page.locator('.client-tile').first.evaluate('''el => ({height:el.getBoundingClientRect().height,buttons:[...el.querySelectorAll('button')].map(b=>({h:b.getBoundingClientRect().height,font:parseFloat(getComputedStyle(b).fontSize)})),phone:el.querySelector('.client-phone').textContent,sub:el.querySelector('.client-subscription').textContent})''')
+     assert all(b['h'] >= 44 and b['font'] >= 13 for b in metrics['buttons']),metrics
+     assert 'Остаток:' in metrics['sub'] and 'До:' in metrics['sub'],metrics
+     print(f'Client card at {width}px: {metrics["height"]:.0f}px; buttons ≥44px, text ≥13px')
   await page.reload()
   await page.wait_for_function('window.Alpine && Alpine.$data(document.body).clients.length === 6')
   assert await page.evaluate("Alpine.$data(document.body).finances['2026-10']")==25400
