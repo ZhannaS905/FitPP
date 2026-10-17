@@ -44,7 +44,7 @@
                 <span class="text-2xl"></span>
                 <h1 class="text-xl font-bold tracking-wide bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent"><svg class="brand-icon" aria-hidden="true"><use href="#icon-barbell"/></svg>FitPP</h1>
             </div>
-            <nav class="flex space-x-1 sm:space-x-2">
+            <nav class="desktop-nav flex space-x-1 sm:space-x-2" aria-label="Навигация для больших экранов">
                 <button @click="activeTab = 'journal'" :class="activeTab === 'journal' ? 'bg-emerald-600 text-white' : 'text-slate-300 hover:bg-slate-700'" class="px-3 py-1.5 rounded-lg text-sm font-medium transition">Журнал</button>
                 <button @click="activeTab = 'clients'" :class="activeTab === 'clients' ? 'bg-emerald-600 text-white' : 'text-slate-300 hover:bg-slate-700'" class="px-3 py-1.5 rounded-lg text-sm font-medium transition">Клиенты</button>
                 <button @click="activeTab = 'finances'" :class="activeTab === 'finances' ? 'bg-emerald-600 text-white' : 'text-slate-300 hover:bg-slate-700'" class="px-3 py-1.5 rounded-lg text-sm font-medium transition">Финансы</button>

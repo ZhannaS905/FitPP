@@ -640,3 +640,13 @@ header nav button {
   .bottom-nav { display: none; }
   main { padding-bottom: 32px !important; }
 }
+
+/* Mobile first: upper navigation stays hidden unless the desktop breakpoint matches. */
+header .desktop-nav { display: none !important; }
+@media (min-width: 768px) {
+  header .desktop-nav { display: grid !important; }
+}
+@media (max-width: 767px) {
+  header > div { grid-template-rows: auto; row-gap: 0 !important; }
+  main { padding-top: 12px !important; }
+}
