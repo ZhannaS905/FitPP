@@ -650,3 +650,16 @@ header .desktop-nav { display: none !important; }
   header > div { grid-template-rows: auto; row-gap: 0 !important; }
   main { padding-top: 12px !important; }
 }
+
+.client-list .client-grid { margin-top: 0; }
+.finance-toolbar { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.finance-toolbar h2 { font-size: 16px; }
+.month-switcher { display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; gap: 2px; padding: 2px; width: 100%; max-width: 300px; }
+.month-switcher button { min-width: 44px; min-height: 44px; border-radius: 10px; }
+.month-switcher span { white-space: nowrap; align-self: center; text-align: center; font-size: 14px; line-height: 1.4; }
+.desktop-add { display: none; }
+@media (min-width: 768px) {
+  .finance-toolbar { flex-direction: row; align-items: center; justify-content: space-between; }
+  .month-switcher { width: 260px; flex-shrink: 0; }
+  .desktop-add { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; color: var(--green); font-size: 28px; }
+}

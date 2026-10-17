@@ -1,4 +1,4 @@
-const CACHE_NAME = "fitpp-cache-v4";
+const CACHE_NAME = "fitpp-cache-v5";
 const ASSETS = [
   "/",
   "./index.html",
