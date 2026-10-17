@@ -3,7 +3,7 @@ import shutil
 import tempfile
 from pathlib import Path
 
-DEMO = Path(__file__).resolve().parent / "fitpp-demo-v3.html"
+DEMO = Path(__file__).resolve().parent / "fitpp-demo-v4.html"
 SCREENSHOTS = Path(tempfile.mkdtemp(prefix="fitpp-demo-check-"))
 from playwright.async_api import async_playwright,expect
 async def main():

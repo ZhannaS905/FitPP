@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; worker-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FitPP — демоверсия v3</title>
+    <title>FitPP — демоверсия v4</title>
     <!-- PWA Manifest & Meta -->
     <meta name="theme-color" content="#10b981">
     <!-- Tailwind CSS -->
@@ -669,6 +669,19 @@ header .desktop-nav { display: none !important; }
   main { padding-top: 12px !important; }
 }
 
+.client-list .client-grid { margin-top: 0; }
+.finance-toolbar { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.finance-toolbar h2 { font-size: 16px; }
+.month-switcher { display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; gap: 2px; padding: 2px; width: 100%; max-width: 300px; }
+.month-switcher button { min-width: 44px; min-height: 44px; border-radius: 10px; }
+.month-switcher span { white-space: nowrap; align-self: center; text-align: center; font-size: 14px; line-height: 1.4; }
+.desktop-add { display: none; }
+@media (min-width: 768px) {
+  .finance-toolbar { flex-direction: row; align-items: center; justify-content: space-between; }
+  .month-switcher { width: 260px; flex-shrink: 0; }
+  .desktop-add { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; color: var(--green); font-size: 28px; }
+}
+
 .demo-note{max-width:800px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;background:#063c32;border-bottom:1px solid #117659;font-size:12px;color:#b0ffe3}.demo-note strong{display:block}.demo-note button{flex-shrink:0;padding:8px 12px;border:1px solid #16876a;border-radius:12px;background:#07513f}.demo-note small{color:#88cbb7;font-size:10px}</style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased" x-data="trainerApp()" x-init="init()">
@@ -681,7 +694,7 @@ header .desktop-nav { display: none !important; }
     </defs></svg>
     <!-- Header -->
     <!-- Auth Banner -->
-    <aside class="demo-note"><div><strong>ДЕМО v3 · Только вымышленные данные</strong><small>Без подключения к базе · Изменения исчезают при перезагрузке</small></div><button @click="resetDemo()">Сбросить</button></aside>
+    <aside class="demo-note"><div><strong>ДЕМО v4 · Только вымышленные данные</strong><small>Без подключения к базе · Изменения исчезают при перезагрузке</small></div><button @click="resetDemo()">Сбросить</button></aside>
     <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-30">
         <div class="max-w-4xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
             <div class="flex items-center space-x-2">
@@ -694,6 +707,7 @@ header .desktop-nav { display: none !important; }
                 <button @click="activeTab = 'finances'" :class="activeTab === 'finances' ? 'bg-emerald-600 text-white' : 'text-slate-300 hover:bg-slate-700'" class="px-3 py-1.5 rounded-lg text-sm font-medium transition">Финансы</button>
             </nav>
             <div class="flex items-center space-x-2 pl-2 border-l border-slate-700">
+                <button class="desktop-add" @click="openClientModal()" aria-label="Добавить клиента">+</button>
                 <template x-if="currentUser">
                     <div class="flex items-center space-x-2">
                         <span class="text-xs text-slate-300 hidden sm:inline" x-text="currentUser.displayName || currentUser.email"></span>
@@ -783,11 +797,7 @@ header .desktop-nav { display: none !important; }
             </div>
         </div>
         <!-- TAB 2: CLIENTS -->
-        <div x-show="activeTab === 'clients'" class="space-y-6">
-            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg flex justify-between items-center">
-                <h2 class="text-lg font-bold">База клиентов</h2>
-                <button @click="openClientModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-semibold transition">+ Новый клиент</button>
-            </div>
+        <div x-show="activeTab === 'clients'" class="client-list">
             <div x-show="clients.length === 0" class="empty-state"><strong>Ваша команда начинается здесь</strong>Добавьте первого клиента, чтобы вести журнал тренировок.</div>
             <div class="client-grid grid grid-cols-1 md:grid-cols-2 gap-4">
                 <template x-for="client in clients" :key="client.id">
@@ -814,12 +824,12 @@ header .desktop-nav { display: none !important; }
         <!-- TAB 3: FINANCES -->
         <div x-show="activeTab === 'finances'" class="space-y-6">
             <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg space-y-4">
-                <div class="flex justify-between items-center">
+                <div class="finance-toolbar">
                     <h2 class="text-lg font-bold">Финансовый отчёт и аренда</h2>
-                    <div class="flex items-center space-x-2 bg-slate-900 border border-slate-700 px-3 py-1 rounded-xl">
-                        <button @click="changeMonth(-1)" class="text-slate-400 hover:text-white">❮</button>
+                    <div class="month-switcher bg-slate-900 border border-slate-700 rounded-xl" aria-label="Отчётный месяц">
+                        <button aria-label="Предыдущий месяц" @click="changeMonth(-1)" class="text-slate-400 hover:text-white">❮</button>
                         <span class="text-sm font-semibold text-emerald-400" x-text="formatMonthName(currentMonth)"></span>
-                        <button @click="changeMonth(1)" class="text-slate-400 hover:text-white">❯</button>
+                        <button aria-label="Следующий месяц" @click="changeMonth(1)" class="text-slate-400 hover:text-white">❯</button>
                     </div>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
@@ -835,12 +845,6 @@ header .desktop-nav { display: none !important; }
                         <span class="text-xs text-slate-400 block">Чистая прибыль</span>
                         <span class="text-xl font-bold text-teal-300 mt-1 block" x-text="getMonthProfit() + ' ₽'"></span>
                     </div>
-                </div>
-            </div>
-            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg space-y-4">
-                <div class="flex justify-between items-center">
-                    <h3 class="text-md font-bold text-rose-400">Опасная зона</h3>
-                    <button @click="clearDatabase()" class="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-xl text-sm font-semibold transition">Сбросить базу данных</button>
                 </div>
             </div>
         </div>
