@@ -1,0 +1,8 @@
+(function(root,factory){const api=factory(typeof module==='object'&&module.exports?require('./firebase-adapter.js'):root.FitPPWorkspace);if(typeof module==='object'&&module.exports)module.exports=api;else root.FitPPBackup=api;})(globalThis,function(W){
+'use strict';
+function canonical(v){if(Array.isArray(v))return v.map(canonical);if(v&&typeof v==='object')return Object.fromEntries(Object.keys(v).sort().map(k=>[k,canonical(v[k])]));return v;}
+async function hash(v){const bytes=new TextEncoder().encode(JSON.stringify(canonical(v)));return Array.from(new Uint8Array(await globalThis.crypto.subtle.digest('SHA-256',bytes)),b=>b.toString(16).padStart(2,'0')).join('');}
+async function create(data,mode){W.validate(data);if(!['local-simulation','firebase'].includes(mode))throw Error('Неизвестный режим');const payload=JSON.parse(JSON.stringify({format:'fitpp-backup-v1',mode,projectId:W.projectId,ownerUid:W.ownerUid,datasetId:W.datasetId,path:W.path,schemaVersion:W.schemaVersion,createdAt:new Date().toISOString(),data}));return {...payload,sha256:await hash(payload)};}
+async function restore(input){const {sha256,...payload}=JSON.parse(typeof input==='string'?input:JSON.stringify(input));if(payload.format!=='fitpp-backup-v1'||payload.projectId!==W.projectId||payload.ownerUid!==W.ownerUid||payload.datasetId!==W.datasetId||payload.path!==W.path||payload.schemaVersion!==W.schemaVersion||!['local-simulation','firebase'].includes(payload.mode)||!Number.isFinite(Date.parse(payload.createdAt)))throw Error('Неверные метаданные');if(await hash(payload)!==sha256)throw Error('Контрольная сумма не совпала');W.validate(payload.data);return JSON.parse(JSON.stringify(payload.data));}
+return {create,restore};
+});

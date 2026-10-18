@@ -2,218 +2,54 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; font-src 'self'">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FitPP — Тренер CRM</title>
+    <title>FitPP</title>
     <!-- PWA Manifest & Meta -->
-    <link rel="manifest" href="manifest.json">
+    
     <meta name="theme-color" content="#10b981">
     <link rel="apple-touch-icon" href="icon-192.png">
     <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="vendor/tailwind-3.4.17.js"></script>
+    <!-- Offline only: no remote SDK -->
     <!-- Alpine.js -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <style>[x-cloak] { display: none !important; }
-
-  body {
-    background-color: #07111f !important;
-  }
-
-  main > div > .bg-slate-800 {
-    background: linear-gradient(145deg, #102438, #0a1726) !important;
-    border: 1px solid #25445b !important;
-    border-radius: 18px !important;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22) !important;
-  }
-
-  main .bg-slate-900.border {
-    background-color: #0b1928 !important;
-    border-color: #25445b !important;
-  }
-</style>
+    <script defer src="vendor/alpine-3.14.9.js"></script>
 
 
-<style id="fitpp-refresh-v1">
-  :root {
-    color-scheme: dark;
-    --fitpp-bg: #07111f;
-    --fitpp-panel: #0d1b2a;
-    --fitpp-card: #0a1624;
-    --fitpp-border: #1d354a;
-    --fitpp-green: #19e6a0;
-    --fitpp-muted: #9db0c4;
-  }
 
-  body {
-    background:
-      radial-gradient(ellipse at 50% -18%, rgba(16,185,129,.13), transparent 42%),
-      var(--fitpp-bg) !important;
-  }
 
-  header {
-    background: rgba(8, 19, 32, .94) !important;
-    border-color: var(--fitpp-border) !important;
-    backdrop-filter: blur(14px);
-  }
-
-  header > div:first-child {
-    padding-top: .65rem !important;
-    padding-bottom: .65rem !important;
-    gap: .65rem !important;
-  }
-
-  header h1 {
-    letter-spacing: -.035em !important;
-    font-weight: 800 !important;
-  }
-
-  header nav button {
-    border-radius: 999px !important;
-    padding: .55rem .9rem !important;
-    transition: background .18s ease, transform .18s ease !important;
-  }
-
-  header nav button:active,
-  main button:active {
-    transform: scale(.98);
-  }
-
-  main {
-    padding-top: 1rem !important;
-  }
-
-  main .bg-slate-800.border {
-    background: linear-gradient(145deg, rgba(17, 34, 51, .98), rgba(11, 25, 40, .98)) !important;
-    border-color: var(--fitpp-border) !important;
-    box-shadow: 0 12px 28px rgba(0,0,0,.14) !important;
-  }
-
-  main .bg-slate-900.border {
-    background: linear-gradient(145deg, #0a1726, #0b1a2a) !important;
-    border-color: #1a3349 !important;
-  }
-
-  main .text-emerald-400 {
-    color: var(--fitpp-green) !important;
-  }
-
-  main .rounded-xl,
-  main .rounded-2xl {
-    border-radius: 1rem !important;
-  }
-
-  main button {
-    transition: background-color .18s ease, border-color .18s ease, transform .18s ease !important;
-  }
-
- 
-  main button { -webkit-tap-highlight-color: transparent; }
-
-  @media (max-width: 640px) {
-    header > div:first-child {
-      display: grid !important;
-      grid-template-columns: 1fr auto;
-      justify-items: center;
-      padding: .45rem .75rem !important;
-    }
-
-    header > div:first-child > div:first-child {
-      justify-self: start;
-    }
-
-    header nav {
-      grid-column: 1 / -1;
-      grid-row: 2;
-      display: flex;
-      width: 100%;
-      justify-content: space-between;
-      gap: .25rem !important;
-    }
-
-    header nav button {
-      flex: 1;
-      padding: .55rem .35rem !important;
-      font-size: .82rem !important;
-      white-space: nowrap;
-    }
-
-    header > div:first-child > div:last-child {
-      border-left: 0 !important;
-      padding-left: 0 !important;
-      justify-self: end;
-    }
-
-    main {
-      padding: .85rem .75rem 5.5rem !important;
-    }
-
-    main > div {
-      gap: .85rem !important;
-    }
-
-    main .rounded-2xl.p-4 {
-      padding: .85rem !important;
-      border-radius: 1.1rem !important;
-    }
-
-    main .space-y-3 > div {
-      padding: .8rem !important;
-      gap: .65rem !important;
-      border-radius: 1rem !important;
-    }
-
-    main .space-y-3 > div > div:last-child {
-      gap: .4rem !important;
-    }
-
-    main .space-y-3 > div > div:last-child button {
-      padding: .55rem .65rem !important;
-      border-radius: .7rem !important;
-      font-size: .72rem !important;
-      line-height: 1.1rem !important;
-    }
-
-    main h2 {
-      letter-spacing: -.02em;
-    }
-
-    input[type="date"] {
-      max-width: 100%;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-      transition-duration: .01ms !important;
-      animation-duration: .01ms !important;
-    }
-  }
-</style>
+<link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased" x-data="trainerApp()" x-init="init()">
+
+    <svg xmlns="http://www.w3.org/2000/svg" class="icon-sprite" aria-hidden="true"><defs>
+      <symbol id="icon-barbell" viewBox="0 0 24 24"><path d="M3 9v6m4-10v14m10-14v14m4-10v6M7 12h10"/></symbol>
+      <symbol id="icon-calendar" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="3"/><path d="M8 3v4m8-4v4M4 10h16m-12 4h1m3 0h1m3 0h1m-9 3h1m3 0h1"/></symbol>
+      <symbol id="icon-users" viewBox="0 0 24 24"><circle cx="10" cy="7" r="4"/><path d="M3 21v-3a7 7 0 0 1 14 0v3Zm15-17a4 4 0 0 1 0 8m2 3a6 6 0 0 1 2 6"/></symbol>
+      <symbol id="icon-wallet" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="4"/><path d="M3 9h18m-6 4h6m-6 4h2"/></symbol>
+    </defs></svg>
+    <div style="background:#92400e;color:white;text-align:center;padding:10px">FITPP • fitpp-165a2 • Рабочая версия • Запись включается отдельно в этой вкладке</div>
     <!-- Header -->
     <!-- Auth Banner -->
-    <div x-show="!currentUser" class="bg-amber-600/20 border-b border-amber-500/30 px-4 py-2.5 text-center text-sm flex justify-between items-center max-w-4xl mx-auto" x-cloak>
-        <span class="text-amber-200 font-medium">Вы не авторизованы. Войдите, чтобы сохранить или синхронизировать данные.</span>
+    <div x-show="!currentUser" class="auth-banner bg-amber-600/20 border-b border-amber-500/30 px-4 py-2.5 text-center text-sm flex justify-between items-center max-w-4xl mx-auto" x-cloak>
+        <span class="text-amber-200 font-medium">Войдите в аккаунт владельца нового проекта через Email/Password.</span>
         <button @click="showAuthModal = true" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow">
-            <span>Войти / Зарегистрироваться</span>
+            <span>Войти</span>
         </button>
     </div>
-    <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50">
+    <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-30">
         <div class="max-w-4xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
             <div class="flex items-center space-x-2">
                 <span class="text-2xl"></span>
-                <h1 class="text-xl font-bold tracking-wide bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">FitPP</h1>
+                <h1 class="text-xl font-bold tracking-wide bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent"><svg class="brand-icon" aria-hidden="true"><use href="#icon-barbell"/></svg>FitPP</h1>
             </div>
-            <nav class="flex space-x-1 sm:space-x-2">
+            <nav class="desktop-nav flex space-x-1 sm:space-x-2" aria-label="Навигация для больших экранов">
                 <button @click="activeTab = 'journal'" :class="activeTab === 'journal' ? 'bg-emerald-600 text-white' : 'text-slate-300 hover:bg-slate-700'" class="px-3 py-1.5 rounded-lg text-sm font-medium transition">Журнал</button>
                 <button @click="activeTab = 'clients'" :class="activeTab === 'clients' ? 'bg-emerald-600 text-white' : 'text-slate-300 hover:bg-slate-700'" class="px-3 py-1.5 rounded-lg text-sm font-medium transition">Клиенты</button>
                 <button @click="activeTab = 'finances'" :class="activeTab === 'finances' ? 'bg-emerald-600 text-white' : 'text-slate-300 hover:bg-slate-700'" class="px-3 py-1.5 rounded-lg text-sm font-medium transition">Финансы</button>
             </nav>
             <div class="flex items-center space-x-2 pl-2 border-l border-slate-700">
+                <button class="desktop-add" :disabled="!canEdit()" @click="openClientModal()" aria-label="Добавить клиента">+</button>
                 <template x-if="currentUser">
                     <div class="flex items-center space-x-2">
                         <span class="text-xs text-slate-300 hidden sm:inline" x-text="currentUser.displayName || currentUser.email"></span>
@@ -228,27 +64,35 @@
             </div>
         </div>
     </header>
+
+    <section class="max-w-4xl mx-auto p-4"><p>FitPP · fitpp-165a2 · manual-history-2026-09-v1. База должна уже существовать. Создание и импорт отключены.</p><label><input type="checkbox" x-model="writeConsent"> Включить запись в этой вкладке после проверки резервной копии</label><br><label>Проверить файл резервной копии (без импорта) <input type="file" accept=".json" @change="verifyBackup($event)"></label><p x-text="backupStatus"></p><button class="p-2 m-1 border rounded" @click="reloadData()">Повторить загрузку с сервера</button><button class="p-2 m-1 border rounded" :disabled="!canRead()" @click="downloadBackup()">Скачать резервную копию с сервера</button></section>
+    <div class="sync-message" x-show="syncError" x-cloak role="alert">
+        <span x-text="syncError"></span>
+        <button @click="reloadData()" :disabled="saving || loading || !currentUser">Обновить данные</button>
+    </div>
+    <div class="sync-status" x-show="loading || saving || saveStatus" x-cloak role="status" aria-live="polite" x-text="loading ? 'Загрузка данных…' : saving ? 'Сохранение в Firebase…' : saveStatus"></div>
+
     <!-- Main Content -->
     <main class="max-w-4xl mx-auto px-4 py-6 pb-24">
         <!-- TAB 1: JOURNAL -->
         <div x-show="activeTab === 'journal'" class="space-y-6">
             <!-- Date & Location Selector -->
-            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg">
+            <div class="date-location bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg">
                 <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
                     <div class="flex items-center space-x-3">
-                        <button @click="changeDate(-1)" class="p-2 bg-slate-700 hover:bg-slate-600 rounded-xl transition">❮</button>
+                        <button aria-label="Предыдущий день" @click="changeDate(-1)" class="p-2 bg-slate-700 hover:bg-slate-600 rounded-xl transition">❮</button>
                         <div class="text-center">
                             <span class="text-xs text-slate-400 block">Дата тренировки</span>
-                            <input type="date" x-model="selectedDate" @change="updateLocationByDate()" class="bg-slate-900 border border-slate-600 text-white px-3 py-1 rounded-lg text-sm font-semibold focus:outline-none focus:border-emerald-500">
+                            <input type="date" aria-label="Дата тренировки" x-model="selectedDate" @change="updateLocationByDate()" class="bg-slate-900 border border-slate-600 text-white px-3 py-1 rounded-lg text-sm font-semibold focus:outline-none focus:border-emerald-500">
                         </div>
-                        <button @click="changeDate(1)" class="p-2 bg-slate-700 hover:bg-slate-600 rounded-xl transition">❯</button>
+                        <button aria-label="Следующий день" @click="changeDate(1)" class="p-2 bg-slate-700 hover:bg-slate-600 rounded-xl transition">❯</button>
                     </div>
                     <button @click="setToday()" class="text-xs bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-xl hover:bg-emerald-600/30 transition">Сегодня</button>
                 </div>
                 <!-- Location Auto-Detector & Manual Switch -->
                 <div>
                     <span class="text-xs text-slate-400 block mb-2">Локация:</span>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <div class="location-switch grid grid-cols-1 sm:grid-cols-3 gap-2">
                         <button @click="currentLocation = 'zarya'" :class="currentLocation === 'zarya' ? 'bg-emerald-600 text-white border-emerald-500' : 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-700'" class="border p-2.5 rounded-xl text-sm font-medium text-left transition flex justify-between items-center">
                             <span>мкр. Заря</span>
                             <span class="text-xs opacity-75">Пн, Ср 20:00</span>
@@ -264,8 +108,54 @@
                     </div>
                 </div>
             </div>
+            <div class="summary" aria-label="Сводка выбранного дня">
+                <div><span>Посещений</span><strong x-text="getClientsForLocation().filter(c => ['attended','razov'].includes(getAttendanceStatus(c.id))).length"></strong><span>за выбранный день</span></div>
+                <div><span>Клиентов</span><strong x-text="getClientsForLocation().length"></strong><span>в этой локации</span></div>
+                <div><span>Заканчивается</span><strong x-text="getClientsForLocation().filter(c => { const sub = getClientActiveSubscription(c); return sub && sub.left > 0 && sub.left <= 2; }).length"></strong><span>≤ 2 занятия</span></div>
+            </div>
+            <section class="bg-slate-800 rounded-2xl p-4 mb-4 space-y-3">
+                <h2 class="font-bold">Тренировки выбранного зала · 60 минут</h2>
+                <button :disabled="!canEdit()" @click="addingWorkout=true; newWorkoutDate=selectedDate; newWorkoutTime=FitPPStore.schedule[currentLocation]?.time || '20:00'; newWorkoutLocation=currentLocation || 'zarya'" class="workout-button workout-selected">+ Добавить тренировку</button>
+                <form x-show="addingWorkout" @submit.prevent="addWorkout()" class="workout-form">
+                    <label>Дата <input type="date" x-model="newWorkoutDate" required></label>
+                    <label>Время <input type="time" x-model="newWorkoutTime" required></label>
+                    <label>Зал <select x-model="newWorkoutLocation" required><option value="zarya">Заря</option><option value="pole">Поле</option><option value="online">Онлайн</option></select></label>
+                    <button type="submit" :disabled="!canEdit()" class="workout-button workout-selected">Добавить</button>
+                    <button type="button" @click="addingWorkout=false" class="workout-button">Закрыть</button>
+                </form>
+                <button :disabled="!canRead()" @click="downloadBackup()" class="bg-slate-700 rounded px-3 py-2">Скачать резервную копию с сервера</button>
+                <p x-show="dayWorkouts().length === 0">В этот день тренировок нет.</p>
+                <template x-for="w in dayWorkouts()" :key="w.id">
+                    <div class="workout-card">
+                        <p class="workout-title" x-text="workoutLabel(w)"></p>
+                        <div class="workout-actions">
+                        <button x-show="!w.cancelled && w.date === selectedDate" @click="chosenWorkout=w.id" class="workout-button" :class="activeWorkout()?.id === w.id ? 'workout-selected' : ''" x-text="activeWorkout()?.id === w.id ? 'Выбрана для отметок' : 'Выбрать для отметок'"></button>
+                        <button :disabled="!canManageWorkout(w)" @click="manageWorkout(w,'date')" class="workout-button">Изменить дату</button>
+                        <button :disabled="!canManageWorkout(w)" @click="manageWorkout(w,'time')" class="workout-button">Изменить время</button>
+                        <button :disabled="!canManageWorkout(w)" x-show="!w.cancelled" @click="manageWorkout(w,'cancel')" class="workout-button workout-danger">Отменить тренировку</button>
+                        <button :disabled="!canManageWorkout(w)" x-show="!w.extra && (w.cancelled || w.date !== w.originDate || w.time !== FitPPStore.schedule[w.location].time)" @click="manageWorkout(w,'restore')" class="workout-button">Вернуть обычное расписание</button>
+                        </div>
+                        <p class="text-slate-400 text-xs" x-show="workoutLocked(w)">Есть отметки или списания. Изменение тренировки заблокировано.</p>
+                    </div>
+                </template>
+                <details class="cancelled-workouts">
+                    <summary class="workout-button" x-text="'Отменённые тренировки (' + cancelledWorkouts().length + ')' "></summary>
+                    <template x-for="w in cancelledWorkouts()" :key="w.id">
+                        <div class="workout-card">
+                            <p class="workout-title" x-text="workoutLabel(w)"></p>
+                            <div class="workout-actions">
+                                <button :disabled="!canManageWorkout(w)" @click="manageWorkout(w,'resume')" class="workout-button">Восстановить</button>
+                                <button x-show="w.extra" :disabled="!canDeleteWorkout(w)" @click="manageWorkout(w,'delete')" class="workout-button workout-danger">Удалить навсегда</button>
+                            </div>
+                            <p x-show="workoutLocked(w)" class="text-slate-400 text-xs">Есть отметки или списания. Изменение тренировки заблокировано.</p>
+                        </div>
+                    </template>
+                </details>
+                <template x-for="row in unresolvedMarks()" :key="row.key"><p><span x-text="row.date + ' · ' + row.name"></span> <button :disabled="!canEdit()" @click="linkOldMark(row)" class="bg-amber-800 rounded px-3 py-2">Указать зал после сверки</button></p></template>
+                <p class="text-amber-300" x-show="FitPPStore.unresolved(sessionData())">Есть старые отметки с неоднозначным залом. Они сохранены; изменение расписания заблокировано до сверки журнала.</p>
+            </section>
             <!-- Attendance List -->
-            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg">
+            <div class="journal-panel bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg">
                 <div class="flex justify-between items-center mb-4">
                     <div>
                         <h2 class="text-lg font-bold" x-text="getLocationTitle()"></h2>
@@ -273,26 +163,32 @@
                     </div>
                     <span class="text-xs bg-slate-700 px-3 py-1 rounded-full text-slate-300" x-text="getClientsForLocation().length + ' клиентов'"></span>
                 </div>
+                <div x-show="!currentLocation" class="empty-state" role="status"><strong>На эту дату тренировок по расписанию нет</strong>Можно выбрать локацию вручную выше.</div>
+                <div x-show="currentLocation && getClientsForLocation().length === 0" class="empty-state"><strong>Пока нет клиентов</strong>Добавьте клиента и выберите для него эту локацию.<br><button :disabled="!canEdit()" @click="openClientModal()" class="text-emerald-400 mt-3">+ Добавить клиента</button></div>
                 <div class="space-y-3">
                     <template x-for="client in getClientsForLocation()" :key="client.id">
-                        <div class="bg-slate-900 border border-slate-700/60 p-3.5 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                            <div>
+                        <div class="client-row bg-slate-900 border border-slate-700/60 p-3.5 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                            <div class="client-heading">
+                                <span class="avatar" aria-hidden="true" x-text="getInitials(client.name)"></span><div>
 <div class="flex items-center gap-1.5">
-    <h3 class="font-semibold text-white" x-text="client.name"></h3>
-    <span x-show="getClientActiveSubscription(client).left === 1" class="text-amber-400 text-xs font-semibold bg-amber-400/10 border border-amber-400/30 px-1.5 py-0.5 rounded flex items-center gap-1" title="Осталось 1 занятие">
-        ⚠️ Осталось 1 зан.
-    </span>
+    <button class="client-name" @click="openClientDetail(client)" x-text="client.name"></button>
+
 </div>
                                 <div class="flex items-center space-x-2 text-xs mt-1">
-                                    <span class="text-emerald-400 font-medium" x-text="'Остаток: ' + getClientActiveSubscription(client).left + ' зан.'"></span>
-                                    <span class="text-slate-400" x-text="'До: ' + getClientActiveSubscription(client).expires"></span>
+                                    <span class="text-emerald-400 font-medium" x-text="'Остаток: ' + (getClientActiveSubscription(client)?.left ?? 0) + ' зан.'"></span>
+                                    <span class="text-slate-400" x-text="'До: ' + (getClientActiveSubscription(client)?.expires || '—')"></span>
                                 </div>
+<div class="subscription-warnings" x-show="getSubscriptionWarnings(client).length">
+    <template x-for="warning in getSubscriptionWarnings(client)" :key="warning.key">
+        <span class="subscription-warning" :class="'subscription-warning-' + warning.kind" :title="warning.title" x-text="warning.text"></span>
+    </template>
+</div>
                             </div>
-                            <div class="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
-                                <button @click="markAttendance(client.id, 'attended')" :class="getAttendanceStatus(client.id) === 'attended' ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'" class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition">✓ Был (-1)</button>
-                                <button @click="markAttendance(client.id, 'razov')" :class="getAttendanceStatus(client.id) === 'razov' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'" class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition" x-text="'₽ Разово (' + getRazovPrice() + ')'"></button>
-                                <button @click="markAttendance(client.id, 'missed')" :class="getAttendanceStatus(client.id) === 'missed' ? 'bg-rose-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'" class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition">Сгорело</button>
-                                <button @click="markAttendance(client.id, 'excused')" :class="getAttendanceStatus(client.id) === 'excused' ? 'bg-amber-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'" class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition">Уваж.</button>
+                            </div>
+                            <div class="attendance-actions flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
+                                <button :disabled="!canEdit() || !activeWorkout() || (client.subscriptions || []).some(s => isFrozen(s) || FitPPStore.frozenOn(s, selectedDate))" @click="markAttendance(client.id, 'attended')" :aria-pressed="getAttendanceStatus(client.id) === 'attended'" :class="getAttendanceStatus(client.id) === 'attended' ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'" class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition">✓ Был (-1)</button>
+                                <button :disabled="!canEdit() || !activeWorkout()" @click="markAttendance(client.id, 'razov')" :aria-pressed="getAttendanceStatus(client.id) === 'razov'" :class="getAttendanceStatus(client.id) === 'razov' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'" class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition" x-text="'₽ Разово (' + getRazovPrice() + ')'"></button>
+                                <button :disabled="!canEdit() || !activeWorkout() || (client.subscriptions || []).some(s => isFrozen(s) || FitPPStore.frozenOn(s, selectedDate))" @click="markAttendance(client.id, 'missed')" :aria-pressed="getAttendanceStatus(client.id) === 'missed'" :class="getAttendanceStatus(client.id) === 'missed' ? 'bg-rose-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'" class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition">Сгорело</button>
                             </div>
                         </div>
                     </template>
@@ -300,32 +196,31 @@
             </div>
         </div>
         <!-- TAB 2: CLIENTS -->
-        <div x-show="activeTab === 'clients'" class="space-y-6">
-            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg flex justify-between items-center">
-                <h2 class="text-lg font-bold">База клиентов</h2>
-                <button @click="openClientModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-semibold transition">+ Новый клиент</button>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <template x-for="client in clients" :key="client.id">
-                    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg flex flex-col justify-between">
-                        <div>
-                            <div class="flex justify-between items-start">
-                                <h3 class="font-bold text-white text-base" x-text="client.name"></h3>
-                                <button @click="editClient(client)" class="text-slate-400 hover:text-white text-xs bg-slate-700 px-2 py-1 rounded-lg">Изменить</button>
+        <div x-show="activeTab === 'clients' || activeTab === 'archive'" class="client-list">
+            <div class="detail-card"><button @click="activeTab = 'clients'" class="px-3 py-2">Активные клиенты</button><button @click="activeTab = 'archive'" class="px-3 py-2">Архив клиентов</button><p x-show="activeTab === 'archive'">История и финансы сохранены. Откройте карточку для просмотра или восстановления.</p></div>
+            <div x-show="visibleClients().length === 0" class="empty-state"><strong>Ваша команда начинается здесь</strong>Добавьте первого клиента, чтобы вести журнал тренировок.</div>
+            <div class="client-grid grid grid-cols-1 md:grid-cols-2 gap-4">
+                <template x-for="client in visibleClients()" :key="client.id">
+                    <div class="client-tile bg-slate-800 border border-slate-700 rounded-2xl">
+                        <div class="client-tile-top">
+                            <span class="avatar" aria-hidden="true" x-text="getInitials(client.name)"></span>
+                            <div class="client-tile-identity">
+                                <button class="client-name" @click="openClientDetail(client)" x-text="client.name"></button>
+                                <p class="client-phone" x-text="client.phone || 'Телефон не указан'"></p>
                             </div>
-                            <p class="text-xs text-slate-400 mt-1" x-text="'Телефон: ' + (client.phone || 'не указан')"></p>
+                            <button class="client-action" :disabled="!canEdit()" @click="editClient(client)">Изменить</button>
                         </div>
-                        <div class="mt-4 pt-3 border-t border-slate-700/60 flex justify-between items-center">
-                            <div>
-                                <span class="text-xs text-slate-400 block">Абонемент:</span>
-<div class="flex items-center gap-1.5">
-    <span class="text-sm font-semibold text-emerald-400" x-text="getClientSubInfo(client)"></span>
-    <span x-show="getClientActiveSubscription(client).left === 1" class="text-amber-400 text-xs font-semibold bg-amber-400/10 border border-amber-400/30 px-1.5 py-0.5 rounded flex items-center gap-1" title="Осталось 1 занятие">
-        ⚠️ 1 зан.
-    </span>
+                        <div class="client-tile-footer">
+                            <div class="client-subscription">
+                                <span class="client-balance" x-text="'Остаток: ' + (getClientActiveSubscription(client)?.left ?? 0) + ' зан.'"></span>
+                                <span class="client-expiry" x-text="'До: ' + (getClientActiveSubscription(client)?.expires || '—')"></span>
+<div class="subscription-warnings" x-show="getSubscriptionWarnings(client).length">
+    <template x-for="warning in getSubscriptionWarnings(client)" :key="warning.key">
+        <span class="subscription-warning" :class="'subscription-warning-' + warning.kind" :title="warning.title" x-text="warning.text"></span>
+    </template>
 </div>
                             </div>
-                            <button @click="openSubModal(client)" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-xl text-xs font-medium transition">+ Продать</button>
+                            <button class="client-action client-sell" :disabled="!canEdit()" @click="openSubModal(client)">+ Продать</button>
                         </div>
                     </div>
                 </template>
@@ -334,14 +229,42 @@
         <!-- TAB 3: FINANCES -->
         <div x-show="activeTab === 'finances'" class="space-y-6">
             <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg space-y-4">
-                <div class="flex justify-between items-center">
+                <div class="finance-toolbar">
                     <h2 class="text-lg font-bold">Финансовый отчёт и аренда</h2>
-                    <div class="flex items-center space-x-2 bg-slate-900 border border-slate-700 px-3 py-1 rounded-xl">
-                        <button @click="changeMonth(-1)" class="text-slate-400 hover:text-white">❮</button>
+                    <div class="month-switcher bg-slate-900 border border-slate-700 rounded-xl" aria-label="Отчётный месяц">
+                        <button aria-label="Предыдущий месяц" @click="changeMonth(-1)" class="text-slate-400 hover:text-white">❮</button>
                         <span class="text-sm font-semibold text-emerald-400" x-text="formatMonthName(currentMonth)"></span>
-                        <button @click="changeMonth(1)" class="text-slate-400 hover:text-white">❯</button>
+                        <button aria-label="Следующий месяц" @click="changeMonth(1)" class="text-slate-400 hover:text-white">❯</button>
                     </div>
                 </div>
+                <div x-show="currentMonth >= '2026-11'" class="space-y-3">
+                    <p class="text-sm text-slate-300" x-text="rentMonths[currentMonth] ? 'Аренда сохранена. Можно изменить даты.' : 'Аренда ещё не сохранена. Прогноз не включён в расходы и прибыль.'"></p>
+                    <button :disabled="!canEdit()" @click="correctFinance()" class="p-3 border rounded">Скорректировать доход месяца</button><button :disabled="!canEdit()" @click="deleteZeroFinance()" class="p-3 border rounded">Удалить нулевой итог</button><button :disabled="!canEdit() || !rentMonths[currentMonth]" @click="deleteRent()" class="p-3 border rounded">Удалить настройку аренды месяца</button>
+                    <button @click="openRent()" :disabled="!canEdit() || !!rentDraft" class="bg-emerald-600 rounded-xl p-3 w-full">Настроить аренду</button>
+                </div>
+                <template x-if="rentDraft">
+                    <section class="space-y-4 bg-slate-900 rounded-xl p-3" aria-label="Календарь аренды">
+                        <h3 class="font-bold" x-text="'Аренда: ' + formatMonthName(rentDraft.month)"></h3>
+                        <p class="text-sm">Снимите галочки с отменённых тренировок. Изменения попадут в расходы после сохранения.</p>
+                        <template x-for="hall in ['zarya', 'pole']" :key="hall">
+                            <fieldset :disabled="!canEdit()" class="space-y-2">
+                                <legend class="font-bold" x-text="hall === 'zarya' ? 'Заря · 800 ₽ · Пн/Ср' : 'Поле чудес · 600 ₽ · Вт/Чт'"></legend>
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                    <template x-for="date in rentDates(hall)" :key="date">
+                                        <label class="flex items-center gap-2 border border-slate-600 rounded-xl p-3" style="min-height:48px">
+                                            <input type="checkbox" :value="date" x-model="rentDraft[hall]" style="width:22px;height:22px">
+                                            <span x-text="date.slice(8) + ' ' + ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'][new Date(date + 'T12:00:00Z').getUTCDay()]"></span>
+                                        </label>
+                                    </template>
+                                </div>
+                                <p x-text="rentDraft[hall].length + ' × ' + (hall === 'zarya' ? 800 : 600) + ' = ' + rentDraft[hall].length * (hall === 'zarya' ? 800 : 600) + ' ₽'"></p>
+                            </fieldset>
+                        </template>
+                        <p class="font-bold" aria-live="polite" x-text="'Итого: ' + rentDraftTotal() + ' ₽'"></p>
+                        <button @click="saveRent()" :disabled="!canEdit()" class="bg-emerald-600 rounded-xl p-3 w-full" x-text="saving ? 'Сохранение…' : 'Сохранить месяц'"></button>
+                        <button @click="rentDraft = null; rentFormToken = null" :disabled="saving" class="border border-slate-600 rounded-xl p-3 w-full">Закрыть без сохранения</button>
+                    </section>
+                </template>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
                     <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl">
                         <span class="text-xs text-slate-400 block">Доходы (Всего)</span>
@@ -357,17 +280,33 @@
                     </div>
                 </div>
             </div>
-            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg space-y-4">
-                <div class="flex justify-between items-center">
-                    <h3 class="text-md font-bold text-rose-400">Опасная зона</h3>
-                    <button @click="clearDatabase()" class="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-xl text-sm font-semibold transition">Сбросить базу данных</button>
-                </div>
-            </div>
         </div>
     </main>
 
+
+    <nav class="bottom-nav" aria-label="Основная навигация">
+        <button @click="activeTab = 'journal'" :aria-current="activeTab === 'journal' ? 'page' : null"><span aria-hidden="true"><svg class="nav-icon"><use href="#icon-calendar"/></svg></span>Журнал</button>
+        <button @click="activeTab = 'clients'" :aria-current="activeTab === 'clients' ? 'page' : null"><span aria-hidden="true"><svg class="nav-icon"><use href="#icon-users"/></svg></span>Клиенты</button>
+        <button @click="activeTab = 'finances'" :aria-current="activeTab === 'finances' ? 'page' : null"><span aria-hidden="true"><svg class="nav-icon"><use href="#icon-wallet"/></svg></span>Финансы</button>
+        <button :disabled="!canEdit()" @click="openClientModal()" aria-label="Добавить клиента">+</button>
+    </nav>
+    <section class="client-detail" x-show="detailClient" x-cloak @keydown.escape.window="detailClient = null" aria-label="Карточка клиента">
+      <template x-if="detailClient"><div class="detail-shell">
+        <div class="detail-top"><button @click="detailClient = null" aria-label="Назад">‹</button>Клиент</div>
+        <div class="detail-card"><div class="client-heading"><span class="avatar" x-text="getInitials(detailClient.name)"></span><div><h2 x-text="detailClient.name"></h2><span class="text-xs text-emerald-400" x-text="FitPPStore.subscriptionTitle(getClientActiveSubscription(detailClient), today)"></span><p><a class="detail-phone" :href="detailClient.phone ? 'tel:' + detailClient.phone.replace(/[^+0-9]/g, '') : null" x-text="detailClient.phone || 'Телефон не указан'"></a></p></div></div></div>
+        <div class="detail-card detail-stats"><div><span>Остаток занятий</span><strong x-text="getClientActiveSubscription(detailClient)?.left ?? 0"></strong><span>в текущем абонементе</span></div><div><span>Абонемент</span><p x-text="getClientSubInfo(detailClient)"></p><button :disabled="!canEdit()" @click="openSubModal(detailClient)" class="text-emerald-400 text-sm mt-3">+ Оформить</button></div></div>
+        <div class="detail-card"><span class="text-slate-400 text-sm">Локации · разовая тренировка</span><template x-for="loc in (detailClient.locations || [])" :key="loc"><p x-text="({zarya:'мкр. Заря — 700 ₽',pole:'Поле чудес — 600 ₽',online:'Онлайн — 500 ₽'})[loc]"></p></template></div>
+        <div class="detail-tabs" role="tablist" aria-label="Данные клиента"><template x-for="tab in [{id:'visits',label:'Посещения'},{id:'payments',label:'Оплаты'},{id:'subs',label:'Абонементы'}]"><button role="tab" :aria-selected="detailTab === tab.id" @click="detailTab = tab.id" x-text="tab.label"></button></template></div>
+        <div class="detail-card" x-show="detailTab === 'visits'"><h3 class="font-semibold">История посещений</h3><p x-show="getClientAttendanceHistory(detailClient.id).length === 0">Посещений пока нет</p><template x-for="item in getClientAttendanceHistory(detailClient.id)" :key="item.id"><div class="history-row"><span x-text="item.date.split('-').reverse().join('.')"></span><span class="rounded-lg px-2 py-1" :class="item.badgeClass" x-text="item.text"></span></div></template></div>
+        <div class="detail-card" x-show="detailTab === 'payments'"><h3 class="font-semibold">Оплаты абонементов</h3><p>Разовые оплаты учтены в общем финансовом отчёте. Историческая сумма разового платежа отдельно не сохраняется.</p><p x-show="!(detailClient.subscriptions || []).length">Оплат абонементов пока нет</p><template x-for="(sub, i) in (detailClient.subscriptions || [])" :key="i"><div class="history-row"><span x-text="sub.startDate || 'Дата не указана'"></span><span class="text-emerald-400" x-text="sub.price != null ? sub.price + ' ₽' : 'Сумма не указана'"></span></div></template></div>
+        <div class="detail-card" x-show="detailTab === 'subs'"><h3 class="font-semibold">Абонементы</h3><p x-show="!(detailClient.subscriptions || []).length">Абонементов пока нет</p><template x-for="(sub, i) in (detailClient.subscriptions || [])" :key="i"><div class="history-row"><span x-text="(isFrozen(sub) || isFreezePending(sub) ? 'Плановый срок до ' : 'До ') + (sub.expires || '—')"></span><span class="text-emerald-400" x-text="'Остаток: ' + sub.left"></span><button :disabled="!canEdit()" @click="editUnusedSubscription(detailClient, sub)" class="px-3 py-2">Изменить неиспользованный</button><button :disabled="!canEdit()" @click="cancelUnusedSubscription(detailClient, sub)" class="px-3 py-2 text-rose-400">Отменить продажу</button><button :disabled="!canEdit() || extensionLeft(sub) === 0 || isFrozen(sub) || isFreezePending(sub) || !!detailClient.archivedAt" x-show="sub.left > 0" @click="extendSub(detailClient, sub, i)" class="bg-emerald-700 px-3 py-2 rounded-lg">Продлить</button><span x-show="sub.left > 0" x-text="'Доступно продление: ' + extensionLeft(sub) + ' дн. из 14 суммарно'"></span><span x-show="isFrozen(sub)" x-text="'❄️ Возвращение: ' + (sub.freezes || []).at(-1)?.end"></span><button :disabled="!canEdit()" x-show="!isFrozen(sub) && !isFreezePending(sub) && sub.left > 0 && sub.expires >= today && (!sub.startDate || sub.startDate <= today)" @click="openFreeze(detailClient, sub, i)" class="bg-sky-700 px-3 py-2 rounded-lg">Заморозить</button><span x-show="isFreezePending(sub)" x-text="'❄️ Запланирована с ' + (sub.freezes || []).at(-1)?.start + ', возвращение ' + (sub.freezes || []).at(-1)?.end"></span><button :disabled="!canEdit()" x-show="isFrozen(sub) || isFreezePending(sub)" @click="unfreeze(detailClient, i)" class="bg-emerald-700 px-3 py-2 rounded-lg" x-text="isFreezePending(sub) ? 'Отменить заморозку' : 'Разморозить'">Разморозить</button></div></template></div>
+        <div class="detail-card"><p x-show="detailClient.archivedAt">Клиент в архиве · история сохранена</p><button :disabled="!canEdit()" @click="archiveClient(detailClient)" class="px-3 py-2" x-text="detailClient.archivedAt ? 'Восстановить' : 'Архивировать'"></button><button :disabled="!canEdit()" @click="removeClient(detailClient)" class="px-3 py-2 text-rose-400">Удалить навсегда</button></div>
+        <button class="detail-edit" @click="editClient(detailClient)">✎ Редактировать клиента</button>
+      </div></template>
+    </section>
+
     <!-- Client Modal -->
-    <div x-show="showClientModal" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+    <div x-show="showClientModal" x-cloak class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
         <div class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <h3 class="text-lg font-bold" x-text="editingClient ? 'Редактировать клиента' : 'Новый клиент'"></h3>
             <div>
@@ -401,17 +340,50 @@
                 </div>
             </template>
             <div class="flex justify-between items-center pt-2 border-t border-slate-700/60">
-                <button x-show="editingClient" @click="deleteClient()" class="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition">Удалить</button>
+                <button x-show="editingClient" :disabled="!canEdit()" @click="deleteClient()" class="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition">Удалить навсегда</button>
                 <div class="flex space-x-3 ml-auto">
                     <button @click="showClientModal = false" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl text-sm font-medium transition">Отмена</button>
-                    <button @click="saveClient()" class="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-xl text-sm font-semibold transition">Сохранить</button>
+                    <button :disabled="!canEdit()" @click="saveClient()" class="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-xl text-sm font-semibold transition">Сохранить</button>
                 </div>
             </div>
         </div>
     </div>
 
+    <div x-show="freezeForm" x-cloak class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+      <div class="bg-slate-800 p-6 rounded-2xl space-y-4">
+        <h3>Заморозка абонемента</h3>
+        <p x-show="freezeForm?.startDate === today">Начало сегодня.</p>
+        <p x-show="freezeForm?.startDate > today">Сегодня уже есть посещение или списание. Предлагаем начать заморозку завтра. Сегодняшняя отметка сохранится.</p>
+        <p x-text="'Начало: ' + (freezeForm?.startDate || '')"></p>
+        <p>Возвращение — первый активный день; этот день в заморозку не входит.</p>
+        <p>Остаток занятий сохраняется. Срок продлевается до возвращения; при досрочной разморозке пересчитывается.</p>
+        <label>Дата возвращения <input type="date" :min="freezeForm ? FitPPStore.addDays(freezeForm.startDate, 1) : ''" :value="freezeForm?.returnDate || ''" @input="if (freezeForm) freezeForm.returnDate = $event.target.value" class="bg-slate-900 p-2 rounded-lg"></label>
+        <button @click="freezeForm = null">Отмена</button>
+        <button :disabled="!canEdit()" @click="saveFreeze()" class="bg-sky-700 p-2 rounded-lg">Заморозить</button>
+      </div>
+    </div>
+    <div x-show="deletionError || deletionMessage" x-cloak class="fixed bottom-4 left-4 right-4 bg-slate-800 border border-slate-500 rounded-xl p-4 z-[70]" role="status" aria-live="polite">
+        <span x-text="deletionError || deletionMessage"></span>
+        <button @click="deletionError=''; deletionMessage=''" class="ml-4">Закрыть</button>
+    </div>
+    <div x-show="deletionForm" x-cloak class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[60]" role="dialog" aria-modal="true" aria-label="Подтверждение удаления клиента">
+        <div class="bg-slate-800 border border-slate-600 w-full max-w-md rounded-2xl p-6 space-y-4">
+            <h3 class="text-lg font-bold">Удалить клиента навсегда?</h3>
+            <p>Будет удалена только карточка клиента без абонементов и посещений. Отменить сохранённое удаление нельзя.</p>
+            <p x-text="deletionForm ? 'Имя клиента: ' + deletionForm.expectedName : ''"></p>
+            <label class="block">Введите точное имя клиента
+                <input :value="deletionForm?.name || ''" @input="if(deletionForm) deletionForm.name=$event.target.value" :disabled="saving" class="w-full bg-slate-900 border rounded-xl p-2">
+            </label>
+            <label class="block">Введите УДАЛИТЬ НАВСЕГДА
+                <input :value="deletionForm?.phrase || ''" @input="if(deletionForm) deletionForm.phrase=$event.target.value" :disabled="saving" class="w-full bg-slate-900 border rounded-xl p-2">
+            </label>
+            <p role="alert" x-text="deletionError"></p>
+            <button :disabled="saving" @click="cancelDeletion()" class="px-4 py-2">Отмена</button>
+            <button :disabled="!canEdit()" @click="confirmDeletion()" class="bg-rose-600 rounded-xl px-4 py-2" x-text="saving ? 'Сохранение…' : 'Подтвердить удаление'"></button>
+        </div>
+    </div>
     <!-- Subscription Modal -->
-    <div x-show="showSubModal" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+    <div x-show="showSubModal" x-cloak class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
         <div class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4">
             <h3 class="text-lg font-bold">Продажа абонемента</h3>
             <p class="text-xs text-slate-400" x-text="'Клиент: ' + (subClient ? subClient.name : '')"></p>
@@ -428,7 +400,7 @@
             </div>
             <div class="flex justify-end space-x-3 pt-2">
                 <button @click="showSubModal = false" class="bg-slate-700 px-4 py-2 rounded-xl text-sm">Отмена</button>
-                <button @click="saveSubscription()" class="bg-emerald-600 px-4 py-2 rounded-xl text-sm font-semibold">Оформить</button>
+                <button :disabled="!canEdit()" @click="saveSubscription()" class="bg-emerald-600 px-4 py-2 rounded-xl text-sm font-semibold">Оформить</button>
             </div>
         </div>
     </div>
@@ -456,29 +428,200 @@
         </div>
     </div>
 
+    <script src="vendor/firebase-app-compat.js"></script>
+<script src="vendor/firebase-auth-compat.js"></script>
+<script src="vendor/firebase-firestore-compat.js"></script>
+<script src="firebase-adapter.js"></script>
+<script src="cloud.js"></script>
+    <script src="backup.js"></script>
+    <script src="persistence.js"></script>
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyD29YmR0LiS-YaV2GZ2c5tXM8t1ibNhJKk",
-            authDomain: "fitpp-crm.firebaseapp.com",
-            projectId: "fitpp-crm",
-            storageBucket: "fitpp-crm.firebasestorage.app",
-            messagingSenderId: "1075119383188",
-            appId: "1:1075119383188:web:21494fbfc98b331b92ca81"
-        };
-        
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        const workspace = FitPPCloud.start(firebase);
+        const stagingApp = {auth: () => workspace.auth};
+        const db = workspace.db;
+
 
         function trainerApp() {
+            const store = FitPPStore.create({ db, auth: stagingApp.auth(), workspace });
+            let started = false;
             return {
+                dataReady: false,
+                loading: false,
+                saving: false,
+                syncError: '',
+                saveStatus: '',
+                sessionEpoch: -1,
+                clientFormToken: null,
+                subFormToken: null,
+                resetSessionUI() {
+                    this.writeConsent = false;
+                    this.deletionForm = null; this.deletionToken = null;
+                    this.deletionError = ''; this.deletionMessage = '';
+                    this.freezeForm = null;
+                    this.chosenWorkout = "";
+                    this.addingWorkout=false; this.newWorkoutDate=''; this.newWorkoutTime=''; this.newWorkoutLocation='zarya';
+                    this.freezeToken = null;
+                    this.rentDraft = null;
+                    this.rentFormToken = null;
+                    this.detailClient = null;
+                    this.detailTab = 'visits';
+                    this.editingClient = null;
+                    this.subClient = null;
+                    this.clientFormToken = null;
+                    this.subFormToken = null;
+                    this.showClientModal = false;
+                    this.showSubModal = false;
+                    this.showAuthModal = false;
+                    this.authForm = { email: '', password: '' };
+                    this.authError = '';
+                    this.clientForm = { id: null, name: '', phone: '', locations: ['zarya'] };
+                    this.subForm = { type: 'zarya', date: this.selectedDate };
+                },
+                canEdit() {
+                    return workspace.writesEnabled && this.writeConsent && this.currentUser?.uid === FitPPWorkspace.ownerUid && this.dataReady && !this.loading && !this.saving;
+                },
+                canRead() {
+                    return this.dataReady && !this.loading && !this.saving;
+                },
+                today: FitPPStore.localDate(),
+                calendarTimer: null,
+                freezeForm: null,
+                freezeToken: null,
+                isFrozen(sub) { return FitPPStore.frozenOn(sub, this.today); },
+                isFreezePending(sub) { return FitPPStore.pendingFreeze(sub, this.today); },
+                openFreeze(client, sub, index) {
+                    if (!this.canEdit() || !this.clients.includes(client) || client.subscriptions?.[index] !== sub) return;
+                    this.today = FitPPStore.localDate();
+                    this.freezeToken = store.token();
+                    const startDate = FitPPStore.freezeStart({attendance:this.freezeAttendance()}, client.id, this.today);
+                    this.freezeForm = {clientId:client.id, subscriptionIndex:index, startDate, returnDate:FitPPStore.addDays(startDate,1)};
+                },
+                async saveFreeze() {
+                    if (!this.freezeForm || !this.canEdit()) return;
+                    if (await store.run({type:'freeze', ...this.freezeForm}, this.freezeToken)) this.freezeForm = null;
+                },
+                async unfreeze(client, index) {
+                    if (!this.canEdit() || !this.clients.includes(client) || !confirm(this.isFreezePending(client.subscriptions[index]) ? 'Отменить запланированную заморозку? Продление срока будет отменено.' : 'Разморозить сегодня? Срок будет пересчитан по фактическим дням.')) return;
+                    await store.run({type:'unfreeze', clientId:client.id, subscriptionIndex:index});
+                },
+                extensionLeft(sub) { try { return FitPPStore.extensionRemaining(sub); } catch { return 0; } },
+                async extendSub(client, sub, index) {
+                    if (!this.canEdit() || !this.clients.includes(client) || client.subscriptions?.[index] !== sub) return;
+                    const token = store.token(), remaining = this.extensionLeft(sub);
+                    if (!remaining) return;
+                    const raw = prompt('На сколько календарных дней продлить от ' + sub.expires + '? Доступно 1–' + remaining + ' дн.; общий лимит 14 дней на абонемент.');
+                    if (raw === null) return;
+                    if (!/^[0-9]+$/.test(raw.trim())) { alert('Введите целое число дней.'); return; }
+                    const days = Number(raw);
+                    if (days < 1 || days > remaining) { alert('Допустимо от 1 до ' + remaining + ' дней.'); return; }
+                    const expectedExpires = sub.expires, expectedUsed = sub.extensionDays ?? 0;
+                    if (!confirm('Продлить до ' + FitPPStore.addDays(expectedExpires, days) + '? Остаток занятий и оплаты сохраняются.')) return;
+                    await store.run({type:'extendSubscription',clientId:client.id,subscriptionIndex:index,days,expectedExpires,expectedUsed}, token);
+                },
+                visibleClients() { return this.clients.filter(c => !!c.archivedAt === (this.activeTab === 'archive')); },
+                async archiveClient(client) {
+                    if (!this.canEdit()) return;
+                    const token = store.token();
+                    const restoring = !!client.archivedAt;
+                    if (!confirm(restoring ? 'Восстановить клиента в активном списке?' : 'Архивировать клиента? Вся история и финансы сохранятся. Новые записи станут недоступны.')) return;
+                    await store.run({type:restoring ? 'restoreClient' : 'archiveClient',clientId:client.id,confirmName:client.name},token);
+                },
+                deletionForm: null,
+                deletionError: '',
+                deletionMessage: '',
+                deletionToken: null,
+                async removeClient(client) {
+                    this.deletionError = ''; this.deletionMessage = '';
+                    if (!client || !this.canEdit()) {
+                        this.deletionError = 'Удаление недоступно. Дождитесь загрузки и включите запись.'; return;
+                    }
+                    try { FitPPStore.deletionPlan(this.sessionDataWithFinances(), client.id); }
+                    catch (e) { this.deletionError = e.message; return; }
+                    this.deletionToken = store.token();
+                    this.deletionForm = {clientId:client.id, expectedName:client.name, name:'', phrase:''};
+                },
+                cancelDeletion() {
+                    if (this.saving) return;
+                    this.deletionForm = null; this.deletionToken = null;
+                    this.deletionError = ''; this.deletionMessage = 'Удаление отменено.';
+                },
+                async confirmDeletion() {
+                    const form = this.deletionForm;
+                    if (!form || this.saving) return;
+                    this.deletionError = '';
+                    if (!this.canEdit()) { this.deletionError = 'Удаление недоступно. Обновите данные и откройте форму заново.'; return; }
+                    if (form.name !== form.expectedName || form.phrase !== 'УДАЛИТЬ НАВСЕГДА') {
+                        this.deletionError = 'Введите точное имя клиента и фразу УДАЛИТЬ НАВСЕГДА.'; return;
+                    }
+                    try {
+                        const ok = await store.run({type:'deleteClient',clientId:form.clientId,confirmName:form.name,confirmPhrase:form.phrase},this.deletionToken);
+                        if (!ok) { this.deletionError = this.syncError || 'Удаление не подтверждено сервером. Повторите загрузку с сервера перед новой попыткой.'; return; }
+                        this.deletionForm = null; this.deletionToken = null;
+                        this.showClientModal = false; this.clientFormToken = null;
+                        this.detailClient = null; this.editingClient = null;
+                        this.deletionMessage = 'Клиент удалён. Изменение сохранено на сервере.';
+                    } catch (e) {
+                        this.deletionError = 'Удаление не подтверждено. Повторите загрузку с сервера. ' + e.message;
+                    }
+                },
+                sessionDataWithFinances() { return FitPPStore.read({...this.sessionData(), finances:this.finances}); },
+                detailClient: null,
+                detailTab: 'visits',
+                getInitials(name) {
+                    return (name || '?').trim().split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase();
+                },
+                openClientDetail(client) {
+                    if (!this.canEdit() || !this.clients.includes(client)) return;
+                    this.detailClient = client;
+                    this.detailTab = 'visits';
+                },
                 activeTab: 'journal',
-                selectedDate: new Date().toISOString().slice(0, 10),
-                currentMonth: new Date().toISOString().slice(0, 7),
-                currentLocation: 'zarya',
+                selectedDate: FitPPStore.localDate(),
+                currentMonth: FitPPStore.localDate().slice(0, 7),
+                currentLocation: null,
                 currentUser: null,
                 clients: [],
-                attendance: {},
+                attendance: {}, workouts: {}, visits: {}, visitOps: {}, legacyLinks: {}, legacySources: {},
+                chosenWorkout: "",
+                addingWorkout:false, newWorkoutDate:'', newWorkoutTime:'', newWorkoutLocation:'zarya',
+                workoutLabel(w) {
+                    const [y,m,d]=w.date.split('-');
+                    return `${d}.${m}.${y.slice(-2)} · ${w.time}` + (w.extra ? ' · Дополнительная' : '') + (w.cancelled ? ' · Отменена' : w.date!==this.selectedDate ? ' · Перенесена' : '');
+                },
+                workoutLocked(w) {
+                    const d=this.sessionData();
+                    return Object.keys(d.visits[w.id] || {}).length>0 || Object.keys(d.visitOps[w.id] || {}).length>0;
+                },
+                canManageWorkout(w) {
+                    const now=new Date(), date=FitPPStore.localDate(now), time=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+                    return this.canEdit() && !this.workoutLocked(w) && !FitPPStore.unresolved(this.sessionData()) && w.date+'T'+w.time>date+'T'+time;
+                },
+                async addWorkout() {
+                    if(!this.canEdit())return;
+                    const workoutId=this.newWorkoutLocation+'_extra_'+crypto.randomUUID();
+                    if(await store.run({type:'workout',mode:'add',workoutId,location:this.newWorkoutLocation,date:this.newWorkoutDate,time:this.newWorkoutTime})) {
+                        this.selectedDate=this.newWorkoutDate;this.currentLocation=this.newWorkoutLocation;this.chosenWorkout=workoutId;this.addingWorkout=false;
+                    }
+                },
                 finances: {},
+                rentMonths: {},
+                rentDraft: null,
+                rentFormToken: null,
+                openRent() {
+                    if (!this.canEdit() || this.currentMonth < '2026-11') return;
+                    const saved = this.rentMonths[this.currentMonth];
+                    this.rentDraft = { month: this.currentMonth,
+                        zarya: saved ? [...saved.zarya] : FitPPStore.rentDates(this.currentMonth, 'zarya'),
+                        pole: saved ? [...saved.pole] : FitPPStore.rentDates(this.currentMonth, 'pole') };
+                    this.rentFormToken = store.token();
+                },
+                rentDates(hall) { return this.rentDraft ? FitPPStore.rentDates(this.rentDraft.month, hall) : []; },
+                rentDraftTotal() { return FitPPStore.rentTotal(this.rentDraft); },
+                async saveRent() {
+                    if (!this.canEdit() || !this.rentDraft) return;
+                    const ok = await store.run({ type: 'rentMonth', ...this.rentDraft }, this.rentFormToken);
+                    if (ok) { this.rentDraft = null; this.rentFormToken = null; }
+                },
                 showAuthModal: false,
                 authMode: 'login',
                 authForm: { email: '', password: '' },
@@ -488,35 +631,38 @@
                 clientForm: { id: null, name: '', phone: '', locations: ['zarya'] },
                 showSubModal: false,
                 subClient: null,
-                subForm: { type: 'zarya', date: new Date().toISOString().slice(0, 10) },
+                subForm: { type: 'zarya', date: FitPPStore.localDate() },
                 updateLocationByDate() {
-                    let d = new Date(this.selectedDate);
-                    let day = d.getDay();
+                    let day = new Date(this.selectedDate + 'T00:00:00Z').getUTCDay();
                     if (day === 1 || day === 3) this.currentLocation = 'zarya';
                     else if (day === 2 || day === 4) this.currentLocation = 'pole';
                     else if (day === 6 || day === 0) this.currentLocation = 'online';
+                    else this.currentLocation = null;
+                    const moved=Object.values(this.workouts).find(w=>w.date===this.selectedDate && !w.cancelled);
+                    if(moved && !this.currentLocation) this.currentLocation=moved.location;
                 },
                 changeDate(dir) {
-                    let d = new Date(this.selectedDate);
-                    d.setDate(d.getDate() + dir);
-                    this.selectedDate = d.toISOString().slice(0, 10);
+                    this.selectedDate = FitPPStore.addDays(this.selectedDate, dir);
                     this.updateLocationByDate();
                 },
                 setToday() {
-                    this.selectedDate = new Date().toISOString().slice(0, 10);
+                    this.selectedDate = FitPPStore.localDate();
                     this.updateLocationByDate();
                 },
                 getLocationTitle() {
                     if (this.currentLocation === 'zarya') return 'мкр. Заря (Пн, Ср 20:00)';
                     if (this.currentLocation === 'pole') return 'Поле чудес (Вт, Чт 18:30)';
-                    return 'Онлайн тренировки (Сб, Вс 18:00)';
+                    if (this.currentLocation === 'online') return 'Онлайн тренировки (Сб, Вс 18:00)';
+                    return 'Локация не выбрана';
                 },
                 getLocationSchedule() {
                     return 'Дата: ' + this.selectedDate;
                 },
                 getClientsForLocation() {
-                    return this.clients.filter(c => c.locations && c.locations.includes(this.currentLocation));
+                    if (!this.currentLocation) return [];
+                    return this.clients.filter(c => !c.archivedAt && c.locations && c.locations.includes(this.currentLocation));
                 },
+                getSubscriptionWarnings(client) { return FitPPStore.subscriptionWarnings(client, this.today); },
                 getClientActiveSubscription(client) {
                     if (!client || !client.subscriptions || client.subscriptions.length === 0) return null;
                     // Ищем первый абонемент, где есть занятия
@@ -527,138 +673,139 @@
                 getClientSubInfo(client) {
                     if (!client) return 'Нет данных';
                     let sub = this.getClientActiveSubscription(client);
-                    return sub.left > 0 ? (sub.left + ' зан. (до ' + sub.expires + ')') : 'Нет активного абонемента';
+                    return sub && this.isFrozen(sub) ? ('❄️ Заморожен до ' + sub.freezes.at(-1).end + ' • ' + sub.left + ' зан.') : sub && sub.left > 0 ? (sub.left + ' зан. (до ' + sub.expires + ')') : 'Нет активного абонемента';
+                },
+                freezeAttendance() {
+                    const d=this.sessionData(), result=JSON.parse(JSON.stringify(this.attendance));
+                    for(const key of Object.keys(d.legacyLinks)) delete result[key.slice(0,10)]?.[key.slice(11)];
+                    for(const [key,entries] of Object.entries(d.visits)) {
+                        const w=d.workouts[key],date=w?.date || key.slice(key.indexOf('_')+1);
+                        Object.assign(result[date] ||= {},entries);
+                    }return result;
+                },
+                async editUnusedSubscription(client,sub) {
+                    if(!this.canEdit())return;const token=store.token(),expected=FitPPStore.fingerprint(sub);
+                    const date=prompt('Дата начала неиспользованного абонемента (ГГГГ-ММ-ДД)',sub.startDate);if(date===null)return;
+                    const price=prompt('Цена в рублях. Доход будет пересчитан.',String(sub.price));if(price===null||!price.trim())return;
+                    await store.run({type:'editSubscription',clientId:client.id,subscriptionId:sub.id,expected,date,price:Number(price)},token);
+                },
+                async cancelUnusedSubscription(client,sub) {
+                    if(!this.canEdit()||!confirm('Отменить продажу неиспользованного абонемента? Его цена будет вычтена из дохода.'))return;
+                    await store.run({type:'cancelSubscription',clientId:client.id,subscriptionId:sub.id,expected:FitPPStore.fingerprint(sub)},store.token());
+                },
+                async correctFinance() {
+                    if(!this.canEdit())return;const token=store.token(),month=this.currentMonth,expected=this.finances[month]||0;
+                    const value=prompt('Коррекция общего дохода '+month+' в рублях. Это заменит итог месяца. Сначала сохраните резервную копию.',String(expected));
+                    if(value===null||!value.trim())return;const amount=Number(value);
+                    if(!confirm('Установить доход '+month+': '+amount+' ₽?'))return;
+                    await store.run({type:'financeMonth',month,expected,amount},token);
+                },
+                async deleteZeroFinance() {
+                    if(!this.canEdit()||!confirm('Удалить нулевой итог месяца?'))return;
+                    await store.run({type:'financeMonth',month:this.currentMonth,expected:this.finances[this.currentMonth]||0,amount:0,remove:true});
+                },
+                async deleteRent() {
+                    if(!this.canEdit()||!confirm('Удалить сохранённую настройку аренды '+this.currentMonth+'?'))return;
+                    await store.run({type:'deleteRentMonth',month:this.currentMonth});
+                },
+                backupStatus: '',
+                writeConsent:false,
+                async verifyBackup(event) {
+                    try { const file=event.target.files[0]; if(!file)return;
+                        const data=await FitPPBackup.restore(await file.text()); FitPPStore.read(data);
+                        this.backupStatus='Контрольная сумма и формат проверены. Проверено клиентов: '+data.clients.length+'. Данные приложения не заменены.';
+                    } catch(e) { this.backupStatus='Проверка не пройдена: '+e.message; }
+                    finally { event.target.value=''; }
+                },
+                async downloadBackup() {
+                    if(!this.canRead()) return;
+                    try {
+                        const uid=workspace.auth.currentUser.uid;
+                        const snap=await workspace.reference().get({source:'server'});
+                        workspace.check();
+                        if(workspace.auth.currentUser?.uid!==uid || snap.metadata?.fromCache || !snap.exists) throw Error('Нет подтверждённого снимка');
+                        const result=await FitPPBackup.create(snap.data(),workspace.local?'local-simulation':'firebase');
+                        const blob=new Blob([JSON.stringify(result,null,2)],{type:'application/json'});
+                        const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='FitPP-fitpp-165a2-'+new Date().toISOString().replace(/[:.]/g,'-')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+                    }catch(e){this.syncError='Бэкап не получен: '+e.message;}
+                },
+                unresolvedMarks() {
+                    const d=this.sessionData(),rows=[];
+                    for(const [date,entries] of Object.entries(d.attendance)) for(const cid of Object.keys(entries)) if(!d.legacyLinks[date+'/'+cid]) rows.push({key:date+'/'+cid,date,cid,name:this.clients.find(c=>String(c.id)===cid)?.name || cid});
+                    return rows;
+                },
+                async linkOldMark(row) {
+                    const location=prompt('После сверки укажите зал: zarya, pole или online. Остаток не изменится.');
+                    if(location===null)return;
+                    await store.run({type:'linkLegacy',date:row.date,clientId:row.cid,location});
+                },
+                sessionData() {
+                    const d=FitPPStore.read({clients:this.clients,attendance:this.attendance,attendanceOps:this.attendanceOps,workouts:this.workouts,visits:this.visits,visitOps:this.visitOps,legacyLinks:this.legacyLinks,legacySources:this.legacySources});
+                    FitPPStore.migrate(d);return d;
+                },
+                dayWorkouts() { return this.currentLocation ? FitPPStore.workoutsOn(this.sessionData(),this.currentLocation,this.selectedDate).filter(w=>!w.cancelled) : []; },
+                cancelledWorkouts() {
+                    return this.currentLocation ? FitPPStore.workoutsOn(this.sessionData(),this.currentLocation,this.selectedDate).filter(w=>w.cancelled && w.date===this.selectedDate) : [];
+                },
+                canDeleteWorkout(w) {
+                    return this.canEdit() && w.extra && w.cancelled && !this.workoutLocked(w) && !FitPPStore.unresolved(this.sessionData());
+                },
+                activeWorkout() {
+                    const rows=this.dayWorkouts().filter(w=>w.date===this.selectedDate && !w.cancelled);
+                    return rows.find(w=>w.id===this.chosenWorkout) || rows[0] || null;
+                },
+                async manageWorkout(w,mode) {
+                    if(mode==='delete' ? !this.canDeleteWorkout(w) : !this.canManageWorkout(w)) return;
+                    let date=w.date,time=w.time;
+                    if(mode==='date') {date=prompt('Новая дата (ГГГГ-ММ-ДД)',date);if(date===null)return;mode='move';}
+                    else if(mode==='time') {time=prompt('Новое время (ЧЧ:ММ)',time);if(time===null)return;mode='move';}
+                    else if(mode==='cancel' && !confirm('Отменить тренировку?')) return;
+                    else if(mode==='delete' && !confirm('Удалить дополнительную тренировку навсегда? Это действие нельзя отменить.')) return;
+                    await store.run({type:'workout',workoutId:w.id,mode,date,time});
                 },
                 getAttendanceStatus(clientId) {
-                    if (!this.attendance[this.selectedDate]) return null;
-                    return this.attendance[this.selectedDate][clientId] || null;
+                    const w=this.activeWorkout();
+                    return w ? this.sessionData().visits[w.id]?.[clientId] || null : null;
                 },
                 getRazovPrice() {
                     return this.currentLocation === 'zarya' ? 700 : (this.currentLocation === 'pole' ? 600 : 500);
                 },
 
                 init() {
-                    firebase.auth().onAuthStateChanged((user) => {
-                        this.currentUser = user;
-                        if (user) {
-                            this.loadFromFirebase();
-                        }
+                    if (started) return;
+                    started = true;
+                    this.updateLocationByDate();
+                    if (typeof setInterval === 'function') this.calendarTimer = setInterval(() => { this.today = FitPPStore.localDate(); }, 1000);
+                    store.start(state => {
+                        if (this.sessionEpoch !== state.sessionEpoch) this.resetSessionUI();
+                        Object.assign(this, state);
+                        if(state.dataReady && !this.currentLocation) this.updateLocationByDate();
+                        if (this.detailClient) this.detailClient = this.clients.find(c => c.id === this.detailClient.id) || null;
                     });
                 },
-                async syncToFirebase() {
-                    if (!this.currentUser) return;
-                    try {
-                        await db.collection('trainers').doc(this.currentUser.uid).set({
-                            clients: this.clients,
-                            attendance: this.attendance,
-                            finances: this.finances
-                        }, { merge: true });
-                    } catch (error) {
-                        console.error("Ошибка сохранения в Firebase:", error);
-                    }
-                },
-                async loadFromFirebase() {
-    if (!this.currentUser) return;
-    try {
-        const doc = await db.collection('trainers').doc(this.currentUser.uid).get();
-        if (doc.exists) {
-            const data = doc.data();
-            this.clients = data.clients || [];
-            this.attendance = data.attendance || {};
-            this.finances = data.finances || {};
-        } else {
-            this.clients = [];
-            this.attendance = {};
-            this.finances = {};
-        }
-    } catch (error) {
-        console.error("Ошибка загрузки из Firebase:", error);
-    }
-},
-                async logout() {
-                    try {
-                        await firebase.auth().signOut();
-                        this.currentUser = null;
-                        this.clients = [];
-                        this.attendance = {};
-                        this.finances = {};
-                    } catch (error) {
-                        console.error("Ошибка при выходе:", error);
-                    }
-                },
+                destroy() { if (this.calendarTimer) clearInterval(this.calendarTimer); store.stop(); },
+                async reloadData() { await store.load(); },
+                async logout() { await store.logout(); },
                 async handleAuth() {
-    this.authError = '';
-    try {
-        // Оставляем только вход по email и паролю
-        await firebase.auth().signInWithEmailAndPassword(this.authForm.email, this.authForm.password);
-        this.showAuthModal = false;
-        this.authForm = { email: '', password: '' };
-    } catch (error) {
-        console.error("Ошибка авторизации:", error);
-        this.authError = error.message;
-    }
-},
-markAttendance(clientId, status) {
-                    if (!this.attendance[this.selectedDate]) this.attendance[this.selectedDate] = {};
-                    let client = this.clients.find(c => c.id === clientId);
-                    if (!client) return;
-                    
-                    let sub = this.getClientActiveSubscription(client);
-                    let prevStatus = this.attendance[this.selectedDate][clientId];
-                    
-                    // Если нажали на ту же кнопку — отменяем действие
-                    if (prevStatus === status) {
-                        if (status === 'attended' && sub && sub.left !== undefined) {
-                            sub.left++; // Возвращаем занятие
-                        }
-                        if (status === 'razov') {
-                            let price = this.getRazovPrice();
-                            let monthKey = this.selectedDate.slice(0, 7);
-                            if (this.finances[monthKey]) {
-                                this.finances[monthKey] = Math.max(0, this.finances[monthKey] - price);
-                            }
-                        }
-                        delete this.attendance[this.selectedDate][clientId];
-                    } else {
-                        // Возврат, если меняем статус с "Был" на другой
-                        if (prevStatus === 'attended' && sub && sub.left !== undefined) {
-                            sub.left++;
-                        }
-                        
-                        // Списание, если ставим "Был"
-                        if (status === 'attended') {
-                            if (sub && sub.left > 0) {
-                                sub.left--;
-                            } else {
-                                if (confirm('У клиента нет доступных занятий в абонементе. Оформить новый абонемент?')) {
-                                    this.openSubModal(client);
-                                }
-                                return; // Прерываем, если нет абонемента
-                            }
-                        }
-                        
-                        this.attendance[this.selectedDate][clientId] = status;
-                        
-                        // Логика финансов для разовых
-                        let monthKey = this.selectedDate.slice(0, 7);
-                        if (!this.finances[monthKey]) this.finances[monthKey] = 0;
-                        
-                        if (status === 'razov' && prevStatus !== 'razov') {
-                            this.finances[monthKey] += this.getRazovPrice();
-                        } else if (prevStatus === 'razov' && status !== 'razov') {
-                            this.finances[monthKey] = Math.max(0, this.finances[monthKey] - this.getRazovPrice());
-                        }
-                    }
-                    
-                    this.clients = [...this.clients];
-                    this.attendance = { ...this.attendance };
-                    this.finances = { ...this.finances };
-                    this.syncToFirebase();
+                    this.authError = '';
+                    try { await workspace.auth.signInWithEmailAndPassword(this.authForm.email.trim(), this.authForm.password); this.showAuthModal=false; }
+                    catch(e) { this.authError='Вход не выполнен: '+e.message; }
+                    finally { this.authForm.password=''; }
+                },
+                async markAttendance(clientId, status) {
+                    const w=this.activeWorkout(); if (!w) return false;
+                    return store.run({ type: 'attendance', workoutId:w.id, clientId, status, date: this.selectedDate, location: this.currentLocation });
                 },
 
                 getClientAttendanceHistory(clientId) {
                     let history = [];
+                    const d=this.sessionData();
+                    for(const [key,entries] of Object.entries(d.visits)) if(entries[clientId]) {
+                        const w=d.workouts[key],date=w?.date || key.slice(key.indexOf('_')+1),hall=w?.location || key.slice(0,key.indexOf('_'));
+                        history.push({id:key,date,text:({attended:'Был',missed:'Сгорело',razov:'Разовое',excused:'Архивная отметка'})[entries[clientId]]+' · '+({zarya:'Заря',pole:'Поле чудес',online:'Онлайн'})[hall]+' '+(w?.time || FitPPStore.schedule[hall].time),badgeClass:'bg-slate-700'});
+                    }
                     for (let date in this.attendance) {
+                        if(d.legacyLinks[date+'/'+clientId]) continue;
                         if (this.attendance[date][clientId]) {
                             let status = this.attendance[date][clientId];
                             let statusText = '';
@@ -666,62 +813,48 @@ markAttendance(clientId, status) {
                             if (status === 'attended') { statusText = 'Был'; badgeClass = 'bg-emerald-600/20 text-emerald-400'; }
                             else if (status === 'razov') { statusText = 'Разовое'; badgeClass = 'bg-blue-600/20 text-blue-400'; }
                             else if (status === 'missed') { statusText = 'Сгорело'; badgeClass = 'bg-rose-600/20 text-rose-400'; }
-                            else if (status === 'excused') { statusText = 'Уваж.'; badgeClass = 'bg-amber-600/20 text-amber-400'; }
-                            history.push({ date: date, text: statusText, badgeClass: badgeClass });
+                            else if (status === 'excused') { statusText = 'Архивная отметка (без списания)'; badgeClass = 'bg-amber-600/20 text-amber-400'; }
+                            history.push({ id:'legacy_'+date, date: date, text: statusText, badgeClass: badgeClass });
                         }
                     }
                     return history.sort((a, b) => new Date(b.date) - new Date(a.date));
                 },
                 openClientModal() {
+                    if (!this.canEdit()) return;
                     this.editingClient = null;
-                    this.clientForm = { id: Date.now(), name: '', phone: '', locations: ['zarya'] };
+                    this.clientFormToken = store.token();
+                    this.clientForm = { name: '', phone: '', locations: ['zarya'] };
                     this.showClientModal = true;
                 },
                 editClient(client) {
+                    if (!this.canEdit() || !this.clients.includes(client)) return;
                     this.editingClient = client;
-                    this.clientForm = { ...client };
-                    if(!this.clientForm.locations) this.clientForm.locations = [];
+                    this.clientFormToken = store.token();
+                    this.clientForm = { name: client.name || '', phone: client.phone || '', locations: [...(client.locations || [])] };
                     this.showClientModal = true;
                 },
-                saveClient() {
-                    if (this.editingClient) {
-                        let idx = this.clients.findIndex(c => c.id === this.editingClient.id);
-                        if (idx !== -1) this.clients[idx] = { ...this.clientForm };
-                    } else {
-                        this.clients.push({ ...this.clientForm });
-                    }
-                    this.syncToFirebase();
-                    this.showClientModal = false;
+                async saveClient() {
+                    if (!this.clientFormToken) return;
+                    const token = this.clientFormToken;
+                    const saved = await store.run({ type: 'client', editingId: this.editingClient?.id ?? null, form: this.clientForm }, token);
+                    if (saved && this.clientFormToken === token) { this.showClientModal = false; this.clientFormToken = null; }
                 },
-                deleteClient() {
-                    if(confirm('Удалить клиента?')) {
-                        this.clients = this.clients.filter(c => c.id !== this.editingClient.id);
-                        this.syncToFirebase();
-                        this.showClientModal = false;
-                    }
-                },
+                async deleteClient() { await this.removeClient(this.editingClient); },
                 openSubModal(client) {
+                    if (!this.canEdit() || client.archivedAt || !this.clients.includes(client)) return;
                     this.subClient = client;
+                    this.subFormToken = store.token();
                     this.subForm.date = this.selectedDate;
                     this.showSubModal = true;
                 },
-                saveSubscription() {
-                    if (!this.subClient) return;
-                    if (!this.subClient.subscriptions) this.subClient.subscriptions = [];
-                    let price = this.subForm.type === 'zarya' ? 4400 : 3800;
-                    let subDate = this.subForm.date || this.selectedDate;
-                    let endDate = new Date(subDate);
-                    endDate.setDate(endDate.getDate() + 28);
-                    this.subClient.subscriptions.push({ left: 8, startDate: subDate, expires: endDate.toISOString().slice(0, 10), price: price });
-                    
-                    let monthKey = subDate.slice(0, 7);
-                    if (!this.finances[monthKey]) this.finances[monthKey] = 0;
-                    this.finances[monthKey] = (this.finances[monthKey] || 0) + price;
-                    this.finances = { ...this.finances };
-                    this.syncToFirebase();
-                    this.showSubModal = false;
+                async saveSubscription() {
+                    if (!this.subClient || !this.subFormToken) return;
+                    const token = this.subFormToken;
+                    const saved = await store.run({ type: 'subscription', clientId: this.subClient.id, subscriptionType: this.subForm.type, date: this.subForm.date || this.selectedDate }, token);
+                    if (saved && this.subFormToken === token) { this.showSubModal = false; this.subFormToken = null; }
                 },
                 changeMonth(dir) {
+                    if (this.saving || this.rentDraft) return;
                     let [y, m] = this.currentMonth.split('-').map(Number);
                     let d = new Date(y, m - 1 + dir, 1);
 this.currentMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;                },
@@ -732,6 +865,7 @@ this.currentMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '
                 },
                 getMonthIncome() { return this.finances[this.currentMonth] || 0; },
                 getMonthRent() {
+                    if (this.currentMonth >= '2026-11') return FitPPStore.rentTotal(this.rentMonths[this.currentMonth]);
                     let [year, month] = this.currentMonth.split('-').map(Number);
                     let daysInMonth = new Date(year, month, 0).getDate();
                     let totalRent = 0;
@@ -748,16 +882,12 @@ this.currentMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '
                 },
                 getMonthProfit() { return this.getMonthIncome() - this.getMonthRent(); },
                 clearDatabase() {
-                    if (confirm('Вы уверены, что хотите сбросить всю базу данных? Это действие нельзя отменить.')) {
-                        this.clients = [];
-                        this.attendance = {};
-                        this.finances = {};
-                        this.syncToFirebase();
-                    }
+                    this.syncError = 'Массовое удаление отключено.';
                 },
             }
         }
     </script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.getRegistration('./').then(r => { if (r && new URL(r.scope).pathname === new URL('./', location.href).pathname) return r.update(); }).catch(() => {});</script>
 </body>
 </html>
 
