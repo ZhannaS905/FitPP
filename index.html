@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; font-src 'self'">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>FitPP</title>
     <!-- PWA Manifest & Meta -->
     
@@ -18,7 +18,7 @@
 
 
 
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v=mobile-20261018-1">
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased" x-data="trainerApp()" x-init="init()">
 
@@ -46,6 +46,7 @@
         <div class="settings-heading"><h2 id="settings-title">Настройки</h2><button aria-label="Закрыть настройки" @click="document.getElementById('settings-dialog').close()">✕</button></div>
         <section class="settings-section">
             <h3>Аккаунт</h3>
+            <p x-text="authWarning"></p>
             <p x-show="currentUser" x-text="currentUser?.email"></p>
             <p x-show="!currentUser">Войдите, чтобы загрузить свои данные.</p>
             <button x-show="!currentUser" @click="document.getElementById('settings-dialog').close(); showAuthModal = true">Войти</button>
@@ -53,16 +54,17 @@
         </section>
         <section class="settings-section">
             <h3>Резервная копия</h3>
-            <p>Сначала скачайте копию с сервера, затем выберите этот файл для проверки. Проверка выполняется локально и не импортирует данные.</p>
+            <p>Перед каждой записью копия сохраняется на этом устройстве. Скачивайте также отдельные файлы: очистка данных браузера удалит локальные копии. Проверка файла не импортирует данные.</p>
             <button :disabled="!canRead() || backupChecking" @click="downloadBackup()">Скачать резервную копию</button>
+            <button :disabled="!canRead()" @click="downloadLocalBackup()">Скачать последнюю автоматическую копию</button>
             <label class="backup-file" for="backup-file">Проверить файл резервной копии</label>
             <input id="backup-file" type="file" accept=".json,application/json" :disabled="!canRead() || backupChecking" @change="verifyBackup($event)">
             <p role="status" aria-live="polite" x-text="backupStatus"></p>
         </section>
         <section class="settings-section">
             <h3>Запись данных</h3>
-            <label class="write-toggle"><input type="checkbox" x-model="writeConsent" :disabled="!backupVerified || backupChecking || !canRead()" aria-describedby="write-help"> Включить запись в этой вкладке</label>
-            <p id="write-help">Доступна после проверки актуального бэкапа. При выходе или повторной загрузке запись отключается.</p>
+            <label class="write-toggle"><input type="checkbox" x-model="writeConsent" :disabled="!canRead()" @change="FitPPWriteSafety.remember($event.target.checked)" aria-describedby="write-help"> Разрешать запись после проверки данных</label>
+            <p id="write-help">Выбор запоминается на устройстве. Перед каждым изменением сохраняется проверенная копия текущих данных на устройстве; транзакция проверяет свежесть данных. Если копия недоступна, запись блокируется.</p>
             <p role="status" x-text="canEdit() ? 'Запись включена' : 'Режим просмотра'"></p>
         </section>
         <section class="settings-section">
@@ -435,9 +437,10 @@
 <script src="vendor/firebase-auth-compat.js"></script>
 <script src="vendor/firebase-firestore-compat.js"></script>
 <script src="firebase-adapter.js"></script>
-<script src="cloud.js"></script>
+<script src="cloud.js?v=mobile-20261018-1"></script>
     <script src="backup.js"></script>
-    <script src="persistence.js"></script>
+    <script src="write-safety.js?v=mobile-20261018-1"></script>
+    <script src="persistence.js?v=mobile-20261018-1"></script>
     <script>
         const workspace = FitPPCloud.start(firebase);
         const stagingApp = {auth: () => workspace.auth};
@@ -445,9 +448,10 @@
 
 
         function trainerApp() {
-            const store = FitPPStore.create({ db, auth: stagingApp.auth(), workspace });
+            const store = FitPPStore.create({ db, auth: stagingApp.auth(), workspace, beforeWrite: data => FitPPWriteSafety.save(data) });
             let started = false;
             return {
+                authWarning: '',
                 dataReady: false,
                 loading: false,
                 saving: false,
@@ -457,7 +461,7 @@
                 clientFormToken: null,
                 subFormToken: null,
                 resetSessionUI() {
-                    this.writeConsent = false;
+                    this.writeConsent = FitPPWriteSafety.intent();
                     this.backupVerified = false; this.backupChecking = false; this.backupStatus = '';
                     this.backupCheckId++;
                     this.deletionForm = null; this.deletionToken = null;
@@ -483,7 +487,7 @@
                     this.subForm = { type: 'zarya', date: this.selectedDate };
                 },
                 canEdit() {
-                    return workspace.writesEnabled && this.backupVerified && this.writeConsent && this.currentUser?.uid === FitPPWorkspace.ownerUid && this.dataReady && !this.loading && !this.saving;
+                    return workspace.writesEnabled && this.writeConsent && this.currentUser?.uid === FitPPWorkspace.ownerUid && this.dataReady && !this.loading && !this.saving;
                 },
                 canRead() {
                     return this.dataReady && !this.loading && !this.saving;
@@ -717,12 +721,12 @@
                 backupVerified: false,
                 backupChecking: false,
                 backupCheckId: 0,
-                writeConsent: false,
+                writeConsent: FitPPWriteSafety.intent(),
                 openSettings() { document.getElementById('settings-dialog').showModal(); },
                 async verifyBackup(event) {
                     const file=event.target.files[0]; if(!file)return;
                     const checkId=++this.backupCheckId, epoch=this.sessionEpoch, uid=this.currentUser?.uid;
-                    this.writeConsent=false; this.backupVerified=false; this.backupChecking=true;
+                    this.backupVerified=false; this.backupChecking=true;
                     this.backupStatus='Проверка резервной копии…';
                     try {
                         if(!this.canRead() || uid!==FitPPWorkspace.ownerUid) throw Error('Сначала загрузите данные владельца');
@@ -733,10 +737,19 @@
                         if(!snap.exists || snap.metadata?.fromCache!==false || snap.metadata?.hasPendingWrites) throw Error('Нет подтверждённого снимка сервера');
                         if(FitPPStore.fingerprint(data)!==FitPPStore.fingerprint(snap.data())) throw Error('Данные изменились. Скачайте новую резервную копию');
                         this.backupVerified=true;
-                        this.backupStatus='Копия проверена и соответствует данным сервера. Можно включить запись. Данные не импортированы.';
+                        this.backupStatus='Копия проверена и соответствует данным сервера. Данные не импортированы. Перед записью также создаётся автоматическая копия.';
                     } catch(e) {
                         if(checkId===this.backupCheckId && epoch===this.sessionEpoch) this.backupStatus='Проверка не пройдена: '+e.message;
                     } finally { if(checkId===this.backupCheckId)this.backupChecking=false; event.target.value=''; }
+                },
+                async downloadLocalBackup() {
+                    try {
+                        const backup=await FitPPWriteSafety.latest();
+                        if(!backup) throw Error('Автоматических копий пока нет');
+                        await FitPPBackup.restore(backup);
+                        const url=URL.createObjectURL(new Blob([JSON.stringify(backup,null,2)],{type:'application/json'}));
+                        const a=document.createElement('a');a.href=url;a.download='FitPP-auto-'+backup.data._fitppRevision+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+                    } catch(e) {this.backupStatus=e.message;}
                 },
                 async downloadBackup() {
                     if(!this.canRead()) return;
@@ -806,7 +819,7 @@
                     });
                 },
                 destroy() { if (this.calendarTimer) clearInterval(this.calendarTimer); store.stop(); },
-                async reloadData() { this.writeConsent=false; this.backupVerified=false; this.backupChecking=false; this.backupCheckId++; this.backupStatus=''; await store.load(); },
+                async reloadData() { this.backupVerified=false; this.backupChecking=false; this.backupCheckId++; this.backupStatus=''; await store.load(); },
                 async logout() { await store.logout(); },
                 async handleAuth() {
                     this.authError = '';

@@ -6,11 +6,13 @@ function start(firebase,W=globalThis.FitPPWorkspace){
  const app=firebase.initializeApp(config,'fitpp-165a2-full');
  const rawAuth=app.auth(),rawDB=app.firestore();
  // No enablePersistence(): Firestore uses its default in-memory cache only.
- const ready=rawAuth.setPersistence(firebase.auth.Auth.Persistence.NONE);
+ let persistenceError='';
+ const ready=rawAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(error=>{persistenceError='Браузер не разрешил сохранить вход. После закрытия может потребоваться вход снова. '+error.message;});
  let generation=0;
  const check=()=>{if(app.options.projectId!=='fitpp-165a2'||W.projectId!=='fitpp-165a2'||W.ownerUid!=='fGu8QWqBQofTRQ8SxHBonbuEVjr2'||W.path!=='trainerWorkspaces/fGu8QWqBQofTRQ8SxHBonbuEVjr2/datasets/manual-history-2026-09-v1'||rawAuth.currentUser?.uid!==W.ownerUid)throw Error('Недопустимый проект или аккаунт владельца');};
  const auth=Object.freeze({get currentUser(){return rawAuth.currentUser;},
- onAuthStateChanged(cb){return rawAuth.onAuthStateChanged(user=>{generation++;if(user&&user.uid!==W.ownerUid){cb(null);void rawAuth.signOut();}else cb(user);});},
+ get persistenceWarning(){return persistenceError;},
+ onAuthStateChanged(cb){let cancelled=false,unsubscribe;void ready.then(()=>{if(cancelled)return;unsubscribe=rawAuth.onAuthStateChanged(user=>{generation++;if(user&&user.uid!==W.ownerUid){cb(null);void rawAuth.signOut();}else cb(user);});});return ()=>{cancelled=true;unsubscribe?.();};},
  async signOut(){generation++;await rawAuth.signOut();},
  async signInWithEmailAndPassword(email,password){await ready;const result=await rawAuth.signInWithEmailAndPassword(email,password);if(result.user.uid!==W.ownerUid){await rawAuth.signOut();throw Error('Этот аккаунт не является владельцем FitPP.');}check();return result;}
  });

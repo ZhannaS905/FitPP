@@ -575,7 +575,7 @@
     } else throw fail("Неподдерживаемая операция.");
     return data;
   }
-  function create({ db, auth, workspace, clock = localDate }) {
+  function create({ db, auth, workspace, clock = localDate, beforeWrite }) {
     if (!workspace && db.offline !== true) throw fail('Требуется защищённый адаптер workspace.');
     const reference = uid => workspace ? workspace.reference() : db.collection('trainers').doc(uid);
     const validateSnapshot = snap => {
@@ -623,6 +623,7 @@
       publish({
         ...read(),
         currentUser: user,
+        authWarning: auth.persistenceWarning || '',
         sessionEpoch: epoch,
         dataReady: false,
         loading: false,
@@ -689,6 +690,15 @@
         const operationDay = clock();
         reduce(base, frozen, operationDay); // Validate before opening the transaction.
         const ref = reference(t.uid);
+        if (workspace && !workspace.local) {
+          if (!beforeWrite) throw fail('Нет хранилища резервных копий. Запись заблокирована.');
+          const snapshot = await ref.get({source:'server'});
+          validateSnapshot(snapshot);
+          if (!valid(t) || fingerprint(read(snapshot.data())) !== fingerprint(base))
+            throw fail('Данные сервера изменились. Обновите их перед повтором.', 'conflict');
+          await beforeWrite(snapshot.data());
+          if (!valid(t)) throw fail('Сессия изменилась.', 'session');
+        }
         const committed = await db.runTransaction(async (tx) => {
           if (!valid(t))
             throw fail("Аккаунт изменился. Операция отменена.", "session");
