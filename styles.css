@@ -735,3 +735,23 @@ header.app-header > div, .detail-shell, .bottom-nav { padding-left: max(16px, en
 
 /* Payment histories wrap on narrow phones. */
 .history-row { flex-wrap: wrap; overflow-wrap: anywhere; }
+
+/* Compact journal: preserve zoom, wrapping, and touch targets. */
+.summary { gap: 6px; margin: 10px 0; }
+.summary > div { padding: 7px 8px; border-radius: 12px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 2px 5px; min-width: 0; }
+.summary span:first-child { font-size: 11px; overflow-wrap: anywhere; }
+.summary strong { font-size: 20px; line-height: 1.1; }
+.summary span:last-child { flex-basis: 100%; font-size: 10px; }
+.workout-panel { background: #1e293b; padding: 10px; border-radius: 16px; margin-bottom: 10px; }
+.workout-heading, .workout-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.workout-heading h2 { font-size: 12px; font-weight: 600; color: #cbd5e1; }
+.workout-panel .workout-button { min-height: 44px; }
+.workout-panel .workout-form { margin: 8px 0; }
+.workout-compact { padding: 6px 8px; border-radius: 12px; margin-top: 6px; }
+.workout-compact .workout-title { margin: 0; font-size: 14px; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.workout-more { min-width: 44px; font-size: 24px; line-height: 1; }
+.workout-menu { border-top: 1px solid #334155; margin-top: 6px; padding-top: 6px; }
+.workout-panel button:focus-visible, .workout-panel summary:focus-visible { outline: 2px solid #6ee7b7; outline-offset: 2px; }
+.cancelled-workouts { margin-top: 6px; }
+.summary > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; }
+.summary span:last-child { grid-column: 1 / -1; }

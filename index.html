@@ -18,7 +18,7 @@
 
 
 
-<link rel="stylesheet" href="styles.css?v=payments-20261018-1">
+<link rel="stylesheet" href="styles.css?v=compact-journal-20261018-1">
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased" x-data="trainerApp()" x-init="init()">
 
@@ -119,9 +119,9 @@
                 <div><span>Клиентов</span><strong x-text="getClientsForLocation().length"></strong><span>в этой локации</span></div>
                 <div><span>Заканчивается</span><strong x-text="getClientsForLocation().filter(c => { const sub = getClientActiveSubscription(c); return sub && sub.left > 0 && sub.left <= 2; }).length"></strong><span>≤ 2 занятия</span></div>
             </div>
-            <section class="bg-slate-800 rounded-2xl p-4 mb-4 space-y-3">
-                <h2 class="font-bold">Тренировки выбранного зала · 60 минут</h2>
-                <button :disabled="!canEdit()" @click="addingWorkout=true; newWorkoutDate=selectedDate; newWorkoutTime=FitPPStore.schedule[currentLocation]?.time || '20:00'; newWorkoutLocation=currentLocation || 'zarya'" class="workout-button workout-selected">+ Добавить тренировку</button>
+            <section class="workout-panel" aria-label="Тренировки выбранного зала">
+                <div class="workout-heading"><h2>Тренировки · 60 минут</h2>
+                <button :disabled="!canEdit()" @click="addingWorkout=true; newWorkoutDate=selectedDate; newWorkoutTime=FitPPStore.schedule[currentLocation]?.time || '20:00'; newWorkoutLocation=currentLocation || 'zarya'" class="workout-button workout-selected">+ Добавить тренировку</button></div>
                 <form x-show="addingWorkout" @submit.prevent="addWorkout()" class="workout-form">
                     <label>Дата <input type="date" x-model="newWorkoutDate" required></label>
                     <label>Время <input type="time" x-model="newWorkoutTime" required></label>
@@ -131,10 +131,11 @@
                 </form>
                 <p x-show="dayWorkouts().length === 0">В этот день тренировок нет.</p>
                 <template x-for="w in dayWorkouts()" :key="w.id">
-                    <div class="workout-card">
-                        <p class="workout-title" x-text="workoutLabel(w)"></p>
-                        <div class="workout-actions">
-                        <button x-show="!w.cancelled && w.date === selectedDate" @click="chosenWorkout=w.id" class="workout-button" :class="activeWorkout()?.id === w.id ? 'workout-selected' : ''" x-text="activeWorkout()?.id === w.id ? 'Выбрана для отметок' : 'Выбрать для отметок'"></button>
+                    <div class="workout-card workout-compact" x-data="{ actionsOpen: false }" @keydown.escape.window="if (actionsOpen) { actionsOpen=false; $refs.actions.focus(); }">
+                        <div class="workout-row"><p class="workout-title" x-text="workoutLabel(w)"></p>
+                        <button x-show="!w.cancelled && w.date === selectedDate" @click="chosenWorkout=w.id" class="workout-button" :class="activeWorkout()?.id === w.id ? 'workout-selected' : ''" x-text="activeWorkout()?.id === w.id ? '✓ Выбрана' : 'Выбрать для отметок'" :aria-pressed="activeWorkout()?.id === w.id"></button>
+                        <button x-ref="actions" class="workout-button workout-more" aria-label="Действия с тренировкой" :aria-expanded="actionsOpen" @click="actionsOpen=!actionsOpen">⋯</button>
+                        </div><div class="workout-actions workout-menu" x-show="actionsOpen" x-cloak>
                         <button :disabled="!canManageWorkout(w)" @click="manageWorkout(w,'date')" class="workout-button">Изменить дату</button>
                         <button :disabled="!canManageWorkout(w)" @click="manageWorkout(w,'time')" class="workout-button">Изменить время</button>
                         <button :disabled="!canManageWorkout(w)" x-show="!w.cancelled" @click="manageWorkout(w,'cancel')" class="workout-button workout-danger">Отменить тренировку</button>
@@ -143,7 +144,7 @@
                         <p class="text-slate-400 text-xs" x-show="workoutLocked(w)">Есть отметки или списания. Изменение тренировки заблокировано.</p>
                     </div>
                 </template>
-                <details class="cancelled-workouts">
+                <details class="cancelled-workouts" x-show="cancelledWorkouts().length > 0">
                     <summary class="workout-button" x-text="'Отменённые тренировки (' + cancelledWorkouts().length + ')' "></summary>
                     <template x-for="w in cancelledWorkouts()" :key="w.id">
                         <div class="workout-card">
