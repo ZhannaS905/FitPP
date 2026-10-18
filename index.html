@@ -400,6 +400,14 @@
             <button :disabled="!canEdit()" @click="confirmDeletion()" class="bg-rose-600 rounded-xl px-4 py-2" x-text="saving ? 'Сохранение…' : 'Подтвердить удаление'"></button>
         </div>
     </div>
+    <div x-show="renewalClient" x-cloak style="z-index:75" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4">
+      <div role="dialog" aria-label="Нет подходящего абонемента" class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-2xl p-6 space-y-4">
+        <h3 class="text-lg font-bold">Нет действующего подходящего абонемента</h3>
+        <p>Можно оформить новый абонемент. Тип и зал вы выбираете самостоятельно.</p>
+        <button @click="renewalClient=null" class="bg-slate-700 px-4 py-2 rounded-xl">Отмена</button>
+        <button :disabled="!canEdit()" @click="openSubModal(renewalClient.client, renewalClient.visit)" class="bg-emerald-600 px-4 py-2 rounded-xl">Оформить новый абонемент</button>
+      </div>
+    </div>
     <!-- Subscription Modal -->
     <div x-show="showSubModal" x-cloak style="z-index:70" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
         <div class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4" style="max-height:90dvh;overflow-y:auto">
@@ -422,7 +430,7 @@
             <p class="text-sm text-slate-400">Дата продажи — дата получения денег. Для истории выберите прошлую дату. Вносите покупки клиента по порядку дат. Недоплата не сохраняется.</p>
             <p x-show="syncError" role="alert" class="text-rose-300 text-sm" x-text="syncError"></p>
             <div class="flex justify-end space-x-3 pt-2">
-                <button @click="showSubModal = false" class="bg-slate-700 px-4 py-2 rounded-xl text-sm">Отмена</button>
+                <button :disabled="saving" @click="showSubModal = false; subVisit=null; subFormToken=null" class="bg-slate-700 px-4 py-2 rounded-xl text-sm">Отмена</button>
                 <button :disabled="!canEdit()" @click="saveSubscription()" class="bg-emerald-600 px-4 py-2 rounded-xl text-sm font-semibold">Оформить</button>
             </div>
         </div>
@@ -470,7 +478,7 @@
 <script src="cloud.js?v=mobile-20261018-1"></script>
     <script src="backup.js"></script>
     <script src="write-safety.js?v=mobile-20261018-1"></script>
-    <script src="persistence.js?v=payments-20261018-1"></script>
+    <script src="persistence.js?v=renewal-20261018-1"></script>
     <script>
         const workspace = FitPPCloud.start(firebase);
         const stagingApp = {auth: () => workspace.auth};
@@ -490,6 +498,8 @@
                 sessionEpoch: -1,
                 clientFormToken: null,
                 subFormToken: null,
+                subVisit: null,
+                renewalClient: null,
                 resetSessionUI() {
                     this.writeConsent = FitPPWriteSafety.intent();
                     this.backupVerified = false; this.backupChecking = false; this.backupStatus = '';
@@ -507,7 +517,7 @@
                     this.editingClient = null;
                     this.subClient = null;
                     this.clientFormToken = null;
-                    this.subFormToken = null;
+                    this.subFormToken = null;this.subVisit=null;this.renewalClient=null;
                     this.showClientModal = false;
                     this.showSubModal = false;
                     this.showAuthModal = false;
@@ -887,6 +897,10 @@
                     const previous=this.getAttendanceStatus(clientId);
                     if(previous==='razov' && !confirm('Отменить разовое посещение? Стоимость вернётся на баланс клиента. Фактическую выдачу денег оформите отдельно в карточке клиента.'))return false;
                     const action={type:'attendance',workoutId:w.id,clientId,status,date:this.selectedDate,location:this.currentLocation};
+                    const client=this.clients.find(c=>c.id===clientId);
+                    if(status==='attended' && !previous && client && !(client.subscriptions || []).some(s=>FitPPStore.covers(s,w.location,w.date))) {
+                      this.renewalClient={client,visit:action};return false;
+                    }
                     if(status==='razov' && previous!==status){
                       const c=this.clients.find(c=>c.id===clientId),price=FitPPStore.prices[this.currentLocation];
                       this.paymentToken=store.token();this.paymentError='';
@@ -938,18 +952,21 @@
                     if (saved && this.clientFormToken === token) { this.showClientModal = false; this.clientFormToken = null; }
                 },
                 async deleteClient() { await this.removeClient(this.editingClient); },
-                openSubModal(client) {
+                openSubModal(client, visit = null) {
                     if (!this.canEdit() || client.archivedAt || !this.clients.includes(client)) return;
                     this.subClient = client;
+                    this.subVisit = visit;this.renewalClient=null;
                     this.subFormToken = store.token();
-                    this.subForm = {type:'zarya',date:this.selectedDate,method:'',received:''};
+                    this.subForm = {type:visit?.location==='pole'?'pole':'zarya',date:visit?.date || this.selectedDate,method:'',received:''};
                     this.showSubModal = true;
                 },
                 async saveSubscription() {
-                    if (!this.subClient || !this.subFormToken) return;
-                    const token = this.subFormToken;
-                    const saved = await store.run({ type: 'subscription', clientId: this.subClient.id, subscriptionType: this.subForm.type, date: this.subForm.date || this.selectedDate, method:this.subForm.method, received:this.parseAmount(this.subForm.received) }, token);
-                    if (saved && this.subFormToken === token) { this.showSubModal = false; this.subFormToken = null; }
+                    if (!this.canEdit() || !this.subClient || !this.subFormToken) return;
+                    const token = this.subFormToken, visit=this.subVisit;
+                    const saved = await store.run({ type: 'subscription', visit, clientId: this.subClient.id, subscriptionType: this.subForm.type, date: this.subForm.date || this.selectedDate, method:this.subForm.method, received:this.parseAmount(this.subForm.received) }, token);
+                    if (saved && this.subFormToken === token) { this.showSubModal = false; this.subFormToken = null;this.subVisit=null;
+                      if(visit && this.sessionData().visits[visit.workoutId]?.[visit.clientId]!=='attended') alert('Абонемент оформлен. Посещение не отмечено: выбран другой зал или абонемент не действует на дату тренировки.');
+                    }
                 },
                 changeMonth(dir) {
                     if (this.saving || this.rentDraft) return;

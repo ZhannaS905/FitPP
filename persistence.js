@@ -338,6 +338,11 @@
       throw fail("Клиент отсутствует в текущем аккаунте. Обновите данные.");
     return client;
   }
+  function covers(sub, location, date) {
+    const hall = sub.location || (sub.price === 4400 ? 'zarya' : sub.price === 3800 ? 'pole' : null);
+    return hall === location && !sub.cancelledAt && Number.isSafeInteger(sub.left) && sub.left > 0 &&
+      (!sub.startDate || sub.startDate <= date) && sub.expires >= date && !frozenOn(sub, date);
+  }
   function attendance(data, action, today) {
     const {clientId,date,location,status}=action;
     if (
@@ -390,8 +395,7 @@
     const next = { status, location, operationId: id() };
     if (status === "attended" || status === "missed") {
       const sub = client.subscriptions?.find(
-        (s) => Number.isSafeInteger(s.left) && s.left > 0 &&
-          (!s.startDate || s.startDate <= date) && s.expires >= date && !frozenOn(s, date),
+        (s) => covers(s, location, date) && (!action.subscriptionId || s.id === action.subscriptionId),
       );
       if (!sub)
         throw fail(
@@ -660,12 +664,22 @@
       const subId=id();
       const paymentId=sell(data,client,action,price,subId,today);
       (client.subscriptions ||= []).push({
-        id: subId,paymentId,
+        id: subId,paymentId,location: action.subscriptionType,
         left: 8,
         startDate: action.date,
         expires: date.toISOString().slice(0, 10),
         price,
       });
+      if (action.visit) {
+        const visit = {...action.visit, type:'attendance', clientId:client.id, status:'attended'};
+        migrate(data);
+        const w = workoutOf(data,visit.workoutId);
+        if(w.cancelled || w.date!==visit.date || w.location!==visit.location || unresolved(data,client.id))
+          throw fail('Тренировка изменилась или есть неоднозначные отметки. Покупка не сохранена; обновите журнал.');
+        if(data.visits[w.id]?.[client.id]) throw fail('Отметка уже существует. Покупка не сохранена; обновите журнал.');
+        const sub=client.subscriptions.find(s=>s.id===subId);
+        if(covers(sub,w.location,w.date)) sessionAction(data,{...visit,subscriptionId:subId},today);
+      }
 
     } else throw fail("Неподдерживаемая операция.");
     return data;
@@ -871,5 +885,5 @@
       },
     };
   }
-  return { balance, report, legacyPayments, ledger, extensionRemaining, subscriptionTitle, deletionPlan, subscriptionWarnings, create, read, reduce, prices, fingerprint, rentDates, rentTotal, localDate, dayNumber, addDays, frozenOn, freezeStart, pendingFreeze, schedule, workoutsOn, migrate, unresolved };
+  return { covers, balance, report, legacyPayments, ledger, extensionRemaining, subscriptionTitle, deletionPlan, subscriptionWarnings, create, read, reduce, prices, fingerprint, rentDates, rentTotal, localDate, dayNumber, addDays, frozenOn, freezeStart, pendingFreeze, schedule, workoutsOn, migrate, unresolved };
 });

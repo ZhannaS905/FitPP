@@ -13,7 +13,7 @@ for(const engine of [chromium,webkit]) {
  for(const width of [320,390]) {
  const context=await browser.newContext({viewport:{width,height:844},isMobile:true,hasTouch:true});const page=await context.newPage();const errors=[];
  page.on('pageerror',e=>errors.push(e.stack));await page.route('**/cloud.js*',r=>r.fulfill({contentType:'text/javascript',body:cloud}));await page.route(/https:\/\//,r=>r.abort());
- await page.goto('http://127.0.0.1:8766');await page.waitForFunction(()=>window.Alpine && Alpine.$data(document.body).dataReady);
+ await page.goto(process.env.FITPP_TEST_URL || 'http://127.0.0.1:8766');await page.waitForFunction(()=>window.Alpine && Alpine.$data(document.body).dataReady);
  await page.evaluate(()=>{const d=Alpine.$data(document.body);d.selectedDate='2026-09-29';d.openSubModal(d.clients[0]);});
  await page.locator('select[x-model="subForm.type"]').selectOption('pole');await page.locator('input[x-model="subForm.date"]').fill('2026-09-29');
  // No method or amount must not write or invalidate confirmed data.
