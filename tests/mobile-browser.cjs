@@ -8,7 +8,7 @@ for(const engine of [chromium,webkit]){
  const page=await context.newPage(); const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/cloud.js*',route=>route.fulfill({contentType:'text/javascript',body:`globalThis.FitPPCloud={start(){return {writesEnabled:true,local:false,auth:{currentUser:null,persistenceWarning:'',onAuthStateChanged(cb){cb(null);return ()=>{};}},db:{}}}};`}));
  await page.route(/https:\/\//,r=>r.abort());
- await page.goto('http://127.0.0.1:8765');await page.waitForTimeout(400);
+ await page.goto('http://127.0.0.1:8766');await page.waitForTimeout(400);
  await page.evaluate(()=>{
  const d=Alpine.$data(document.body);d.clients=[{id:'fixture',name:'Анна Оченьдлиннаяфамилия Дляпроверкипереноса',phone:'+79991234567',locations:['zarya','pole'],subscriptions:[{left:1,expires:FitPPStore.localDate()}]}];
  d.currentUser={uid:FitPPWorkspace.ownerUid,email:'test@example.com'};d.dataReady=true;

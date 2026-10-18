@@ -18,7 +18,7 @@
 
 
 
-<link rel="stylesheet" href="styles.css?v=mobile-20261018-1">
+<link rel="stylesheet" href="styles.css?v=payments-20261018-1">
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased" x-data="trainerApp()" x-init="init()">
 
@@ -216,7 +216,7 @@
                             <button class="client-action" :disabled="!canEdit()" @click="editClient(client)">Изменить</button>
                         </div>
                         <div class="client-tile-footer">
-                            <div class="client-subscription">
+                            <div class="client-subscription"><span class="text-xs text-emerald-400" x-text="'Баланс: ' + moneyBalance(client) + ' ₽'"></span>
                                 <span class="client-balance" x-text="'Остаток: ' + (getClientActiveSubscription(client)?.left ?? 0) + ' зан.'"></span>
                                 <span class="client-expiry" x-text="'До: ' + (getClientActiveSubscription(client)?.expires || '—')"></span>
 <div class="subscription-warnings" x-show="getSubscriptionWarnings(client).length">
@@ -270,6 +270,12 @@
                         <button @click="rentDraft = null; rentFormToken = null" :disabled="saving" class="border border-slate-600 rounded-xl p-3 w-full">Закрыть без сохранения</button>
                     </section>
                 </template>
+                <div class="detail-card space-y-2" aria-label="Способы оплаты">
+                  <p x-text="'Наличные (после возвратов): ' + moneyReport().cash + ' ₽'"></p><p x-text="'Переводы (после возвратов): ' + moneyReport().transfer + ' ₽'"></p>
+                  <p x-text="'Возвращено наличными: ' + moneyReport().cashRefund + ' ₽ · переводом: ' + moneyReport().transferRefund + ' ₽'"></p>
+                  <p class="text-amber-300" x-text="'Способ не указан / требуется сверка: ' + moneyReport().unknown + ' ₽'"></p>
+                  <p class="text-xs text-slate-400">Доход — фактические поступления минус выданные возвраты. Зачёт баланса и отмена с возвратом на баланс не создают поступлений. Общий итог включает старые оплаты без способа.</p>
+                </div>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
                     <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl">
                         <span class="text-xs text-slate-400 block">Доходы (Всего)</span>
@@ -298,14 +304,21 @@
     <section class="client-detail" x-show="detailClient" x-cloak @keydown.escape.window="detailClient = null" aria-label="Карточка клиента">
       <template x-if="detailClient"><div class="detail-shell">
         <div class="detail-top"><button @click="detailClient = null" aria-label="Назад">‹</button>Клиент</div>
-        <div class="detail-card"><div class="client-heading"><span class="avatar" x-text="getInitials(detailClient.name)"></span><div><h2 x-text="detailClient.name"></h2><span class="text-xs text-emerald-400" x-text="FitPPStore.subscriptionTitle(getClientActiveSubscription(detailClient), today)"></span><p><a class="detail-phone" :href="detailClient.phone ? 'tel:' + detailClient.phone.replace(/[^+0-9]/g, '') : null" x-text="detailClient.phone || 'Телефон не указан'"></a></p></div></div></div>
+        <div class="detail-card"><div class="client-heading"><span class="avatar" x-text="getInitials(detailClient?.name)"></span><div><h2 x-text="detailClient?.name"></h2><span class="text-xs text-emerald-400" x-text="FitPPStore.subscriptionTitle(getClientActiveSubscription(detailClient), today)"></span><p><a class="detail-phone" :href="detailClient?.phone ? 'tel:' + detailClient?.phone.replace(/[^+0-9]/g, '') : null" x-text="detailClient?.phone || 'Телефон не указан'"></a></p></div></div></div>
+        <div class="detail-card"><strong x-text="'Денежный баланс: ' + moneyBalance(detailClient) + ' ₽'"></strong></div>
         <div class="detail-card detail-stats"><div><span>Остаток занятий</span><strong x-text="getClientActiveSubscription(detailClient)?.left ?? 0"></strong><span>в текущем абонементе</span></div><div><span>Абонемент</span><p x-text="getClientSubInfo(detailClient)"></p><button :disabled="!canEdit()" @click="openSubModal(detailClient)" class="text-emerald-400 text-sm mt-3">+ Оформить</button></div></div>
-        <div class="detail-card"><span class="text-slate-400 text-sm">Локации · разовая тренировка</span><template x-for="loc in (detailClient.locations || [])" :key="loc"><p x-text="({zarya:'мкр. Заря — 700 ₽',pole:'Поле чудес — 600 ₽',online:'Онлайн — 500 ₽'})[loc]"></p></template></div>
+        <div class="detail-card"><span class="text-slate-400 text-sm">Локации · разовая тренировка</span><template x-for="loc in (detailClient?.locations || [])" :key="loc"><p x-text="({zarya:'мкр. Заря — 700 ₽',pole:'Поле чудес — 600 ₽',online:'Онлайн — 500 ₽'})[loc]"></p></template></div>
         <div class="detail-tabs" role="tablist" aria-label="Данные клиента"><template x-for="tab in [{id:'visits',label:'Посещения'},{id:'payments',label:'Оплаты'},{id:'subs',label:'Абонементы'}]"><button role="tab" :aria-selected="detailTab === tab.id" @click="detailTab = tab.id" x-text="tab.label"></button></template></div>
-        <div class="detail-card" x-show="detailTab === 'visits'"><h3 class="font-semibold">История посещений</h3><p x-show="getClientAttendanceHistory(detailClient.id).length === 0">Посещений пока нет</p><template x-for="item in getClientAttendanceHistory(detailClient.id)" :key="item.id"><div class="history-row"><span x-text="item.date.split('-').reverse().join('.')"></span><span class="rounded-lg px-2 py-1" :class="item.badgeClass" x-text="item.text"></span></div></template></div>
-        <div class="detail-card" x-show="detailTab === 'payments'"><h3 class="font-semibold">Оплаты абонементов</h3><p>Разовые оплаты учтены в общем финансовом отчёте. Историческая сумма разового платежа отдельно не сохраняется.</p><p x-show="!(detailClient.subscriptions || []).length">Оплат абонементов пока нет</p><template x-for="(sub, i) in (detailClient.subscriptions || [])" :key="i"><div class="history-row"><span x-text="sub.startDate || 'Дата не указана'"></span><span class="text-emerald-400" x-text="sub.price != null ? sub.price + ' ₽' : 'Сумма не указана'"></span></div></template></div>
-        <div class="detail-card" x-show="detailTab === 'subs'"><h3 class="font-semibold">Абонементы</h3><p x-show="!(detailClient.subscriptions || []).length">Абонементов пока нет</p><template x-for="(sub, i) in (detailClient.subscriptions || [])" :key="i"><div class="history-row"><span x-text="(isFrozen(sub) || isFreezePending(sub) ? 'Плановый срок до ' : 'До ') + (sub.expires || '—')"></span><span class="text-emerald-400" x-text="'Остаток: ' + sub.left"></span><button :disabled="!canEdit()" @click="editUnusedSubscription(detailClient, sub)" class="px-3 py-2">Изменить неиспользованный</button><button :disabled="!canEdit()" @click="cancelUnusedSubscription(detailClient, sub)" class="px-3 py-2 text-rose-400">Отменить продажу</button><button :disabled="!canEdit() || extensionLeft(sub) === 0 || isFrozen(sub) || isFreezePending(sub) || !!detailClient.archivedAt" x-show="sub.left > 0" @click="extendSub(detailClient, sub, i)" class="bg-emerald-700 px-3 py-2 rounded-lg">Продлить</button><span x-show="sub.left > 0" x-text="'Доступно продление: ' + extensionLeft(sub) + ' дн. из 14 суммарно'"></span><span x-show="isFrozen(sub)" x-text="'❄️ Возвращение: ' + (sub.freezes || []).at(-1)?.end"></span><button :disabled="!canEdit()" x-show="!isFrozen(sub) && !isFreezePending(sub) && sub.left > 0 && sub.expires >= today && (!sub.startDate || sub.startDate <= today)" @click="openFreeze(detailClient, sub, i)" class="bg-sky-700 px-3 py-2 rounded-lg">Заморозить</button><span x-show="isFreezePending(sub)" x-text="'❄️ Запланирована с ' + (sub.freezes || []).at(-1)?.start + ', возвращение ' + (sub.freezes || []).at(-1)?.end"></span><button :disabled="!canEdit()" x-show="isFrozen(sub) || isFreezePending(sub)" @click="unfreeze(detailClient, i)" class="bg-emerald-700 px-3 py-2 rounded-lg" x-text="isFreezePending(sub) ? 'Отменить заморозку' : 'Разморозить'">Разморозить</button></div></template></div>
-        <div class="detail-card"><p x-show="detailClient.archivedAt">Клиент в архиве · история сохранена</p><button :disabled="!canEdit()" @click="archiveClient(detailClient)" class="px-3 py-2" x-text="detailClient.archivedAt ? 'Восстановить' : 'Архивировать'"></button><button :disabled="!canEdit()" @click="removeClient(detailClient)" class="px-3 py-2 text-rose-400">Удалить навсегда</button></div>
+        <div class="detail-card" x-show="detailTab === 'visits'"><h3 class="font-semibold">История посещений</h3><p x-show="getClientAttendanceHistory(detailClient?.id).length === 0">Посещений пока нет</p><template x-for="item in getClientAttendanceHistory(detailClient?.id)" :key="item.id"><div class="history-row"><span x-text="item.date.split('-').reverse().join('.')"></span><span class="rounded-lg px-2 py-1" :class="item.badgeClass" x-text="item.text"></span></div></template></div>
+        <div class="detail-card space-y-3" x-show="detailTab === 'payments'">
+          <h3 class="font-semibold" x-text="'Денежный баланс: ' + moneyBalance(detailClient) + ' ₽'"></h3>
+          <button :disabled="!canEdit() || moneyBalance(detailClient) <= 0" @click="openRefund(detailClient)" class="border rounded-xl p-3">Вернуть деньги с баланса</button>
+          <p class="text-sm text-slate-400">Старые оплаты не получают способ автоматически. Их можно уточнить отдельно, в том числе за сентябрь. Если фактически получили другую сумму, сначала нужна сверка истории.</p>
+          <template x-for="entry in paymentHistory(detailClient)" :key="entry.id"><div class="history-row"><span x-text="entry.date + ' · ' + ({sale:'Покупка',legacy:'Старая оплата',cancel:'Отмена → баланс',refund:'Возврат'})[entry.kind]"></span><span x-text="(entry.method ? ({cash:'Наличные',transfer:'Перевод'})[entry.method] : 'Без поступления') + ': ' + entry.received / 100 + ' ₽'"></span><small x-show="entry.kind === 'sale'" x-text="'Стоимость ' + entry.price/100 + ' ₽ · зачтено ' + entry.used/100 + ' ₽'"></small></div></template>
+          <template x-for="row in oldPayments(detailClient)" :key="row.key"><div class="history-row"><span x-text="row.date + ' · ' + row.label + ' · ' + (row.price ?? 'Сумма неизвестна') + ' ₽ · Способ не указан'"></span><button :disabled="!canEdit() || row.price == null" @click="openLegacyPayment(detailClient,row)" class="border p-2 rounded">Уточнить оплату</button></div></template>
+        </div>
+        <div class="detail-card" x-show="detailTab === 'subs'"><h3 class="font-semibold">Абонементы</h3><p x-show="!(detailClient?.subscriptions || []).length">Абонементов пока нет</p><template x-for="(sub, i) in (detailClient?.subscriptions || [])" :key="i"><div class="history-row"><span x-text="(isFrozen(sub) || isFreezePending(sub) ? 'Плановый срок до ' : 'До ') + (sub.expires || '—')"></span><span class="text-emerald-400" x-text="sub.cancelledAt ? 'Продажа отменена ' + sub.cancelledAt : 'Остаток: ' + sub.left"></span><button :disabled="!canEdit()" @click="editUnusedSubscription(detailClient, sub)" class="px-3 py-2">Изменить начало</button><button :disabled="!canEdit()" @click="cancelUnusedSubscription(detailClient, sub)" class="px-3 py-2 text-rose-400">Отменить продажу</button><button :disabled="!canEdit() || extensionLeft(sub) === 0 || isFrozen(sub) || isFreezePending(sub) || !!detailClient?.archivedAt" x-show="sub.left > 0" @click="extendSub(detailClient, sub, i)" class="bg-emerald-700 px-3 py-2 rounded-lg">Продлить</button><span x-show="sub.left > 0" x-text="'Доступно продление: ' + extensionLeft(sub) + ' дн. из 14 суммарно'"></span><span x-show="isFrozen(sub)" x-text="'❄️ Возвращение: ' + (sub.freezes || []).at(-1)?.end"></span><button :disabled="!canEdit()" x-show="!isFrozen(sub) && !isFreezePending(sub) && sub.left > 0 && sub.expires >= today && (!sub.startDate || sub.startDate <= today)" @click="openFreeze(detailClient, sub, i)" class="bg-sky-700 px-3 py-2 rounded-lg">Заморозить</button><span x-show="isFreezePending(sub)" x-text="'❄️ Запланирована с ' + (sub.freezes || []).at(-1)?.start + ', возвращение ' + (sub.freezes || []).at(-1)?.end"></span><button :disabled="!canEdit()" x-show="isFrozen(sub) || isFreezePending(sub)" @click="unfreeze(detailClient, i)" class="bg-emerald-700 px-3 py-2 rounded-lg" x-text="isFreezePending(sub) ? 'Отменить заморозку' : 'Разморозить'">Разморозить</button></div></template></div>
+        <div class="detail-card"><p x-show="detailClient?.archivedAt">Клиент в архиве · история сохранена</p><button :disabled="!canEdit()" @click="archiveClient(detailClient)" class="px-3 py-2" x-text="detailClient?.archivedAt ? 'Восстановить' : 'Архивировать'"></button><button :disabled="!canEdit()" @click="removeClient(detailClient)" class="px-3 py-2 text-rose-400">Удалить навсегда</button></div>
         <button class="detail-edit" @click="editClient(detailClient)">✎ Редактировать клиента</button>
       </div></template>
     </section>
@@ -388,8 +401,8 @@
         </div>
     </div>
     <!-- Subscription Modal -->
-    <div x-show="showSubModal" x-cloak class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-        <div class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4">
+    <div x-show="showSubModal" x-cloak style="z-index:70" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4" style="max-height:90dvh;overflow-y:auto">
             <h3 class="text-lg font-bold">Продажа абонемента</h3>
             <p class="text-xs text-slate-400" x-text="'Клиент: ' + (subClient ? subClient.name : '')"></p>
             <div>
@@ -403,11 +416,28 @@
                 <label class="text-xs text-slate-400 block mb-1">Дата продажи</label>
                 <input type="date" x-model="subForm.date" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-3 py-2 text-sm text-white">
             </div>
+            <p class="text-sm" x-text="'Баланс: ' + (subClient ? moneyBalance(subClient) : 0) + ' ₽ · К оплате: ' + subDue() + ' ₽'"></p>
+            <label class="block text-sm">Способ оплаты<select aria-label="Способ оплаты абонемента" x-model="subForm.method" class="w-full bg-slate-900 border rounded-xl p-2"><option value="">Выберите способ</option><option value="transfer">Перевод</option><option value="cash">Наличные</option></select></label>
+            <label class="block text-sm">Фактически получено, ₽<input aria-label="Получено за абонемент" type="number" min="0" step="0.01" inputmode="decimal" x-model="subForm.received" class="w-full bg-slate-900 border rounded-xl p-2"></label>
+            <p class="text-sm text-slate-400">Дата продажи — дата получения денег. Для истории выберите прошлую дату. Вносите покупки клиента по порядку дат. Недоплата не сохраняется.</p>
+            <p x-show="syncError" role="alert" class="text-rose-300 text-sm" x-text="syncError"></p>
             <div class="flex justify-end space-x-3 pt-2">
                 <button @click="showSubModal = false" class="bg-slate-700 px-4 py-2 rounded-xl text-sm">Отмена</button>
                 <button :disabled="!canEdit()" @click="saveSubscription()" class="bg-emerald-600 px-4 py-2 rounded-xl text-sm font-semibold">Оформить</button>
             </div>
         </div>
+    </div>
+    <div x-show="paymentDraft" x-cloak style="z-index:70" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+      <template x-if="paymentDraft"><section role="dialog" aria-label="Оплата" class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-2xl p-5 space-y-3" style="max-height:90dvh;overflow-y:auto">
+        <h3 class="font-bold" x-text="paymentDraft.title"></h3>
+        <p x-text="paymentDraft.note"></p>
+        <label class="block">Дата<input aria-label="Дата оплаты" type="date" x-model="paymentDraft.paymentDate" :disabled="paymentDraft.type === 'classifyLegacy'" class="w-full bg-slate-900 border rounded-xl p-2"></label>
+        <label class="block">Способ оплаты<select aria-label="Способ оплаты" x-model="paymentDraft.method" class="w-full bg-slate-900 border rounded-xl p-2"><option value="">Выберите способ</option><option value="transfer">Перевод</option><option value="cash">Наличные</option></select></label>
+        <label class="block">Сумма, ₽<input aria-label="Фактически получено" type="number" min="0" step="0.01" inputmode="decimal" x-model="paymentDraft.received" :disabled="paymentDraft.type === 'classifyLegacy'" class="w-full bg-slate-900 border rounded-xl p-2"></label>
+        <p x-show="paymentError" role="alert" class="text-rose-300" x-text="paymentError"></p>
+        <button :disabled="!canEdit()" @click="savePayment()" class="bg-emerald-600 p-3 rounded-xl">Сохранить</button>
+        <button :disabled="saving" @click="paymentDraft=null;paymentToken=null" class="border p-3 rounded-xl">Закрыть</button>
+      </section></template>
     </div>
     <!-- Auth Modal -->
     <div x-show="showAuthModal" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50" x-cloak>
@@ -440,7 +470,7 @@
 <script src="cloud.js?v=mobile-20261018-1"></script>
     <script src="backup.js"></script>
     <script src="write-safety.js?v=mobile-20261018-1"></script>
-    <script src="persistence.js?v=mobile-20261018-1"></script>
+    <script src="persistence.js?v=payments-20261018-1"></script>
     <script>
         const workspace = FitPPCloud.start(firebase);
         const stagingApp = {auth: () => workspace.auth};
@@ -484,7 +514,7 @@
                     this.authForm = { email: '', password: '' };
                     this.authError = '';
                     this.clientForm = { id: null, name: '', phone: '', locations: ['zarya'] };
-                    this.subForm = { type: 'zarya', date: this.selectedDate };
+                    this.subForm = { type: 'zarya', date: this.selectedDate, method:'', received:'' };this.paymentDraft=null;this.paymentToken=null;
                 },
                 canEdit() {
                     return workspace.writesEnabled && this.writeConsent && this.currentUser?.uid === FitPPWorkspace.ownerUid && this.dataReady && !this.loading && !this.saving;
@@ -573,7 +603,7 @@
                         this.deletionError = 'Удаление не подтверждено. Повторите загрузку с сервера. ' + e.message;
                     }
                 },
-                sessionDataWithFinances() { return FitPPStore.read({...this.sessionData(), finances:this.finances}); },
+                sessionDataWithFinances() { return FitPPStore.read({clients:this.clients,attendance:this.attendance,attendanceOps:this.attendanceOps,workouts:this.workouts,visits:this.visits,visitOps:this.visitOps,legacyLinks:this.legacyLinks,legacySources:this.legacySources,finances:this.finances}); },
                 detailClient: null,
                 detailTab: 'visits',
                 getInitials(name) {
@@ -640,7 +670,8 @@
                 clientForm: { id: null, name: '', phone: '', locations: ['zarya'] },
                 showSubModal: false,
                 subClient: null,
-                subForm: { type: 'zarya', date: FitPPStore.localDate() },
+                subForm: { type: 'zarya', date: FitPPStore.localDate(), method:'', received:'' },
+                paymentDraft:null,paymentToken:null,
                 updateLocationByDate() {
                     let day = new Date(this.selectedDate + 'T00:00:00Z').getUTCDay();
                     if (day === 1 || day === 3) this.currentLocation = 'zarya';
@@ -675,7 +706,7 @@
                 getClientActiveSubscription(client) {
                     if (!client || !client.subscriptions || client.subscriptions.length === 0) return null;
                     // Ищем первый абонемент, где есть занятия
-                    let active = client.subscriptions.find(s => s.left > 0);
+                    let active = client.subscriptions.find(s => s.left > 0 && !s.cancelledAt);
                     // Если такого нет, возвращаем последний, чтобы показать "0"
                     return active || client.subscriptions[client.subscriptions.length - 1];
                 },
@@ -694,12 +725,11 @@
                 },
                 async editUnusedSubscription(client,sub) {
                     if(!this.canEdit())return;const token=store.token(),expected=FitPPStore.fingerprint(sub);
-                    const date=prompt('Дата начала неиспользованного абонемента (ГГГГ-ММ-ДД)',sub.startDate);if(date===null)return;
-                    const price=prompt('Цена в рублях. Доход будет пересчитан.',String(sub.price));if(price===null||!price.trim())return;
-                    await store.run({type:'editSubscription',clientId:client.id,subscriptionId:sub.id,expected,date,price:Number(price)},token);
+                    const date=prompt('Начало неиспользованного абонемента (ГГГГ-ММ-ДД). Дата оплаты и её сумма не меняются.',sub.startDate);if(date===null)return;
+                    await store.run({type:'editSubscription',clientId:client.id,subscriptionId:sub.id,expected,date,price:sub.price},token);
                 },
                 async cancelUnusedSubscription(client,sub) {
-                    if(!this.canEdit()||!confirm('Отменить продажу неиспользованного абонемента? Его цена будет вычтена из дохода.'))return;
+                    if(!this.canEdit()||!confirm('Отменить неиспользованную продажу? Стоимость вернётся на денежный баланс клиента. Если деньги выданы клиенту, затем оформите возврат с баланса.'))return;
                     await store.run({type:'cancelSubscription',clientId:client.id,subscriptionId:sub.id,expected:FitPPStore.fingerprint(sub)},store.token());
                 },
                 async correctFinance() {
@@ -815,7 +845,7 @@
                         if (this.sessionEpoch !== state.sessionEpoch) this.resetSessionUI();
                         Object.assign(this, state);
                         if(state.dataReady && !this.currentLocation) this.updateLocationByDate();
-                        if (this.detailClient) this.detailClient = this.clients.find(c => c.id === this.detailClient.id) || null;
+                        if (this.detailClient) this.detailClient = this.clients.find(c => c.id === this.detailClient?.id) || null;
                     });
                 },
                 destroy() { if (this.calendarTimer) clearInterval(this.calendarTimer); store.stop(); },
@@ -827,9 +857,42 @@
                     catch(e) { this.authError='Вход не выполнен: '+e.message; }
                     finally { this.authForm.password=''; }
                 },
+                parseAmount(value) { return String(value).trim() === '' ? NaN : Number(String(value).replace(',','.')); },
+                moneyBalance(c) { return c ? FitPPStore.balance(c) : 0; },
+                paymentHistory(c) { return c ? FitPPStore.ledger(c) : []; },
+                oldPayments(c) { return c ? FitPPStore.legacyPayments(this.sessionDataWithFinances(),c) : []; },
+                moneyReport() { return FitPPStore.report(this.sessionDataWithFinances(),this.currentMonth); },
+                subDue() { return Math.max(0,(this.subForm.type==='zarya'?4400:3800)-this.moneyBalance(this.subClient)); },
+                paymentError:'',
+                openRefund(c) {
+                    if(!this.canEdit())return;
+                    this.paymentToken=store.token();this.paymentError='';
+                    this.paymentDraft={type:'refund',clientId:c.id,date:this.today,paymentDate:this.today,method:'',received:'',title:'Возврат с баланса',note:'Доступно '+this.moneyBalance(c)+' ₽. Записывайте только фактически выданные деньги.'};
+                },
+                openLegacyPayment(c,row) {
+                    if(!this.canEdit())return;
+                    this.paymentToken=store.token();this.paymentError='';
+                    this.paymentDraft={type:'classifyLegacy',clientId:c.id,key:row.key,expected:row.expected,paymentDate:row.date,method:'',received:row.price,title:'Уточнить старую оплату',note:'Подтвердите, что фактически получили '+row.price+' ₽ в указанную дату. Общий доход не изменится; баланс не создаётся.'};
+                },
+                async savePayment() {
+                    const draft=this.paymentDraft,token=this.paymentToken;if(!draft||!token)return;
+                    if(!draft.method){this.paymentError='Выберите способ оплаты.';return;}
+                    const action={...draft,received:this.parseAmount(draft.received)};
+                    if(action.type==='refund')action.date=draft.paymentDate;
+                    const saved=await store.run(action,token);
+                    if(saved && this.paymentToken===token){this.paymentDraft=null;this.paymentToken=null;} else if(this.paymentDraft===draft){this.paymentError=this.syncError;}
+                },
                 async markAttendance(clientId, status) {
-                    const w=this.activeWorkout(); if (!w) return false;
-                    return store.run({ type: 'attendance', workoutId:w.id, clientId, status, date: this.selectedDate, location: this.currentLocation });
+                    const w=this.activeWorkout(); if (!w || !this.canEdit()) return false;
+                    const previous=this.getAttendanceStatus(clientId);
+                    if(previous==='razov' && !confirm('Отменить разовое посещение? Стоимость вернётся на баланс клиента. Фактическую выдачу денег оформите отдельно в карточке клиента.'))return false;
+                    const action={type:'attendance',workoutId:w.id,clientId,status,date:this.selectedDate,location:this.currentLocation};
+                    if(status==='razov' && previous!==status){
+                      const c=this.clients.find(c=>c.id===clientId),price=FitPPStore.prices[this.currentLocation];
+                      this.paymentToken=store.token();this.paymentError='';
+                      this.paymentDraft={...action,paymentDate:this.selectedDate,method:'',received:'',title:'Разовое посещение',note:'Стоимость '+price+' ₽ · баланс '+this.moneyBalance(c)+' ₽ · к оплате '+Math.max(0,price-this.moneyBalance(c))+' ₽. Дата оплаты может отличаться от даты посещения.'};return;
+                    }
+                    return store.run(action);
                 },
 
                 getClientAttendanceHistory(clientId) {
@@ -879,13 +942,13 @@
                     if (!this.canEdit() || client.archivedAt || !this.clients.includes(client)) return;
                     this.subClient = client;
                     this.subFormToken = store.token();
-                    this.subForm.date = this.selectedDate;
+                    this.subForm = {type:'zarya',date:this.selectedDate,method:'',received:''};
                     this.showSubModal = true;
                 },
                 async saveSubscription() {
                     if (!this.subClient || !this.subFormToken) return;
                     const token = this.subFormToken;
-                    const saved = await store.run({ type: 'subscription', clientId: this.subClient.id, subscriptionType: this.subForm.type, date: this.subForm.date || this.selectedDate }, token);
+                    const saved = await store.run({ type: 'subscription', clientId: this.subClient.id, subscriptionType: this.subForm.type, date: this.subForm.date || this.selectedDate, method:this.subForm.method, received:this.parseAmount(this.subForm.received) }, token);
                     if (saved && this.subFormToken === token) { this.showSubModal = false; this.subFormToken = null; }
                 },
                 changeMonth(dir) {

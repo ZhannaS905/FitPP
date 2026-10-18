@@ -732,3 +732,6 @@ input[type=date], input[type=time] { appearance: none; -webkit-appearance: none;
 }
 
 header.app-header > div, .detail-shell, .bottom-nav { padding-left: max(16px, env(safe-area-inset-left)) !important; padding-right: max(16px, env(safe-area-inset-right)) !important; }
+
+/* Payment histories wrap on narrow phones. */
+.history-row { flex-wrap: wrap; overflow-wrap: anywhere; }

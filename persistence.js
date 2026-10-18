@@ -235,6 +235,7 @@
       if (!plain(sub)) throw fail("Повреждённый абонемент.");
       validateFreezes(sub);
     }
+    for (const c of data.clients) ledger(c);
     for(const [key,w] of Object.entries(data.workouts)) {
       if(!plain(w) || w.id!==key || (!regular(w.location,w.originDate) && !(w.legacy===true && schedule[w.location]) && !(w.extra===true && schedule[w.location])) || (w.extra===true ? !new RegExp('^'+w.location+'_extra_[a-zA-Z0-9-]+$').test(key) : key!==w.location+'_'+w.originDate) || typeof w.cancelled!=='boolean' || !/^([01]\d|2[0-3]):[0-5]\d$/.test(w.time)) throw fail('Повреждено расписание.');
       dayNumber(w.date);dayNumber(w.originDate);
@@ -250,21 +251,95 @@
     }
     return copy(data);
   }
+  // Money history lives inside the existing clients list: no dataset/rules migration.
+  function money(value) {
+    if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > 100000000 || Math.abs(value*100-Math.round(value*100)) > 0.000001) throw fail('Укажите сумму в рублях, не более двух знаков после запятой.');
+    return Math.round(value*100);
+  }
+  function ledger(client) {
+    if (client.money === undefined) return [];
+    if (!plain(client.money) || client.money.version !== 1 || !Array.isArray(client.money.entries)) throw fail('Неизвестная денежная история.');
+    let balance=0, previous='', keys=new Set(), seen=new Map(), cancelled=new Set();
+    for (const e of client.money.entries) {
+      dayNumber(e.date);
+      if (!plain(e) || typeof e.id!=='string' || keys.has(e.id) || e.date<previous || !['sale','legacy','cancel','refund'].includes(e.kind) || !Number.isSafeInteger(e.received) || !Number.isSafeInteger(e.delta) || !Number.isSafeInteger(e.price) || e.price<0 || !Number.isSafeInteger(e.used) || e.used<0 || !['cash','transfer',null].includes(e.method) || (e.received!==0 && !e.method)) throw fail('Повреждена денежная история.');
+      if ((e.kind==='sale' && (e.received<0 || e.delta!==e.received-e.price || e.used>e.price)) || (e.kind==='legacy' && (e.received!==e.price || e.delta!==0 || e.used!==0)) || (e.kind==='cancel' && (e.received!==0 || e.delta!==e.price)) || (e.kind==='refund' && (e.received>=0 || e.delta!==e.received))) throw fail('Несогласованные денежные движения.');
+      if(['sale','legacy'].includes(e.kind) && !['cash','transfer'].includes(e.method))throw fail('Не указан способ оплаты.');
+      if(e.kind==='sale' && (e.used!==Math.min(balance,e.price) || e.received+e.used<e.price)) throw fail('Неверный зачёт баланса.');
+      if(e.kind==='cancel') {
+        const source=seen.get(e.ref);
+        if(!source || !['sale','legacy'].includes(source.kind) || cancelled.has(e.ref) || e.price!==source.price || e.used!==0 || e.method!==null)throw fail('Неверная отмена оплаты.');
+        cancelled.add(e.ref);
+      }
+      if(e.kind==='refund' && (e.price!==0 || e.used!==0))throw fail('Неверный возврат.');
+      seen.set(e.id,e);
+      balance+=e.delta;
+      if (!Number.isSafeInteger(balance) || balance<0) throw fail('Денежный баланс не может стать отрицательным.');
+      keys.add(e.id);previous=e.date;
+    }
+    return client.money.entries;
+  }
+  const balance = client => ledger(client).reduce((n,e)=>n+e.delta,0)/100;
+  const rubles = cents => cents/100;
+  function addMoney(data,client,entry,today) {
+    dayNumber(entry.date);
+    if(entry.date>today) throw fail('Оплата будущей датой запрещена.');
+    const entries=ledger(client);
+    if(entry.kind!=='legacy' && entries.length && entry.date<entries.at(-1).date) throw fail('Вносите денежную историю клиента по порядку дат. Более поздние операции уже сохранены.');
+    client.money ||= {version:1,entries:[]};
+    const added={id:id(),...entry};
+    client.money.entries.push(added);
+    client.money.entries.sort((a,b)=>a.date.localeCompare(b.date));ledger(client);
+    if(entry.kind!=='legacy') {
+      const month=entry.date.slice(0,7);
+      data.finances[month]=Math.round(((data.finances[month] || 0)*100+entry.received))/100;
+    }
+    return added.id;
+  }
+  function sell(data,client,action,price,ref,today) {
+    const cost=money(price), available=money(balance(client));
+    if(!['cash','transfer'].includes(action.method)) throw fail('Выберите один способ оплаты: Перевод или Наличные.');
+    const received=money(action.received), used=Math.min(cost,available);
+    if(received+used<cost) throw fail('Недоплата: требуется '+rubles(cost-used)+' ₽. Продажа не сохранена.');
+    return addMoney(data,client,{kind:'sale',date:action.paymentDate || action.date,method:action.method,received,price:cost,used,delta:received-cost,ref},today);
+  }
+  function cancelMoney(data,client,paymentId,today) {
+    const e=ledger(client).find(e=>e.id===paymentId);
+    if(!e || !['sale','legacy'].includes(e.kind) || ledger(client).some(x=>x.kind==='cancel'&&x.ref===paymentId)) throw fail('Исходная оплата не найдена или уже отменена.');
+    addMoney(data,client,{kind:'cancel',date:today,method:null,received:0,price:e.price,used:0,delta:e.price,ref:paymentId},today);
+  }
+  function report(data,month) {
+    const result={cash:0,transfer:0,cashRefund:0,transferRefund:0,unknown:0,total:data.finances[month]||0};
+    for(const c of data.clients) for(const e of ledger(c)) if(e.date.slice(0,7)===month && e.method) {
+      result[e.method]+=e.received/100;
+      if(e.received<0)result[e.method+'Refund']-=e.received/100;
+    }
+    result.cash=Math.round(result.cash*100)/100;result.transfer=Math.round(result.transfer*100)/100;
+    result.cashRefund=Math.round(result.cashRefund*100)/100;result.transferRefund=Math.round(result.transferRefund*100)/100;
+    result.unknown=Math.round((result.total-result.cash-result.transfer)*100)/100;
+    return result;
+  }
+  function legacyPayments(data,client) {
+    const rows=[];
+    (client.subscriptions||[]).forEach((s,i)=>{if(!s.paymentId && !s.cancelledAt) rows.push({key:'sub:'+i,label:'Абонемент',date:s.startDate,price:s.price,index:i,expected:fingerprint(s)});});
+    for(const [date,entries] of Object.entries(data.attendance)) if(entries[client.id]==='razov' && !data.legacyLinks[date+'/'+client.id]) {
+      const op=data.attendanceOps[date]?.[client.id];
+      if(!op?.paymentId)rows.push({key:'old:'+date,label:'Разовое (старый журнал)',date,price:op?.price,oldDate:date,expected:fingerprint(op||null)});
+    }
+    for(const [key,entries] of Object.entries(data.visits)) if(entries[client.id]==='razov') {
+      const op=data.visitOps[key]?.[client.id];
+      if(!op?.paymentId)rows.push({key:'visit:'+key,label:'Разовое',date:workoutOf(data,key).date,price:op?.price,workoutId:key,expected:fingerprint(op||null)});
+    }
+    return rows.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  }
   function clientOf(data, clientId) {
     const client = data.clients.find((c) => c.id === clientId);
     if (!client)
       throw fail("Клиент отсутствует в текущем аккаунте. Обновите данные.");
     return client;
   }
-  function income(data, month, amount) {
-    const next = (data.finances[month] || 0) + amount;
-    if (!Number.isFinite(next) || next < 0)
-      throw fail(
-        "Сумма возврата не соответствует финансовым данным. Изменение отменено.",
-      );
-    data.finances[month] = next;
-  }
-  function attendance(data, { clientId, date, location, status }, today) {
+  function attendance(data, action, today) {
+    const {clientId,date,location,status}=action;
     if (
       !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
       !Object.hasOwn(prices, location) ||
@@ -303,7 +378,8 @@
       } else {
         if (!Number.isFinite(operation.price) || operation.price < 0)
           throw fail("Неизвестна исходная сумма оплаты.");
-        income(data, date.slice(0, 7), -operation.price);
+        if(!operation.paymentId) throw fail('Сначала уточните старую оплату в карточке клиента.');
+        cancelMoney(data,client,operation.paymentId,today);
       }
     }
     if (previous === status) {
@@ -326,7 +402,7 @@
       sub.left--;
     } else if (status === "razov") {
       next.price = prices[location];
-      income(data, date.slice(0, 7), next.price);
+      next.paymentId=sell(data,client,action,next.price,next.operationId,today);
     }
     day[clientId] = status; // Keep the original string format for existing readers.
     ops[clientId] = next;
@@ -445,13 +521,31 @@
       throw fail('Есть посещения или отметки журнала. Используйте архив.');
     if (['legacyLinks','legacySources'].some(map => Object.keys(data[map]).some(key => key.slice(11) === String(clientId))))
       throw fail('Есть связанные данные старого журнала. Используйте архив.');
-    if ((c.subscriptions || []).length)
+    if (ledger(c).length || (c.subscriptions || []).length)
       throw fail('Есть абонементы и финансовая история. Используйте архив.');
     return {};
   }
   function reduce(input, action, today = localDate()) {
     const data = copy(input);
-    if (action.type==='linkLegacy') {
+    if (action.type==='refund') {
+      const c=clientOf(data,action.clientId), amount=money(action.received);
+      if(!['cash','transfer'].includes(action.method)||amount<=0||amount>money(balance(c))) throw fail('Возврат должен быть больше нуля и не превышать баланс.');
+      addMoney(data,c,{kind:'refund',date:action.date,method:action.method,received:-amount,price:0,used:0,delta:-amount,ref:''},today);
+    } else if(action.type==='classifyLegacy') {
+      const c=clientOf(data,action.clientId), row=legacyPayments(data,c).find(r=>r.key===action.key);
+      if(!row || row.expected!==action.expected || !['cash','transfer'].includes(action.method))throw fail('Старая запись изменилась или способ оплаты не выбран.');
+      dayNumber(row.date);const price=money(row.price);
+      if(price<=0)throw fail('Исходная сумма неизвестна. Автоматическая сверка невозможна.');
+      const month=row.date.slice(0,7), totals=report(data,month);
+      if(money(Math.max(0,totals.unknown))<price)throw fail('Сумма превышает нераспределённый доход месяца. Нужна сверка общего итога.');
+      const paymentId=addMoney(data,c,{kind:'legacy',date:row.date,method:action.method,received:price,price,used:0,delta:0,ref:row.key},today);
+      if(row.index!==undefined) {c.subscriptions[row.index].id ||= id();c.subscriptions[row.index].paymentId=paymentId;}
+      else {
+        const entries=row.workoutId ? (data.visitOps[row.workoutId] ||= {}) : (data.attendanceOps[row.oldDate] ||= {});
+        // Missing original amount is never guessed; only known operations reach here.
+        entries[c.id].paymentId=paymentId;
+      }
+    } else if (action.type==='linkLegacy') {
       dayNumber(action.date); const key=action.date+'/'+action.clientId;
       const w=schedule[action.location] && (regular(action.location,action.date) || {id:action.location+'_'+action.date,location:action.location,originDate:action.date,date:action.date,time:schedule[action.location].time,cancelled:false,legacy:true}), status=data.attendance[action.date]?.[action.clientId];
       if(!w || !['attended','missed','razov','excused'].includes(status) || data.legacyLinks[key] || Object.hasOwn(data.visits[w.id] || {},action.clientId)) throw fail('Нельзя связать старую отметку.');
@@ -526,6 +620,7 @@
       delete data.rentMonths[action.month];
     } else if (action.type === 'financeMonth') {
       if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(action.month) || !Number.isFinite(action.amount) || action.amount < 0 || action.amount > 100000000) throw fail('Некорректная сумма месяца.');
+      if(data.clients.some(c=>ledger(c).some(e=>e.date.slice(0,7)===action.month))) throw fail('Месяц содержит денежные операции. Прямая замена итога запрещена.');
       const actual = data.finances[action.month] ?? 0;
       if (action.expected !== actual) throw fail('Финансы изменились. Обновите данные.');
       if (action.remove) {
@@ -536,17 +631,15 @@
       const c=clientOf(data,action.clientId), sub=c.subscriptions?.find(s=>s.id===action.subscriptionId);
       if(!sub || fingerprint(sub)!==action.expected) throw fail('Абонемент изменился. Откройте заново.');
       const linked = [data.attendanceOps,data.visitOps].some(map=>Object.values(map).some(entries=>Object.values(entries).some(op=>op.subscriptionId===sub.id)));
+      if(sub.cancelledAt)throw fail('Продажа уже отменена.');
       if(sub.left!==8 || linked || sub.freezes?.length || sub.extensionDays) throw fail('Изменять или отменять можно только неиспользованный абонемент без заморозок и продлений.');
       dayNumber(sub.startDate);
       if(action.type==='cancelSubscription') {
-        income(data,sub.startDate.slice(0,7),-sub.price);
-        c.subscriptions=c.subscriptions.filter(s=>s.id!==sub.id);
+        if(!sub.paymentId)throw fail('Сначала уточните способ старой оплаты.');
+        cancelMoney(data,c,sub.paymentId,today);sub.left=0;sub.cancelledAt=today;
       } else {
-        dayNumber(action.date);
-        if(!Number.isFinite(action.price)||action.price<0||action.price>1000000)throw fail('Некорректная цена.');
-        income(data,sub.startDate.slice(0,7),-sub.price);
-        income(data,action.date.slice(0,7),action.price);
-        sub.startDate=action.date;sub.expires=addDays(action.date,28);sub.price=action.price;
+        if(!sub.paymentId || action.price!==sub.price)throw fail('Изменение цены отключено. Для исправления оплаты отмените продажу и оформите заново.');
+        dayNumber(action.date);sub.startDate=action.date;sub.expires=addDays(action.date,28);
       }
     } else if (action.type === "subscription") {
       const client = clientOf(data, action.clientId);
@@ -564,14 +657,16 @@
       )
         throw fail("Некорректная дата.");
       date.setUTCDate(date.getUTCDate() + 28);
+      const subId=id();
+      const paymentId=sell(data,client,action,price,subId,today);
       (client.subscriptions ||= []).push({
-        id: id(),
+        id: subId,paymentId,
         left: 8,
         startDate: action.date,
         expires: date.toISOString().slice(0, 10),
         price,
       });
-      income(data, action.date.slice(0, 7), price);
+
     } else throw fail("Неподдерживаемая операция.");
     return data;
   }
@@ -685,10 +780,11 @@
       }
       const base = copy(baseline),
         frozen = copy(action);
+      const operationDay = clock();
+      try { reduce(base, frozen, operationDay); }
+      catch(error) {publish({syncError:'Не сохранено. '+error.message,saveStatus:''});return false;}
       publish({ saving: true, syncError: "", saveStatus: "" });
       try {
-        const operationDay = clock();
-        reduce(base, frozen, operationDay); // Validate before opening the transaction.
         const ref = reference(t.uid);
         if (workspace && !workspace.local) {
           if (!beforeWrite) throw fail('Нет хранилища резервных копий. Запись заблокирована.');
@@ -775,5 +871,5 @@
       },
     };
   }
-  return { extensionRemaining, subscriptionTitle, deletionPlan, subscriptionWarnings, create, read, reduce, prices, fingerprint, rentDates, rentTotal, localDate, dayNumber, addDays, frozenOn, freezeStart, pendingFreeze, schedule, workoutsOn, migrate, unresolved };
+  return { balance, report, legacyPayments, ledger, extensionRemaining, subscriptionTitle, deletionPlan, subscriptionWarnings, create, read, reduce, prices, fingerprint, rentDates, rentTotal, localDate, dayNumber, addDays, frozenOn, freezeStart, pendingFreeze, schedule, workoutsOn, migrate, unresolved };
 });
