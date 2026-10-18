@@ -404,10 +404,21 @@
     <div x-show="renewalClient" x-cloak style="z-index:75" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4">
       <div role="dialog" aria-label="Нет подходящего абонемента" class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-2xl p-6 space-y-4">
         <h3 class="text-lg font-bold">Нет действующего подходящего абонемента</h3>
-        <p>Можно оформить новый абонемент. Тип и зал вы выбираете самостоятельно.</p>
+        <p>Можно оформить новый абонемент. Тип и зал вы выбираете самостоятельно. Для онлайн подходят и «Заря», и «Поле чудес».</p>
         <button @click="renewalClient=null" class="bg-slate-700 px-4 py-2 rounded-xl">Отмена</button>
         <button :disabled="!canEdit()" @click="openSubModal(renewalClient.client, renewalClient.visit)" class="bg-emerald-600 px-4 py-2 rounded-xl">Оформить новый абонемент</button>
       </div>
+    </div>
+    <div x-show="subscriptionChoice" x-cloak style="z-index:75" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4">
+      <section role="dialog" aria-label="Выберите абонемент" class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-2xl p-5 space-y-3" style="max-height:90dvh;overflow-y:auto">
+        <h3 class="text-lg font-bold">С какого абонемента списать занятие?</h3>
+        <p class="text-sm">Подходит несколько абонементов. Спишется одно занятие, без новой оплаты.</p>
+        <template x-for="item in subscriptionChoice?.items || []" :key="item.key">
+          <button :disabled="!canEdit()" @click="chooseAttendanceSubscription(item.key)" class="w-full text-left bg-slate-700 p-3 rounded-xl" x-text="item.label"></button>
+        </template>
+        <p x-show="syncError" role="alert" class="text-rose-300 text-sm" x-text="syncError"></p>
+        <button :disabled="saving" @click="subscriptionChoice=null" class="bg-slate-700 px-4 py-2 rounded-xl">Отмена</button>
+      </section>
     </div>
     <!-- Subscription Modal -->
     <div x-show="showSubModal" x-cloak style="z-index:70" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
@@ -479,7 +490,7 @@
 <script src="cloud.js?v=mobile-20261018-1"></script>
     <script src="backup.js"></script>
     <script src="write-safety.js?v=mobile-20261018-1"></script>
-    <script src="persistence.js?v=renewal-20261018-1"></script>
+    <script src="persistence.js?v=online-20261018-1"></script>
     <script>
         const workspace = FitPPCloud.start(firebase);
         const stagingApp = {auth: () => workspace.auth};
@@ -501,6 +512,7 @@
                 subFormToken: null,
                 subVisit: null,
                 renewalClient: null,
+                subscriptionChoice: null,
                 resetSessionUI() {
                     this.writeConsent = FitPPWriteSafety.intent();
                     this.backupVerified = false; this.backupChecking = false; this.backupStatus = '';
@@ -518,7 +530,7 @@
                     this.editingClient = null;
                     this.subClient = null;
                     this.clientFormToken = null;
-                    this.subFormToken = null;this.subVisit=null;this.renewalClient=null;
+                    this.subFormToken = null;this.subVisit=null;this.renewalClient=null;this.subscriptionChoice=null;
                     this.showClientModal = false;
                     this.showSubModal = false;
                     this.showAuthModal = false;
@@ -893,14 +905,34 @@
                     const saved=await store.run(action,token);
                     if(saved && this.paymentToken===token){this.paymentDraft=null;this.paymentToken=null;} else if(this.paymentDraft===draft){this.paymentError=this.syncError;}
                 },
+                async chooseAttendanceSubscription(key) {
+                    const draft=this.subscriptionChoice;if(!draft || !this.canEdit())return false;
+                    if(this.activeWorkout()?.id!==draft.action.workoutId || this.selectedDate!==draft.action.date || this.currentLocation!==draft.action.location) {
+                      this.subscriptionChoice=null;return false;
+                    }
+                    const saved=await store.run({...draft.action,subscriptionKey:key},draft.token);
+                    if(saved && this.subscriptionChoice===draft)this.subscriptionChoice=null;
+                    return saved;
+                },
                 async markAttendance(clientId, status) {
                     const w=this.activeWorkout(); if (!w || !this.canEdit()) return false;
                     const previous=this.getAttendanceStatus(clientId);
                     if(previous==='razov' && !confirm('Отменить разовое посещение? Стоимость вернётся на баланс клиента. Фактическую выдачу денег оформите отдельно в карточке клиента.'))return false;
                     const action={type:'attendance',workoutId:w.id,clientId,status,date:this.selectedDate,location:this.currentLocation};
                     const client=this.clients.find(c=>c.id===clientId);
-                    if(status==='attended' && !previous && client && !(client.subscriptions || []).some(s=>FitPPStore.covers(s,w.location,w.date))) {
-                      this.renewalClient={client,visit:action};return false;
+                    if(['attended','missed'].includes(status) && previous!==status && client) {
+                      const op=this.sessionData().visitOps[w.id]?.[clientId];
+                      const items=FitPPStore.availableSubscriptions(client,w.location,w.date,op?.subscriptionId);
+                      if(status==='attended' && !previous && !items.length) {
+                        this.renewalClient={client,visit:action};return false;
+                      }
+                      // Changing «Был»/«Сгорело» keeps the original subscription.
+                      if(items.length>1 && !items.some(item=>op?.subscriptionId && item.sub.id===op.subscriptionId)) {
+                        this.subscriptionChoice={action,token:store.token(),items:items.map(({key,sub})=>({key,label:
+                          (sub.location==='zarya' || (!sub.location && sub.price===4400) ? 'Заря' : 'Поле чудес')+
+                          ' · '+sub.price+' ₽ · остаток '+sub.left+' · с '+(sub.startDate || '—')+' до '+sub.expires}))};
+                        return false;
+                      }
                     }
                     if(status==='razov' && previous!==status){
                       const c=this.clients.find(c=>c.id===clientId),price=FitPPStore.prices[this.currentLocation];

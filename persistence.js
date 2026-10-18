@@ -340,8 +340,14 @@
   }
   function covers(sub, location, date) {
     const hall = sub.location || (sub.price === 4400 ? 'zarya' : sub.price === 3800 ? 'pole' : null);
-    return hall === location && !sub.cancelledAt && Number.isSafeInteger(sub.left) && sub.left > 0 &&
+    return (hall === location || (location === 'online' && ['zarya','pole'].includes(hall))) && !sub.cancelledAt && Number.isSafeInteger(sub.left) && sub.left > 0 &&
       (!sub.startDate || sub.startDate <= date) && sub.expires >= date && !frozenOn(sub, date);
+  }
+  // Array keys also identify legacy subscriptions without assigning IDs on read.
+  // The store revision token protects these keys against concurrent edits/reordering.
+  function availableSubscriptions(client, location, date, restoredId) {
+    return (client?.subscriptions || []).map((sub,index)=>({key:'sub:'+index,sub}))
+      .filter(({sub})=>covers(restoredId && sub.id===restoredId ? {...sub,left:sub.left+1} : sub,location,date));
   }
   function attendance(data, action, today) {
     const {clientId,date,location,status}=action;
@@ -394,9 +400,13 @@
     }
     const next = { status, location, operationId: id() };
     if (status === "attended" || status === "missed") {
-      const sub = client.subscriptions?.find(
-        (s) => covers(s, location, date) && (!action.subscriptionId || s.id === action.subscriptionId),
-      );
+      let candidates = availableSubscriptions(client, location, date);
+      if (action.subscriptionKey !== undefined) candidates=candidates.filter(c=>c.key===action.subscriptionKey);
+      else if (action.subscriptionId) candidates=candidates.filter(c=>c.sub.id===action.subscriptionId);
+      else if (operation?.subscriptionId && candidates.some(c=>c.sub.id===operation.subscriptionId))
+        candidates=candidates.filter(c=>c.sub.id===operation.subscriptionId);
+      if (candidates.length > 1) throw fail('Выберите абонемент для списания занятия.');
+      const sub = candidates[0]?.sub;
       if (!sub)
         throw fail(
           "У клиента нет доступных занятий. Сначала оформите абонемент.",
@@ -885,5 +895,5 @@
       },
     };
   }
-  return { covers, balance, report, legacyPayments, ledger, extensionRemaining, subscriptionTitle, deletionPlan, subscriptionWarnings, create, read, reduce, prices, fingerprint, rentDates, rentTotal, localDate, dayNumber, addDays, frozenOn, freezeStart, pendingFreeze, schedule, workoutsOn, migrate, unresolved };
+  return { covers, availableSubscriptions, balance, report, legacyPayments, ledger, extensionRemaining, subscriptionTitle, deletionPlan, subscriptionWarnings, create, read, reduce, prices, fingerprint, rentDates, rentTotal, localDate, dayNumber, addDays, frozenOn, freezeStart, pendingFreeze, schedule, workoutsOn, migrate, unresolved };
 });
