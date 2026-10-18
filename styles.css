@@ -687,3 +687,29 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .subscription-warning-balance { color:#fbbf24; background:#fbbf2414; border-color:#fbbf244d; }
 .subscription-warning-soon { color:#fdba74; background:#fb923c14; border-color:#fb923c4d; }
 .subscription-warning-expired { color:#fda4af; background:#fb718514; border-color:#fb71854d; }
+
+/* Compact header and accessible native settings dialog. */
+header.app-header > div { padding: 10px 16px !important; gap: 8px !important; align-items: center; }
+header.app-header h1 { margin: 0; font-size: 25px !important; }
+header.app-header h1::before { content: none; }
+.header-actions { display: flex; align-items: center; gap: 8px; }
+.settings-trigger { min-height: 44px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 12px; background: #102738; color: #edf5ff; font-size: 14px; }
+.settings-dialog { width: min(540px, calc(100% - 24px)); max-height: calc(100dvh - 32px); padding: 20px; border: 1px solid var(--border); border-radius: 20px; background: #081827; color: #edf5ff; overflow-y: auto; overscroll-behavior: contain; }
+.settings-dialog::backdrop { background: #000b; }
+body:has(.settings-dialog[open]) { overflow: hidden; }
+.settings-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.settings-heading h2 { font-size: 22px; font-weight: 700; }
+.settings-heading button { min-width: 44px; min-height: 44px; border-radius: 12px; background: #20394b; }
+.settings-section { padding: 18px 0; border-bottom: 1px solid var(--border); }
+.settings-section:last-child { border-bottom: 0; padding-bottom: 0; }
+.settings-section h3 { font-weight: 700; font-size: 17px; margin-bottom: 8px; }
+.settings-section p { color: #b8cad9; font-size: 14px; line-height: 1.5; margin: 8px 0; overflow-wrap: anywhere; }
+.settings-section button { display: block; min-height: 44px; padding: 10px 14px; background: #09bd88; color: #00251b; font-weight: 700; border-radius: 12px; width: 100%; }
+.settings-dialog button:disabled, .settings-dialog input:disabled { opacity: .5; cursor: not-allowed; }
+.backup-file { display: block; margin: 16px 0 8px; font-size: 14px; }
+.settings-section input[type=file] { max-width: 100%; width: 100%; font-size: 14px; }
+.settings-section input::file-selector-button { min-height: 44px; border: 1px solid #456477; border-radius: 10px; background: #20394b; color: white; padding: 8px; margin-right: 8px; }
+.write-toggle { display: flex; align-items: center; gap: 12px; min-height: 44px; }
+.write-toggle input { width: 22px; height: 22px; flex-shrink: 0; accent-color: #12e7a1; }
+.settings-dialog button:focus-visible { outline: 2px solid var(--green); outline-offset: 3px; }
+@media (max-width: 639px) { header.app-header > div { grid-template-columns: 1fr auto !important; } }

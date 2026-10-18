@@ -28,44 +28,48 @@
       <symbol id="icon-users" viewBox="0 0 24 24"><circle cx="10" cy="7" r="4"/><path d="M3 21v-3a7 7 0 0 1 14 0v3Zm15-17a4 4 0 0 1 0 8m2 3a6 6 0 0 1 2 6"/></symbol>
       <symbol id="icon-wallet" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="4"/><path d="M3 9h18m-6 4h6m-6 4h2"/></symbol>
     </defs></svg>
-    <div style="background:#92400e;color:white;text-align:center;padding:10px">FITPP • fitpp-165a2 • Рабочая версия • Запись включается отдельно в этой вкладке</div>
-    <!-- Header -->
-    <!-- Auth Banner -->
-    <div x-show="!currentUser" class="auth-banner bg-amber-600/20 border-b border-amber-500/30 px-4 py-2.5 text-center text-sm flex justify-between items-center max-w-4xl mx-auto" x-cloak>
-        <span class="text-amber-200 font-medium">Войдите в аккаунт владельца нового проекта через Email/Password.</span>
-        <button @click="showAuthModal = true" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow">
-            <span>Войти</span>
-        </button>
-    </div>
-    <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-30">
-        <div class="max-w-4xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
-            <div class="flex items-center space-x-2">
-                <span class="text-2xl"></span>
-                <h1 class="text-xl font-bold tracking-wide bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent"><svg class="brand-icon" aria-hidden="true"><use href="#icon-barbell"/></svg>FitPP</h1>
-            </div>
-            <nav class="desktop-nav flex space-x-1 sm:space-x-2" aria-label="Навигация для больших экранов">
-                <button @click="activeTab = 'journal'" :class="activeTab === 'journal' ? 'bg-emerald-600 text-white' : 'text-slate-300 hover:bg-slate-700'" class="px-3 py-1.5 rounded-lg text-sm font-medium transition">Журнал</button>
-                <button @click="activeTab = 'clients'" :class="activeTab === 'clients' ? 'bg-emerald-600 text-white' : 'text-slate-300 hover:bg-slate-700'" class="px-3 py-1.5 rounded-lg text-sm font-medium transition">Клиенты</button>
-                <button @click="activeTab = 'finances'" :class="activeTab === 'finances' ? 'bg-emerald-600 text-white' : 'text-slate-300 hover:bg-slate-700'" class="px-3 py-1.5 rounded-lg text-sm font-medium transition">Финансы</button>
+    <header class="app-header sticky top-0 z-30">
+        <div class="max-w-4xl mx-auto">
+            <h1><svg class="brand-icon" aria-hidden="true"><use href="#icon-barbell"/></svg>FitPP</h1>
+            <nav class="desktop-nav" aria-label="Навигация для больших экранов">
+                <button @click="activeTab = 'journal'" :class="activeTab === 'journal' ? 'bg-emerald-600' : ''">Журнал</button>
+                <button @click="activeTab = 'clients'" :class="activeTab === 'clients' ? 'bg-emerald-600' : ''">Клиенты</button>
+                <button @click="activeTab = 'finances'" :class="activeTab === 'finances' ? 'bg-emerald-600' : ''">Финансы</button>
             </nav>
-            <div class="flex items-center space-x-2 pl-2 border-l border-slate-700">
+            <div class="header-actions">
                 <button class="desktop-add" :disabled="!canEdit()" @click="openClientModal()" aria-label="Добавить клиента">+</button>
-                <template x-if="currentUser">
-                    <div class="flex items-center space-x-2">
-                        <span class="text-xs text-slate-300 hidden sm:inline" x-text="currentUser.displayName || currentUser.email"></span>
-                        <button @click="logout()" class="text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 px-2.5 py-1.5 rounded-lg transition">Выйти</button>
-                    </div>
-                </template>
-                <template x-if="!currentUser">
-                    <button @click="showAuthModal = true" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center space-x-1">
-                        <span>Войти</span>
-                    </button>
-                </template>
+                <button id="settings-trigger" class="settings-trigger" @click="openSettings()" aria-haspopup="dialog" aria-controls="settings-dialog"><span aria-hidden="true">⚙</span> Настройки</button>
             </div>
         </div>
     </header>
-
-    <section class="max-w-4xl mx-auto p-4"><p>FitPP · fitpp-165a2 · manual-history-2026-09-v1. База должна уже существовать. Создание и импорт отключены.</p><label><input type="checkbox" x-model="writeConsent"> Включить запись в этой вкладке после проверки резервной копии</label><br><label>Проверить файл резервной копии (без импорта) <input type="file" accept=".json" @change="verifyBackup($event)"></label><p x-text="backupStatus"></p><button class="p-2 m-1 border rounded" @click="reloadData()">Повторить загрузку с сервера</button><button class="p-2 m-1 border rounded" :disabled="!canRead()" @click="downloadBackup()">Скачать резервную копию с сервера</button></section>
+    <dialog id="settings-dialog" class="settings-dialog" aria-labelledby="settings-title" @close="document.getElementById('settings-trigger').focus()">
+        <div class="settings-heading"><h2 id="settings-title">Настройки</h2><button aria-label="Закрыть настройки" @click="document.getElementById('settings-dialog').close()">✕</button></div>
+        <section class="settings-section">
+            <h3>Аккаунт</h3>
+            <p x-show="currentUser" x-text="currentUser?.email"></p>
+            <p x-show="!currentUser">Войдите, чтобы загрузить свои данные.</p>
+            <button x-show="!currentUser" @click="document.getElementById('settings-dialog').close(); showAuthModal = true">Войти</button>
+            <button x-show="currentUser" @click="logout()">Выйти из аккаунта</button>
+        </section>
+        <section class="settings-section">
+            <h3>Резервная копия</h3>
+            <p>Сначала скачайте копию с сервера, затем выберите этот файл для проверки. Проверка выполняется локально и не импортирует данные.</p>
+            <button :disabled="!canRead() || backupChecking" @click="downloadBackup()">Скачать резервную копию</button>
+            <label class="backup-file" for="backup-file">Проверить файл резервной копии</label>
+            <input id="backup-file" type="file" accept=".json,application/json" :disabled="!canRead() || backupChecking" @change="verifyBackup($event)">
+            <p role="status" aria-live="polite" x-text="backupStatus"></p>
+        </section>
+        <section class="settings-section">
+            <h3>Запись данных</h3>
+            <label class="write-toggle"><input type="checkbox" x-model="writeConsent" :disabled="!backupVerified || backupChecking || !canRead()" aria-describedby="write-help"> Включить запись в этой вкладке</label>
+            <p id="write-help">Доступна после проверки актуального бэкапа. При выходе или повторной загрузке запись отключается.</p>
+            <p role="status" x-text="canEdit() ? 'Запись включена' : 'Режим просмотра'"></p>
+        </section>
+        <section class="settings-section">
+            <h3>Данные с сервера</h3>
+            <button :disabled="!currentUser || loading || saving || backupChecking" @click="reloadData()">Перезагрузить данные с сервера</button>
+        </section>
+    </dialog>
     <div class="sync-message" x-show="syncError" x-cloak role="alert">
         <span x-text="syncError"></span>
         <button @click="reloadData()" :disabled="saving || loading || !currentUser">Обновить данные</button>
@@ -123,7 +127,6 @@
                     <button type="submit" :disabled="!canEdit()" class="workout-button workout-selected">Добавить</button>
                     <button type="button" @click="addingWorkout=false" class="workout-button">Закрыть</button>
                 </form>
-                <button :disabled="!canRead()" @click="downloadBackup()" class="bg-slate-700 rounded px-3 py-2">Скачать резервную копию с сервера</button>
                 <p x-show="dayWorkouts().length === 0">В этот день тренировок нет.</p>
                 <template x-for="w in dayWorkouts()" :key="w.id">
                     <div class="workout-card">
@@ -455,6 +458,8 @@
                 subFormToken: null,
                 resetSessionUI() {
                     this.writeConsent = false;
+                    this.backupVerified = false; this.backupChecking = false; this.backupStatus = '';
+                    this.backupCheckId++;
                     this.deletionForm = null; this.deletionToken = null;
                     this.deletionError = ''; this.deletionMessage = '';
                     this.freezeForm = null;
@@ -478,7 +483,7 @@
                     this.subForm = { type: 'zarya', date: this.selectedDate };
                 },
                 canEdit() {
-                    return workspace.writesEnabled && this.writeConsent && this.currentUser?.uid === FitPPWorkspace.ownerUid && this.dataReady && !this.loading && !this.saving;
+                    return workspace.writesEnabled && this.backupVerified && this.writeConsent && this.currentUser?.uid === FitPPWorkspace.ownerUid && this.dataReady && !this.loading && !this.saving;
                 },
                 canRead() {
                     return this.dataReady && !this.loading && !this.saving;
@@ -709,13 +714,29 @@
                     await store.run({type:'deleteRentMonth',month:this.currentMonth});
                 },
                 backupStatus: '',
-                writeConsent:false,
+                backupVerified: false,
+                backupChecking: false,
+                backupCheckId: 0,
+                writeConsent: false,
+                openSettings() { document.getElementById('settings-dialog').showModal(); },
                 async verifyBackup(event) {
-                    try { const file=event.target.files[0]; if(!file)return;
-                        const data=await FitPPBackup.restore(await file.text()); FitPPStore.read(data);
-                        this.backupStatus='Контрольная сумма и формат проверены. Проверено клиентов: '+data.clients.length+'. Данные приложения не заменены.';
-                    } catch(e) { this.backupStatus='Проверка не пройдена: '+e.message; }
-                    finally { event.target.value=''; }
+                    const file=event.target.files[0]; if(!file)return;
+                    const checkId=++this.backupCheckId, epoch=this.sessionEpoch, uid=this.currentUser?.uid;
+                    this.writeConsent=false; this.backupVerified=false; this.backupChecking=true;
+                    this.backupStatus='Проверка резервной копии…';
+                    try {
+                        if(!this.canRead() || uid!==FitPPWorkspace.ownerUid) throw Error('Сначала загрузите данные владельца');
+                        const text=await file.text(), data=await FitPPBackup.restore(text); FitPPStore.read(data);
+                        if(JSON.parse(text).mode!=='firebase') throw Error('Нужна копия с сервера');
+                        const snap=await workspace.reference().get({source:'server'}); workspace.check();
+                        if(checkId!==this.backupCheckId || epoch!==this.sessionEpoch || uid!==this.currentUser?.uid)return;
+                        if(!snap.exists || snap.metadata?.fromCache!==false || snap.metadata?.hasPendingWrites) throw Error('Нет подтверждённого снимка сервера');
+                        if(FitPPStore.fingerprint(data)!==FitPPStore.fingerprint(snap.data())) throw Error('Данные изменились. Скачайте новую резервную копию');
+                        this.backupVerified=true;
+                        this.backupStatus='Копия проверена и соответствует данным сервера. Можно включить запись. Данные не импортированы.';
+                    } catch(e) {
+                        if(checkId===this.backupCheckId && epoch===this.sessionEpoch) this.backupStatus='Проверка не пройдена: '+e.message;
+                    } finally { if(checkId===this.backupCheckId)this.backupChecking=false; event.target.value=''; }
                 },
                 async downloadBackup() {
                     if(!this.canRead()) return;
@@ -727,7 +748,8 @@
                         const result=await FitPPBackup.create(snap.data(),workspace.local?'local-simulation':'firebase');
                         const blob=new Blob([JSON.stringify(result,null,2)],{type:'application/json'});
                         const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='FitPP-fitpp-165a2-'+new Date().toISOString().replace(/[:.]/g,'-')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
-                    }catch(e){this.syncError='Бэкап не получен: '+e.message;}
+                        this.backupStatus='Файл подготовлен к скачиванию. Выберите сохранённый файл для проверки.';
+                    }catch(e){this.syncError='Бэкап не получен: '+e.message;this.backupStatus=this.syncError;}
                 },
                 unresolvedMarks() {
                     const d=this.sessionData(),rows=[];
@@ -784,7 +806,7 @@
                     });
                 },
                 destroy() { if (this.calendarTimer) clearInterval(this.calendarTimer); store.stop(); },
-                async reloadData() { await store.load(); },
+                async reloadData() { this.writeConsent=false; this.backupVerified=false; this.backupChecking=false; this.backupCheckId++; this.backupStatus=''; await store.load(); },
                 async logout() { await store.logout(); },
                 async handleAuth() {
                     this.authError = '';
