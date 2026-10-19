@@ -108,15 +108,13 @@
                 </form>
                 <p x-show="dayWorkouts().length === 0">В этот день тренировок нет.</p>
                 <template x-for="w in dayWorkouts()" :key="w.id">
-                    <div class="workout-card workout-compact" x-data="{ actionsOpen: false }" @keydown.escape.window="if (actionsOpen) { actionsOpen=false; $refs.actions.focus(); }">
-                        <div class="workout-row"><p class="workout-title" x-text="workoutLabel(w)"></p>
-                        <button x-show="!w.cancelled && w.date === selectedDate" @click="chosenWorkout=w.id" class="workout-button" :class="activeWorkout()?.id === w.id ? 'workout-selected' : ''" x-text="activeWorkout()?.id === w.id ? '✓ Выбрана' : 'Выбрать'" :aria-pressed="activeWorkout()?.id === w.id"></button>
-                        </div><div class="workout-controls"><button class="workout-button" :disabled="!canManageWorkout(w) || activeWorkout()?.id !== w.id" :data-move-workout="w.id" @click="openWorkoutMove(w)">Перенести</button>
-                        <button x-ref="actions" class="workout-button workout-more" aria-label="Действия с тренировкой" :aria-expanded="actionsOpen" @click="actionsOpen=!actionsOpen">⋯</button>
-                        </div><div class="workout-actions workout-menu" x-show="actionsOpen" x-cloak>
-                        <button :disabled="!canManageWorkout(w)" x-show="!w.cancelled" @click="manageWorkout(w,'cancel')" class="workout-button workout-danger">Отменить тренировку</button>
-                        <button :disabled="!canManageWorkout(w)" x-show="!w.extra && (w.cancelled || w.date !== w.originDate || w.time !== FitPPStore.schedule[w.location].time)" @click="manageWorkout(w,'restore')" class="workout-button">Вернуть обычное расписание</button>
+                    <div class="workout-card workout-compact" :aria-label="workoutLabel(w)">
+                        <div class="workout-controls">
+                            <button class="workout-button" :disabled="!canManageWorkout(w) || activeWorkout()?.id !== w.id" :data-move-workout="w.id" @click="openWorkoutMove(w)">Перенести</button>
+                            <button class="workout-button workout-danger" :disabled="!canManageWorkout(w)" @click="manageWorkout(w,'cancel')">Отменить</button>
+                            <button x-show="!w.cancelled && w.date === selectedDate" @click="chosenWorkout=w.id" class="workout-button workout-check" :class="activeWorkout()?.id === w.id ? 'workout-selected' : ''" :aria-label="activeWorkout()?.id === w.id ? 'Тренировка выбрана' : 'Выбрать тренировку'" :aria-pressed="activeWorkout()?.id === w.id">✓</button>
                         </div>
+                        <button :disabled="!canManageWorkout(w)" x-show="!w.extra && (w.date !== w.originDate || w.time !== FitPPStore.schedule[w.location].time)" @click="manageWorkout(w,'restore')" class="workout-button workout-restore">Вернуть обычное расписание</button>
                         <p class="text-slate-400 text-xs" x-show="workoutLocked(w)">Есть отметки или списания. Изменение тренировки заблокировано.</p>
                     </div>
                 </template>
@@ -624,7 +622,7 @@
                 addingWorkout:false, newWorkoutDate:'', newWorkoutTime:'', newWorkoutLocation:'zarya',
                 workoutLabel(w) {
                     const [y,m,d]=w.date.split('-');
-                    return `${Number(d)} ${['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'][Number(m)-1]} · ${w.time}` + (w.cancelled ? ' · Отменена' : w.date!==this.selectedDate ? ' · Перенесена' : '');
+                    return `${Number(d)} ${['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'][Number(m)-1]} · ${w.time}` + (w.cancelled ? ' · Отменено' : w.date!==this.selectedDate ? ' · Перенесена' : '');
                 },
                 clientWord(count) { const n=Math.abs(count)%100,last=n%10; return n>=11&&n<=14?'клиентов':last===1?'клиент':last>=2&&last<=4?'клиента':'клиентов'; },
                 peopleWord(count) { const n=Math.abs(count)%100,last=n%10; return n>=11&&n<=14?'человек':last>=2&&last<=4?'человека':'человек'; },

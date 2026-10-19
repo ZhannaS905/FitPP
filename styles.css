@@ -863,3 +863,9 @@ header.app-header > div, .detail-shell, .bottom-nav { padding-left: max(16px, en
 .workout-move-dialog .move-actions {display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px;}
 .workout-move-dialog button {min-height:44px;padding:8px;border-radius:10px;background:#21394b;}
 .workout-move-dialog button[type=submit] {background:#09bd88;color:#00251b;font-weight:700;}
+
+/* Workout actions: equal move/cancel columns and a square selection control. */
+.workout-controls {grid-template-columns:minmax(0,1fr) minmax(0,1fr) 32px;gap:8px;width:100%;}
+.workout-panel .workout-compact>.workout-title {margin:0;font-size:12px;line-height:1.4;}
+.workout-panel .workout-check {width:32px;height:32px;min-width:0;padding:2px;font-size:16px;}
+.workout-restore {margin-top:6px;max-width:100%;white-space:normal;}
