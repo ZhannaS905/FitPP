@@ -30,18 +30,12 @@ for(const engine of [chromium,webkit]) {
  const notices=[];page.on('dialog',async dialog=>{notices.push(dialog.message());await dialog.accept();});
  await page.getByRole('button',{name:'Оформить',exact:true}).click();
  await page.waitForFunction(()=>!Alpine.$data(document.body).showSubModal);
- assert.equal(notices.length,1);assert.match(notices[0],/Посещение не отмечено/);
- assert.equal(await page.evaluate(()=>Alpine.$data(document.body).sessionData().visits['pole_2026-09-29']?.c),undefined);
- await page.getByRole('button',{name:'✓ Был (-1)',exact:true}).click();await page.getByRole('button',{name:'Оформить новый абонемент',exact:true}).click();
- await page.getByLabel('Способ оплаты абонемента').selectOption('transfer');await page.getByLabel('Получено за абонемент').fill('3800');
- assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
- await page.evaluate(()=>{const b=[...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='Оформить');b.click();b.click();});
- await page.waitForFunction(()=>!Alpine.$data(document.body).showSubModal);
+ assert.equal(notices.length,0);
  await page.reload();await page.waitForFunction(()=>Alpine.$data(document.body).dataReady);
- const result=await page.evaluate(()=>{const d=Alpine.$data(document.body);return {left:d.clients[0].subscriptions.map(s=>s.left),visit:d.sessionData().visits['pole_2026-09-29'].c,ledger:FitPPStore.ledger(d.clients[0]).length};});
- assert.deepEqual(result,{left:[0,8,7],visit:'attended',ledger:2});assert.deepEqual(errors,[]);
+ const result=await page.evaluate(()=>{const d=Alpine.$data(document.body);return {left:d.clients[0].subscriptions.map(s=>s.left),visit:d.sessionData().visits['pole_2026-09-29'].c,ledger:FitPPStore.ledger(d.clients[0]).length,expires:d.clients[0].subscriptions.at(-1).expires};});
+ assert.deepEqual(result,{left:[0,7],visit:'attended',ledger:1,expires:'2026-10-27'});assert.deepEqual(errors,[]);
  await context.close();
  }
- await browser.close();console.log(engine.name()+': renewal cancel, September, manual hall, no visit for other hall, double click, reload, 320/390px PASS');
+ await browser.close();console.log(engine.name()+': renewal cancel, September, manual plan, cross-location attendance, reload, 320/390px PASS');
 }
 })().catch(e=>{console.error(e);process.exit(1)});

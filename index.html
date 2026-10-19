@@ -387,7 +387,7 @@
     <div x-show="renewalClient" x-cloak style="z-index:75" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4">
       <div role="dialog" aria-label="Нет подходящего абонемента" class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-2xl p-6 space-y-4">
         <h3 class="text-lg font-bold">Нет действующего подходящего абонемента</h3>
-        <p>Можно оформить новый абонемент. Тип и зал вы выбираете самостоятельно. Для онлайн подходят и «Заря», и «Поле чудес».</p>
+        <p>Можно оформить абонемент «Заря» или «Поле чудес». Оба действуют на всех локациях: «Заря», «Поле чудес» и «Онлайн».</p>
         <button @click="renewalClient=null" class="bg-slate-700 px-4 py-2 rounded-xl">Отмена</button>
         <button :disabled="!canEdit()" @click="openSubModal(renewalClient.client, renewalClient.visit)" class="bg-emerald-600 px-4 py-2 rounded-xl">Оформить новый абонемент</button>
       </div>
@@ -411,8 +411,8 @@
             <div>
                 <label class="text-xs text-slate-400 block mb-1">Тип абонемента</label>
                 <select x-model="subForm.type" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-3 py-2 text-sm text-white">
-                    <option value="zarya">мкр. Заря (8 занятий) — 4400 ₽</option>
-                    <option value="pole">Поле чудес (8 занятий) — 3800 ₽</option>
+                    <option value="zarya">мкр. Заря (8 занятий · 4 недели) — 4400 ₽</option>
+                    <option value="pole">Поле чудес (8 занятий · 4 недели) — 3800 ₽</option>
                 </select>
             </div>
             <div>
@@ -1029,7 +1029,7 @@
                     const token = this.subFormToken, visit=this.subVisit;
                     const saved = await store.run({ type: 'subscription', visit, clientId: this.subClient.id, subscriptionType: this.subForm.type, date: this.subForm.date || this.selectedDate, method:this.subForm.method, received:this.parseAmount(this.subForm.received) }, token);
                     if (saved && this.subFormToken === token) { this.showSubModal = false; this.subFormToken = null;this.subVisit=null;
-                      if(visit && this.sessionData().visits[visit.workoutId]?.[visit.clientId]!=='attended') alert('Абонемент оформлен. Посещение не отмечено: выбран другой зал или абонемент не действует на дату тренировки.');
+                      if(visit && this.sessionData().visits[visit.workoutId]?.[visit.clientId]!=='attended') alert('Абонемент оформлен. Посещение не отмечено: абонемент не действует на дату тренировки.');
                     }
                 },
                 changeMonth(dir) {

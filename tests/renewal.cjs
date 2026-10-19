@@ -8,8 +8,8 @@ test('September purchase and attendance are atomic; only new matching subscripti
  const next=run(d);assert.equal(next.visits[visit.workoutId].c,'attended');assert.deepEqual(next.clients[0].subscriptions.map(s=>s.left),[0,8,8,7]);assert.equal(S.balance(next.clients[0]),200);assert.equal(S.report(next,'2026-09').cash,4000);assert.equal(S.ledger(next.clients[0]).length,1);assert.equal(next.clients[0].subscriptions.at(-1).startDate,visit.date);
  assert.throws(()=>run(next),/уже существует/);assert.equal(S.ledger(next.clients[0]).length,1);assert.equal(d.clients[0].subscriptions.length,3);
 });
-test('other hall or invalid coverage date saves purchase without attendance',()=>{
- for(const overrides of [{subscriptionType:'zarya',received:4400},{date:'2026-09-02'},{date:'2026-08-01'}]){
+test('invalid coverage date saves purchase without attendance',()=>{
+ for(const overrides of [{date:'2026-09-02'},{date:'2026-08-01'}]){
  const d=run(fresh(),{...action,...overrides});assert.equal(d.visits[visit.workoutId]?.c,undefined);assert.equal(d.clients[0].subscriptions[0].left,8);assert.equal(S.ledger(d.clients[0]).length,1);
  }
 });
@@ -19,7 +19,7 @@ test('invalid payment or moved workout cannot partially save purchase or visit',
 });
 test('legacy subscription hall inferred from price; exhausted, expired, future, cancelled do not cover',()=>{
  const s={price:3800,left:8,startDate:'2026-09-01',expires:'2026-09-29'};
- assert(S.covers(s,'pole',visit.date));assert(!S.covers(s,'zarya',visit.date));
+ assert(S.covers(s,'pole',visit.date));assert(S.covers(s,'zarya',visit.date));
  for(const override of [{left:0},{expires:'2026-08-31'},{startDate:'2026-09-02'},{cancelledAt:'2026-09-01'}])assert(!S.covers({...s,...override},'pole',visit.date));
 });
 test('combined operation rejects duplicate clicks, stale tokens, concurrent revision and failed backup',async()=>{

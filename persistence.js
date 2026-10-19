@@ -340,7 +340,8 @@
   }
   function covers(sub, location, date) {
     const hall = sub.location || (sub.price === 4400 ? 'zarya' : sub.price === 3800 ? 'pole' : null);
-    return (hall === location || (location === 'online' && ['zarya','pole'].includes(hall))) && !sub.cancelledAt && Number.isSafeInteger(sub.left) && sub.left > 0 &&
+    // Both existing plans cover every FitPP location, including legacy records.
+    return ['zarya','pole'].includes(hall) && Object.hasOwn(prices, location) && !sub.cancelledAt && Number.isSafeInteger(sub.left) && sub.left > 0 &&
       (!sub.startDate || sub.startDate <= date) && sub.expires >= date && !frozenOn(sub, date);
   }
   // Array keys also identify legacy subscriptions without assigning IDs on read.

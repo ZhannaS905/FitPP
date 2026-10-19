@@ -4,10 +4,10 @@ const sub=(location,extra={})=>({location,price:location==='zarya'?4400:3800,lef
 const fresh=(subs)=>S.read({clients:[{id:'c',name:'Онлайн',locations:['online','zarya','pole'],subscriptions:subs}]});
 const action={type:'attendance',clientId:'c',workoutId:'online_'+date,date,location:'online',status:'attended'};
 const run=(d,a=action)=>S.reduce(d,a,today);
-test('both modern and legacy subscriptions cover online and own hall only',()=>{
+test('both modern and legacy subscriptions cover all three locations',()=>{
  for(const hall of ['zarya','pole'])for(const legacy of [false,true]){
   const s=sub(hall);if(legacy)delete s.location;
-  assert(S.covers(s,'online',date));assert(S.covers(s,hall,date));assert(!S.covers(s,hall==='pole'?'zarya':'pole',date));
+  assert(S.covers(s,'online',date));assert(S.covers(s,hall,date));assert(S.covers(s,hall==='pole'?'zarya':'pole',date));
   const d=run(fresh([s]));assert.equal(d.clients[0].subscriptions[0].left,7);assert.equal(d.visits[action.workoutId].c,'attended');assert.deepEqual(d.finances,{});assert.equal(S.ledger(d.clients[0]).length,0);
   const undo=run(d);assert.equal(undo.clients[0].subscriptions[0].left,8);assert.equal(undo.visits[action.workoutId].c,undefined);
  }
