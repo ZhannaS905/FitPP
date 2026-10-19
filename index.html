@@ -2,10 +2,11 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; font-src 'self'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; font-src 'self'">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>FitPP</title>
     <!-- PWA Manifest & Meta -->
+    <link rel="manifest" href="manifest.webmanifest">
     
     <meta name="theme-color" content="#10b981">
     <link rel="apple-touch-icon" href="icon-192.png">
@@ -1035,7 +1036,7 @@ this.currentMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '
             }
         }
     </script>
-<script>if ('serviceWorker' in navigator) navigator.serviceWorker.getRegistration('./').then(r => { if (r && new URL(r.scope).pathname === new URL('./', location.href).pathname) return r.update(); }).catch(() => {});</script>
+<script src="pwa.js?v=pwa-20261019-1"></script>
 </body>
 </html>
 
