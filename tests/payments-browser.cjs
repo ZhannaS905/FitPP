@@ -38,6 +38,7 @@ for(const engine of [chromium,webkit]) {
  await page.reload();await page.waitForFunction(()=>Alpine.$data(document.body).dataReady);
  assert.deepEqual(await page.evaluate(()=>{const d=Alpine.$data(document.body),s=d.sessionDataWithFinances();return {balance:FitPPStore.balance(d.clients[0]),september:FitPPStore.report(s,'2026-09'),october:FitPPStore.report(s,'2026-10')};}),{balance:100,september:{cash:7800,transfer:600,cashRefund:0,transferRefund:0,unknown:0,total:8400},october:{cash:700,transfer:3600,cashRefund:0,transferRefund:0,unknown:0,total:4300}});
  await page.evaluate(()=>{const d=Alpine.$data(document.body);d.activeTab='finances';d.currentMonth='2026-09';});
+ await page.getByRole('button',{name:'Детализация финансов',exact:true}).click();
  await page.getByText('Наличные (после возвратов): 7800 ₽',{exact:true}).waitFor({state:'visible'});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
  if(process.env.FITPP_SCREENSHOTS && width===390)await page.screenshot({path:process.env.FITPP_SCREENSHOTS+'/FitPP-payments-'+engine.name()+'.png',fullPage:true});
  await page.evaluate(()=>{const d=Alpine.$data(document.body);d.activeTab='clients';d.detailClient=d.clients[0];d.detailTab='subs';});

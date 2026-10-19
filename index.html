@@ -208,13 +208,19 @@
         <!-- TAB 3: FINANCES -->
         <div x-show="activeTab === 'finances'" class="space-y-6">
             <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg space-y-4">
-                <div class="finance-toolbar">
-                    <h2 class="text-lg font-bold">Финансовый отчёт и аренда</h2>
+                <div class="finance-toolbar" x-data="{ financeDetailsOpen: false }" @click.outside="financeDetailsOpen=false" @keydown.escape.window="if(financeDetailsOpen){financeDetailsOpen=false;$refs.financeDetailsButton.focus()}">
+                    <div class="finance-heading"><h2 class="text-lg font-bold">Финансовый отчёт и аренда</h2><button class="finance-details-trigger" x-ref="financeDetailsButton" aria-label="Детализация финансов" :aria-expanded="financeDetailsOpen" aria-controls="finance-details" @click="financeDetailsOpen=!financeDetailsOpen;$refs.financeDetailsButton.focus()">•••</button></div>
                     <div class="month-switcher bg-slate-900 border border-slate-700 rounded-xl" aria-label="Отчётный месяц">
                         <button aria-label="Предыдущий месяц" @click="changeMonth(-1)" class="text-slate-400 hover:text-white">❮</button>
                         <span class="text-sm font-semibold text-emerald-400" x-text="formatMonthName(currentMonth)"></span>
                         <button aria-label="Следующий месяц" @click="changeMonth(1)" class="text-slate-400 hover:text-white">❯</button>
                     </div>
+                <section id="finance-details" class="finance-details-panel" x-show="financeDetailsOpen" x-cloak aria-label="Способы оплаты"><div class="finance-details-heading"><strong x-text="formatMonthName(currentMonth)"></strong><button aria-label="Закрыть детализацию" @click="financeDetailsOpen=false;$refs.financeDetailsButton.focus()">×</button></div>
+                  <p x-text="'Наличные (после возвратов): ' + moneyReport().cash + ' ₽'"></p><p x-text="'Переводы (после возвратов): ' + moneyReport().transfer + ' ₽'"></p>
+                  <p x-text="'Возвращено наличными: ' + moneyReport().cashRefund + ' ₽ · переводом: ' + moneyReport().transferRefund + ' ₽'"></p>
+                  <p class="text-amber-300" x-text="'Способ не указан / требуется сверка: ' + moneyReport().unknown + ' ₽'"></p>
+                  <p class="text-xs text-slate-400">Доход — фактические поступления минус выданные возвраты. Зачёт баланса и отмена с возвратом на баланс не создают поступлений. Общий итог включает старые оплаты без способа.</p>
+                </section>
                 </div>
                 <div x-show="currentMonth >= '2026-11'" class="space-y-3">
                     <p class="text-sm text-slate-300" x-text="rentMonths[currentMonth] ? 'Аренда сохранена. Можно изменить даты.' : 'Аренда ещё не сохранена. Прогноз не включён в расходы и прибыль.'"></p>
@@ -244,12 +250,6 @@
                         <button @click="rentDraft = null; rentFormToken = null" :disabled="saving" class="border border-slate-600 rounded-xl p-3 w-full">Закрыть без сохранения</button>
                     </section>
                 </template>
-                <div class="detail-card space-y-2" aria-label="Способы оплаты">
-                  <p x-text="'Наличные (после возвратов): ' + moneyReport().cash + ' ₽'"></p><p x-text="'Переводы (после возвратов): ' + moneyReport().transfer + ' ₽'"></p>
-                  <p x-text="'Возвращено наличными: ' + moneyReport().cashRefund + ' ₽ · переводом: ' + moneyReport().transferRefund + ' ₽'"></p>
-                  <p class="text-amber-300" x-text="'Способ не указан / требуется сверка: ' + moneyReport().unknown + ' ₽'"></p>
-                  <p class="text-xs text-slate-400">Доход — фактические поступления минус выданные возвраты. Зачёт баланса и отмена с возвратом на баланс не создают поступлений. Общий итог включает старые оплаты без способа.</p>
-                </div>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
                     <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl">
                         <span class="text-xs text-slate-400 block">Доходы (Всего)</span>
