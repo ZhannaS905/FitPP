@@ -79,50 +79,26 @@
     </div>
     <div class="sync-status" x-show="loading || saving || saveStatus" x-cloak role="status" aria-live="polite" x-text="loading ? 'Загрузка данных…' : saving ? 'Сохранение в Firebase…' : saveStatus"></div>
 
+    <dialog class="workout-move-dialog" x-ref="workoutMove" aria-labelledby="workout-move-title" @close="clearWorkoutMove()" @cancel="if(moveSaving)$event.preventDefault()">
+        <form @submit.prevent="saveWorkoutMove()">
+            <h2 id="workout-move-title">Перенести тренировку</h2>
+            <label>Новая дата<input type="date" x-model="moveDate" required :disabled="moveSaving"></label>
+            <label>Новое время<input type="time" x-model="moveTime" required :disabled="moveSaving"></label>
+            <p role="alert" x-text="moveError"></p>
+            <div class="move-actions"><button type="button" @click="closeWorkoutMove()" :disabled="moveSaving">Отмена</button><button type="submit" :disabled="moveSaving || !canEdit()" x-text="moveSaving ? 'Сохранение…' : 'Сохранить'"></button></div>
+        </form>
+    </dialog>
+
     <!-- Main Content -->
     <main class="max-w-4xl mx-auto px-4 py-6 pb-24">
         <!-- TAB 1: JOURNAL -->
         <div x-show="activeTab === 'journal'" class="space-y-6">
             <!-- Date & Location Selector -->
-            <div class="date-location bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg">
-                <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
-                    <div class="flex items-center space-x-3">
-                        <button aria-label="Предыдущий день" @click="changeDate(-1)" class="p-2 bg-slate-700 hover:bg-slate-600 rounded-xl transition">❮</button>
-                        <div class="text-center">
-                            <span class="text-xs text-slate-400 block">Дата тренировки</span>
-                            <input type="date" aria-label="Дата тренировки" x-model="selectedDate" @change="updateLocationByDate()" class="bg-slate-900 border border-slate-600 text-white px-3 py-1 rounded-lg text-sm font-semibold focus:outline-none focus:border-emerald-500">
-                        </div>
-                        <button aria-label="Следующий день" @click="changeDate(1)" class="p-2 bg-slate-700 hover:bg-slate-600 rounded-xl transition">❯</button>
-                    </div>
-                    <button @click="setToday()" class="text-xs bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-xl hover:bg-emerald-600/30 transition">Сегодня</button>
-                </div>
-                <!-- Location Auto-Detector & Manual Switch -->
-                <div>
-                    <span class="text-xs text-slate-400 block mb-2">Локация:</span>
-                    <div class="location-switch grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        <button @click="currentLocation = 'zarya'" :class="currentLocation === 'zarya' ? 'bg-emerald-600 text-white border-emerald-500' : 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-700'" class="border p-2.5 rounded-xl text-sm font-medium text-left transition flex justify-between items-center">
-                            <span>мкр. Заря</span>
-                            <span class="text-xs opacity-75">Пн, Ср 20:00</span>
-                        </button>
-                        <button @click="currentLocation = 'pole'" :class="currentLocation === 'pole' ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-700'" class="border p-2.5 rounded-xl text-sm font-medium text-left transition flex justify-between items-center">
-                            <span>Поле чудес</span>
-                            <span class="text-xs opacity-75">Вт, Чт 18:30</span>
-                        </button>
-                        <button @click="currentLocation = 'online'" :class="currentLocation === 'online' ? 'bg-amber-600 text-white border-amber-500' : 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-700'" class="border p-2.5 rounded-xl text-sm font-medium text-left transition flex justify-between items-center">
-                            <span>Онлайн</span>
-                            <span class="text-xs opacity-75">Сб, Вс 18:00</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div class="summary" aria-label="Сводка выбранного дня">
-                <div><span>Посещений</span><strong x-text="getClientsForLocation().filter(c => ['attended','razov'].includes(getAttendanceStatus(c.id))).length"></strong><span>за выбранный день</span></div>
-                <div><span>Клиентов</span><strong x-text="getClientsForLocation().length"></strong><span>в этой локации</span></div>
-                <div><span>Заканчивается</span><strong x-text="getClientsForLocation().filter(c => { const sub = getClientActiveSubscription(c); return sub && sub.left > 0 && sub.left <= 2; }).length"></strong><span>≤ 2 занятия</span></div>
-            </div>
+<div class="date-location"><div class="journal-date-row"><div class="journal-date-pill"><div class="journal-date-value"><span id="date-label" x-text="formatJournalDate(selectedDate)"></span><input x-ref="journalDate" type="date" aria-label="Дата тренировки" x-model="selectedDate" @change="updateLocationByDate()"></div><button type="button" aria-label="Следующий день" @click="changeDate(1)">›</button></div><button type="button" class="journal-calendar" aria-label="Открыть календарь" @click="openJournalCalendar()"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="3"/><path d="M8 3v4m8-4v4M4 10h16m-12 4h1m3 0h1m3 0h1m-9 3h1m3 0h1"/></svg></button></div><div class="location-switch journal-locations"><button type="button" @click="currentLocation = 'zarya'" :aria-pressed="currentLocation === 'zarya'"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-8 8-14a8 8 0 1 0-16 0c0 6 8 14 8 14Z" fill="currentColor" stroke="none"/><circle cx="12" cy="8" r="2.5" fill="#06202b" stroke="none"/></svg><span>мкр. Заря</span></button><button type="button" @click="currentLocation = 'pole'" :aria-pressed="currentLocation === 'pole'"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-8 8-14a8 8 0 1 0-16 0c0 6 8 14 8 14Z" fill="currentColor" stroke="none"/><circle cx="12" cy="8" r="2.5" fill="#06202b" stroke="none"/></svg><span>Поле чудес</span></button><button type="button" @click="currentLocation = 'online'" :aria-pressed="currentLocation === 'online'"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-8 8-14a8 8 0 1 0-16 0c0 6 8 14 8 14Z" fill="currentColor" stroke="none"/><circle cx="12" cy="8" r="2.5" fill="#06202b" stroke="none"/></svg><span>Онлайн</span></button></div></div>
+<div class="summary journal-summary" aria-label="Сводка выбранного дня"><div><span class="journal-stat-label"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M3 20v-3a6 6 0 0 1 12 0v3Zm13-16a3 3 0 0 1 0 6m2 4a5 5 0 0 1 3 6"/></svg>Посетили</span><div class="journal-stat-value"><strong x-text="getClientsForLocation().filter(c => ['attended','razov'].includes(getAttendanceStatus(c.id))).length"></strong><span x-text="peopleWord(getClientsForLocation().filter(c => ['attended','razov'].includes(getAttendanceStatus(c.id))).length)"></span></div></div><div><span class="journal-stat-label"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h12a2 2 0 0 1 2 2v15M6 5h11a2 2 0 0 1 2 2v14H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"/><path d="M8 5v16M11 9h5m-5 4h5m-5 4h4M3 9h3m-3 4h3m-3 4h3"/></svg>Записано</span><div class="journal-stat-value"><strong x-text="getClientsForLocation().length"></strong><span x-text="clientWord(getClientsForLocation().length)"></span></div></div><div><span class="journal-stat-label"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 8v5h4M3 5l3-3m12 0 3 3M7 22l-2 1m12-1 2 1"/></svg>Истекают</span><div class="journal-stat-value"><strong x-text="getClientsForLocation().filter(c => { const sub = getClientActiveSubscription(c); return sub && sub.left > 0 && sub.left <= 2; }).length"></strong><span>≤ 2 занятия</span></div></div></div>
             <section class="workout-panel" aria-label="Тренировки выбранного зала">
-                <div class="workout-heading"><h2>Тренировки · 60 минут</h2>
-                <button :disabled="!canEdit()" @click="addingWorkout=true; newWorkoutDate=selectedDate; newWorkoutTime=FitPPStore.schedule[currentLocation]?.time || '20:00'; newWorkoutLocation=currentLocation || 'zarya'" class="workout-button workout-selected">+ Добавить тренировку</button></div>
+                <div class="workout-heading"><h2>Табата · 1 час</h2>
+                <button :disabled="!canEdit()" @click="addingWorkout=true; newWorkoutDate=selectedDate; newWorkoutTime=FitPPStore.schedule[currentLocation]?.time || '20:00'; newWorkoutLocation=currentLocation || 'zarya'" class="workout-button workout-selected" aria-label="Добавить тренировку">+ Занятие</button></div>
                 <form x-show="addingWorkout" @submit.prevent="addWorkout()" class="workout-form">
                     <label>Дата <input type="date" x-model="newWorkoutDate" required></label>
                     <label>Время <input type="time" x-model="newWorkoutTime" required></label>
@@ -134,11 +110,10 @@
                 <template x-for="w in dayWorkouts()" :key="w.id">
                     <div class="workout-card workout-compact" x-data="{ actionsOpen: false }" @keydown.escape.window="if (actionsOpen) { actionsOpen=false; $refs.actions.focus(); }">
                         <div class="workout-row"><p class="workout-title" x-text="workoutLabel(w)"></p>
-                        <button x-show="!w.cancelled && w.date === selectedDate" @click="chosenWorkout=w.id" class="workout-button" :class="activeWorkout()?.id === w.id ? 'workout-selected' : ''" x-text="activeWorkout()?.id === w.id ? '✓ Выбрана' : 'Выбрать для отметок'" :aria-pressed="activeWorkout()?.id === w.id"></button>
+                        <button x-show="!w.cancelled && w.date === selectedDate" @click="chosenWorkout=w.id" class="workout-button" :class="activeWorkout()?.id === w.id ? 'workout-selected' : ''" x-text="activeWorkout()?.id === w.id ? '✓ Выбрана' : 'Выбрать'" :aria-pressed="activeWorkout()?.id === w.id"></button>
+                        </div><div class="workout-controls"><button class="workout-button" :disabled="!canManageWorkout(w) || activeWorkout()?.id !== w.id" :data-move-workout="w.id" @click="openWorkoutMove(w)">Перенести</button>
                         <button x-ref="actions" class="workout-button workout-more" aria-label="Действия с тренировкой" :aria-expanded="actionsOpen" @click="actionsOpen=!actionsOpen">⋯</button>
                         </div><div class="workout-actions workout-menu" x-show="actionsOpen" x-cloak>
-                        <button :disabled="!canManageWorkout(w)" @click="manageWorkout(w,'date')" class="workout-button">Изменить дату</button>
-                        <button :disabled="!canManageWorkout(w)" @click="manageWorkout(w,'time')" class="workout-button">Изменить время</button>
                         <button :disabled="!canManageWorkout(w)" x-show="!w.cancelled" @click="manageWorkout(w,'cancel')" class="workout-button workout-danger">Отменить тренировку</button>
                         <button :disabled="!canManageWorkout(w)" x-show="!w.extra && (w.cancelled || w.date !== w.originDate || w.time !== FitPPStore.schedule[w.location].time)" @click="manageWorkout(w,'restore')" class="workout-button">Вернуть обычное расписание</button>
                         </div>
@@ -165,10 +140,9 @@
             <div class="journal-panel bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg">
                 <div class="flex justify-between items-center mb-4">
                     <div>
-                        <h2 class="text-lg font-bold" x-text="getLocationTitle()"></h2>
-                        <p class="text-xs text-slate-400" x-text="getLocationSchedule()"></p>
+                        <h2 class="text-lg font-bold journal-location-title" x-text="getJournalLocationName()"></h2>
                     </div>
-                    <span class="text-xs bg-slate-700 px-3 py-1 rounded-full text-slate-300" x-text="getClientsForLocation().length + ' клиентов'"></span>
+                    <span class="text-xs bg-slate-700 px-3 py-1 rounded-full text-slate-300" x-text="getClientsForLocation().length + ' ' + clientWord(getClientsForLocation().length)"></span>
                 </div>
                 <div x-show="!currentLocation" class="empty-state" role="status"><strong>На эту дату тренировок по расписанию нет</strong>Можно выбрать локацию вручную выше.</div>
                 <div x-show="currentLocation && getClientsForLocation().length === 0" class="empty-state"><strong>Пока нет клиентов</strong>Добавьте клиента и выберите для него эту локацию.<br><button :disabled="!canEdit()" @click="openClientModal()" class="text-emerald-400 mt-3">+ Добавить клиента</button></div>
@@ -183,7 +157,7 @@
 </div>
                                 <div class="flex items-center space-x-2 text-xs mt-1">
                                     <span class="text-emerald-400 font-medium" x-text="'Остаток: ' + (getClientActiveSubscription(client)?.left ?? 0) + ' зан.'"></span>
-                                    <span class="text-slate-400" x-text="'До: ' + (getClientActiveSubscription(client)?.expires || '—')"></span>
+                                    <span class="text-slate-400" x-text="'До: ' + formatSubscriptionDate(getClientActiveSubscription(client)?.expires)"></span>
                                 </div>
 <div class="subscription-warnings" x-show="getSubscriptionWarnings(client).length">
     <template x-for="warning in getSubscriptionWarnings(client)" :key="warning.key">
@@ -220,7 +194,7 @@
                         <div class="client-tile-footer">
                             <div class="client-subscription"><span class="text-xs text-emerald-400" x-text="'Баланс: ' + moneyBalance(client) + ' ₽'"></span>
                                 <span class="client-balance" x-text="'Остаток: ' + (getClientActiveSubscription(client)?.left ?? 0) + ' зан.'"></span>
-                                <span class="client-expiry" x-text="'До: ' + (getClientActiveSubscription(client)?.expires || '—')"></span>
+                                <span class="client-expiry" x-text="'До: ' + formatSubscriptionDate(getClientActiveSubscription(client)?.expires)"></span>
 <div class="subscription-warnings" x-show="getSubscriptionWarnings(client).length">
     <template x-for="warning in getSubscriptionWarnings(client)" :key="warning.key">
         <span class="subscription-warning" :class="'subscription-warning-' + warning.kind" :title="warning.title" x-text="warning.text"></span>
@@ -515,6 +489,7 @@
                 renewalClient: null,
                 subscriptionChoice: null,
                 resetSessionUI() {
+                    this.closeWorkoutMove();this.moveDraft=null;this.moveToken=null;this.moveError='';
                     this.writeConsent = FitPPWriteSafety.intent();
                     this.backupVerified = false; this.backupChecking = false; this.backupStatus = '';
                     this.backupCheckId++;
@@ -649,7 +624,38 @@
                 addingWorkout:false, newWorkoutDate:'', newWorkoutTime:'', newWorkoutLocation:'zarya',
                 workoutLabel(w) {
                     const [y,m,d]=w.date.split('-');
-                    return `${d}.${m}.${y.slice(-2)} · ${w.time}` + (w.extra ? ' · Дополнительная' : '') + (w.cancelled ? ' · Отменена' : w.date!==this.selectedDate ? ' · Перенесена' : '');
+                    return `${Number(d)} ${['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'][Number(m)-1]} · ${w.time}` + (w.cancelled ? ' · Отменена' : w.date!==this.selectedDate ? ' · Перенесена' : '');
+                },
+                clientWord(count) { const n=Math.abs(count)%100,last=n%10; return n>=11&&n<=14?'клиентов':last===1?'клиент':last>=2&&last<=4?'клиента':'клиентов'; },
+                peopleWord(count) { const n=Math.abs(count)%100,last=n%10; return n>=11&&n<=14?'человек':last>=2&&last<=4?'человека':'человек'; },
+                formatSubscriptionDate(value) { return /^\d{4}-\d{2}-\d{2}$/.test(value || '') ? value.slice(8,10)+'.'+value.slice(5,7)+'.'+value.slice(2,4) : (value || '—'); },
+                formatJournalDate(value) { return /^\d{4}-\d{2}-\d{2}$/.test(value || '') ? value.split('-').reverse().join('.') : 'Выберите дату'; },
+                getJournalLocationName() { return ({zarya:'мкр. Заря',pole:'Поле чудес',online:'Онлайн'})[this.currentLocation] || 'Локация не выбрана'; },
+                openJournalCalendar() { const input=this.$refs.journalDate; try { input.showPicker(); } catch { input.focus(); input.click(); } },
+                moveDraft:null, moveToken:null, moveDate:'', moveTime:'', moveError:'', moveSaving:false,
+                openWorkoutMove(w) {
+                    if(!this.canManageWorkout(w) || this.activeWorkout()?.id!==w.id)return;
+                    this.moveDraft={id:w.id,date:w.date,time:w.time,location:w.location,selectedDate:this.selectedDate};
+                    this.moveToken=store.token();this.moveDate=w.date;this.moveTime=w.time;this.moveError='';
+                    this.$refs.workoutMove.showModal();
+                },
+                closeWorkoutMove() { this.$refs.workoutMove?.close(); },
+                clearWorkoutMove() {
+                    const id=this.moveDraft?.id;this.moveDraft=null;this.moveToken=null;this.moveError='';
+                    this.$nextTick(()=>{for(const button of document.querySelectorAll('[data-move-workout]'))if(button.dataset.moveWorkout===id){button.focus();break;}});
+                },
+                async saveWorkoutMove() {
+                    const draft=this.moveDraft,token=this.moveToken;if(!draft || !token || this.moveSaving)return;
+                    const w=this.dayWorkouts().find(row=>row.id===draft.id);
+                    if(!w || !this.canManageWorkout(w) || this.activeWorkout()?.id!==draft.id || this.currentLocation!==draft.location || this.selectedDate!==draft.selectedDate || w.date!==draft.date || w.time!==draft.time) {
+                        this.moveError='Тренировка изменилась или перенос недоступен. Закройте окно и выберите тренировку снова.';return;
+                    }
+                    this.moveSaving=true;this.moveError='';
+                    try {
+                        const saved=await store.run({type:'workout',mode:'move',workoutId:draft.id,date:this.moveDate,time:this.moveTime},token);
+                        if(this.moveDraft!==draft)return;
+                        if(saved)this.closeWorkoutMove();else this.moveError=this.syncError || 'Перенос не сохранён. Обновите данные.';
+                    } finally {this.moveSaving=false;}
                 },
                 workoutLocked(w) {
                     const d=this.sessionData();
