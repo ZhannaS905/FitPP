@@ -324,7 +324,7 @@ input[type="checkbox"] {
 }
 .attendance-actions {
   display: grid !important;
-  grid-template-columns: 1.05fr 1.25fr 1fr 0.8fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px !important;
   width: 100% !important;
 }
