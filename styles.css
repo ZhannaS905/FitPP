@@ -913,3 +913,20 @@ header.app-header > div, .detail-shell, .bottom-nav { padding-left: max(16px, en
 .finance-details-panel p {margin:8px 0;font-size:12px;line-height:1.5;overflow-wrap:anywhere;}
 .finance-details-panel p:last-child {font-size:11px;color:#9db6ca;}
 @media(min-width:768px){.finance-heading{flex:1;}.finance-toolbar{align-items:center;gap:16px;}}
+
+/* Actual NPD payments */
+.tax-add,.tax-row-actions button,.tax-form-actions button{padding:8px 10px;border:1px solid #295360;border-radius:10px;background:#102d38;color:#b7f5df;font-size:12px;}
+.tax-amount-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px;min-width:0;}
+.tax-amount-row>span{white-space:nowrap;}
+.tax-add{display:block;margin-top:0;flex-shrink:0;}
+.tax-history{border-top:1px solid #29485b;padding-top:12px;}
+.tax-history summary{cursor:pointer;font-size:14px;font-weight:600;}
+.tax-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #29485b;}
+.tax-row p{font-size:12px;color:#a8bfce;overflow-wrap:anywhere;}
+.tax-row-actions{display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
+.tax-overlay{z-index:80;}
+.tax-dialog{width:100%;max-width:420px;max-height:90dvh;overflow-y:auto;min-width:0;}
+.tax-dialog label{display:block;font-size:13px;min-width:0;}
+.tax-dialog input{display:block;width:100%;min-width:0;max-width:100%;margin-top:5px;padding:10px;border:1px solid #355367;border-radius:10px;background:#071724;color:#edf5ff;}
+.tax-form-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.tax-form-actions button:last-child{background:#007d62;}

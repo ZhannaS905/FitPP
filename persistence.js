@@ -187,6 +187,7 @@
   const rentTotal = entry => entry ? entry.zarya.length * 800 + entry.pole.length * 600 : 0;
   function read(raw = {}) {
     const data = {
+      ...(Object.hasOwn(raw, "taxPayments") ? {taxPayments:raw.taxPayments} : {}),
       clients: raw.clients ?? [],
       attendance: raw.attendance ?? {},
       finances: raw.finances ?? {},
@@ -230,6 +231,7 @@
       throw fail(
         "Повторяющиеся идентификаторы клиентов. Запись заблокирована.",
       );
+    validateTaxPayments(data.taxPayments);
     for (const [month, entry] of Object.entries(data.rentMonths)) validateRent(month, entry);
     for (const c of data.clients) for (const sub of c.subscriptions || []) {
       if (!plain(sub)) throw fail("Повреждённый абонемент.");
@@ -250,6 +252,22 @@
       if(fingerprint(source)!==fingerprint(data.legacySources[key])) throw fail('Старые отметки изменены после миграции. Требуется сверка; запись заблокирована.');
     }
     return copy(data);
+  }
+  function validateTaxPayments(payments) {
+    if(payments===undefined)return;
+    if(!plain(payments))throw fail('Повреждена история НПД.');
+    for(const [key,p] of Object.entries(payments)) {
+      if(!/^tax-[a-zA-Z0-9-]{1,76}$/.test(key) || !plain(p) || p.id!==key || p.version!==1 ||
+        !Number.isSafeInteger(p.amount) || p.amount<=0 || p.amount>10000000000 ||
+        !/^\d{4}-(0[1-9]|1[0-2])$/.test(p.period) || Object.keys(p).some(k=>!['id','version','amount','paidDate','period'].includes(k)))throw fail('Повреждён налоговый платёж.');
+      dayNumber(p.paidDate);
+    }
+  }
+  function taxTotal(payments, month) {
+    validateTaxPayments(payments);
+    const cents=Object.values(payments||{}).filter(p=>p.paidDate.slice(0,7)===month).reduce((sum,p)=>sum+p.amount,0);
+    if(!Number.isSafeInteger(cents))throw fail('Сумма налога слишком велика.');
+    return cents/100;
   }
   // Money history lives inside the existing clients list: no dataset/rules migration.
   function money(value) {
@@ -633,6 +651,20 @@
     } else if (action.type === 'deleteRentMonth') {
       if (!Object.hasOwn(data.rentMonths, action.month)) throw fail('Месяц аренды отсутствует.');
       delete data.rentMonths[action.month];
+    } else if (action.type === 'taxPayment') {
+      if(!/^tax-[a-zA-Z0-9-]{1,76}$/.test(action.paymentId))throw fail('Неверный номер налогового платежа.');
+      const previous=data.taxPayments?.[action.paymentId];
+      if(action.expected!==fingerprint(previous||null))throw fail('Налоговый платёж изменился. Обновите данные.');
+      if(action.mode==='delete') {
+        if(!previous)throw fail('Налоговый платёж не найден.');
+        delete data.taxPayments[action.paymentId];
+      } else if(action.mode==='save') {
+        dayNumber(action.paidDate);
+        if(action.paidDate>today)throw fail('Нельзя записать будущую оплату налога.');
+        const payment={id:action.paymentId,version:1,amount:money(action.amount),paidDate:action.paidDate,period:action.period};
+        validateTaxPayments({[action.paymentId]:payment});
+        (data.taxPayments ||= {})[action.paymentId]=payment;
+      } else throw fail('Неизвестная операция НПД.');
     } else if (action.type === 'financeMonth') {
       if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(action.month) || !Number.isFinite(action.amount) || action.amount < 0 || action.amount > 100000000) throw fail('Некорректная сумма месяца.');
       if(data.clients.some(c=>ledger(c).some(e=>e.date.slice(0,7)===action.month))) throw fail('Месяц содержит денежные операции. Прямая замена итога запрещена.');
@@ -737,6 +769,8 @@
       );
     }
     function reset(user) {
+      // Optional tax history must not survive logout or loading another snapshot.
+      delete state.taxPayments;
       epoch++;
       loadId++;
       baseline = null;
@@ -896,5 +930,5 @@
       },
     };
   }
-  return { covers, availableSubscriptions, balance, report, legacyPayments, ledger, extensionRemaining, subscriptionTitle, deletionPlan, subscriptionWarnings, create, read, reduce, prices, fingerprint, rentDates, rentTotal, localDate, dayNumber, addDays, frozenOn, freezeStart, pendingFreeze, schedule, workoutsOn, migrate, unresolved };
+  return { taxTotal, covers, availableSubscriptions, balance, report, legacyPayments, ledger, extensionRemaining, subscriptionTitle, deletionPlan, subscriptionWarnings, create, read, reduce, prices, fingerprint, rentDates, rentTotal, localDate, dayNumber, addDays, frozenOn, freezeStart, pendingFreeze, schedule, workoutsOn, migrate, unresolved };
 });

@@ -13,3 +13,11 @@ test('service worker uses network only for in-scope navigation; no API, cache, s
  for(const request of [{method:'POST',mode:'cors',url:'https://firestore.googleapis.com/test'},{method:'GET',mode:'cors',url:'https://firestore.googleapis.com/test'},{method:'GET',mode:'navigate',url:'https://zhannas905.github.io/other/'},{method:'GET',mode:'cors',url:scope+'persistence.js'}]){handlers.fetch({request,respondWith(){assert.fail('Must not intercept')}});}
  let result;const request={method:'GET',mode:'navigate',url:scope+'?v=new'};handlers.fetch({request,respondWith:p=>result=p});assert.equal(await result,'network');assert.deepEqual(calls,[request]);
 });
+
+test('NPD release versions every first-party script and stylesheet consistently',()=>{
+ const html=read('index.html').toString(),release='npd-20261019-1';
+ for(const name of ['styles.css','firebase-adapter.js','cloud.js','backup.js','write-safety.js','persistence.js','pwa.js']){
+  const urls=[...html.matchAll(/(?:src|href)="([^" ]+)"/g)].map(m=>m[1]).filter(url=>url.split('?')[0]===name);
+  assert.equal(urls.length,1,name);assert.equal(new URL(urls[0],'https://example.test/FitPP/').searchParams.get('v'),release,name);
+ }
+});

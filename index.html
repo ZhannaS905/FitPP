@@ -19,7 +19,7 @@
 
 
 
-<link rel="stylesheet" href="styles.css?v=compact-journal-20261018-1">
+<link rel="stylesheet" href="styles.css?v=npd-20261019-1">
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased" x-data="trainerApp()" x-init="init()">
 
@@ -218,8 +218,15 @@
                 <section id="finance-details" class="finance-details-panel" x-show="financeDetailsOpen" x-cloak aria-label="Способы оплаты"><div class="finance-details-heading"><strong x-text="formatMonthName(currentMonth)"></strong><button aria-label="Закрыть детализацию" @click="financeDetailsOpen=false;$refs.financeDetailsButton.focus()">×</button></div>
                   <p x-text="'Наличные (после возвратов): ' + moneyReport().cash + ' ₽'"></p><p x-text="'Переводы (после возвратов): ' + moneyReport().transfer + ' ₽'"></p>
                   <p x-text="'Возвращено наличными: ' + moneyReport().cashRefund + ' ₽ · переводом: ' + moneyReport().transferRefund + ' ₽'"></p>
-                  <p class="text-amber-300" x-text="'Способ не указан / требуется сверка: ' + moneyReport().unknown + ' ₽'"></p>
-                  <p class="text-xs text-slate-400">Доход — фактические поступления минус выданные возвраты. Зачёт баланса и отмена с возвратом на баланс не создают поступлений. Общий итог включает старые оплаты без способа.</p>
+                <details class="tax-history"><summary>История налоговых платежей</summary>
+                    <p x-show="!taxHistory().length" class="text-sm text-slate-400">Налоговых платежей пока нет</p>
+                    <template x-for="payment in taxHistory()" :key="payment.id">
+                        <article class="tax-row">
+                            <div><strong x-text="payment.amount/100+' ₽'"></strong><p x-text="'Оплата: '+formatSubscriptionDate(payment.paidDate)"></p><p x-text="'Период: '+formatMonthName(payment.period)"></p></div>
+                            <div class="tax-row-actions"><button :disabled="!canEdit()" @click="openTax(payment)">Изменить</button><button :disabled="!canEdit()" @click="deleteTax(payment)">Удалить</button></div>
+                        </article>
+                    </template>
+                </details>
                 </section>
                 </div>
                 <div x-show="currentMonth >= '2026-11'" class="space-y-3">
@@ -250,7 +257,7 @@
                         <button @click="rentDraft = null; rentFormToken = null" :disabled="saving" class="border border-slate-600 rounded-xl p-3 w-full">Закрыть без сохранения</button>
                     </section>
                 </template>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                     <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl">
                         <span class="text-xs text-slate-400 block">Доходы (Всего)</span>
                         <span class="text-xl font-bold text-emerald-400 mt-1 block" x-text="getMonthIncome() + ' ₽'"></span>
@@ -259,11 +266,17 @@
                         <span class="text-xs text-slate-400 block">Расходы (Аренда залов)</span>
                         <span class="text-xl font-bold text-rose-400 mt-1 block" x-text="getMonthRent() + ' ₽'"></span>
                     </div>
+                    <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl tax-kpi">
+                        <span class="text-xs text-slate-400 block">Налог НПД</span>
+                        <div class="tax-amount-row"><span class="text-xl font-bold text-amber-300" x-text="getMonthTax() + ' ₽'"></span>
+                        <button :disabled="!canEdit() || !!taxDraft" @click="openTax()" class="tax-add">+ Налоговый платёж</button></div>
+                    </div>
                     <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl">
                         <span class="text-xs text-slate-400 block">Чистая прибыль</span>
                         <span class="text-xl font-bold text-teal-300 mt-1 block" x-text="getMonthProfit() + ' ₽'"></span>
                     </div>
                 </div>
+
             </div>
         </div>
     </main>
@@ -384,6 +397,18 @@
             <button :disabled="!canEdit()" @click="confirmDeletion()" class="bg-rose-600 rounded-xl px-4 py-2" x-text="saving ? 'Сохранение…' : 'Подтвердить удаление'"></button>
         </div>
     </div>
+    <div x-show="taxDraft" x-cloak class="tax-overlay fixed inset-0 bg-black/70 flex items-center justify-center p-4" @keydown.escape.window="if(taxDraft && !saving){taxDraft=null;taxToken=null;}">
+      <template x-if="taxDraft"><form @submit.prevent="saveTax()" role="dialog" aria-modal="true" aria-label="Налоговый платёж" class="tax-dialog bg-slate-800 border border-slate-700 rounded-2xl p-4 space-y-4">
+        <h3 class="font-bold">Налоговый платёж</h3>
+        <p class="text-sm text-slate-300">Укажите фактически оплаченную сумму. Прибыль уменьшится в месяце даты оплаты.</p>
+        <label>Сумма, ₽<input aria-label="Сумма налога" type="number" min="0.01" max="100000000" step="0.01" required x-model="taxDraft.amount" :disabled="saving"></label>
+        <label>Дата оплаты<input aria-label="Дата оплаты налога" type="date" required x-model="taxDraft.paidDate" :max="today" :disabled="saving"></label>
+        <label>Налоговый период<input aria-label="Налоговый период" type="month" required x-model="taxDraft.period" :disabled="saving"></label>
+        <p class="text-sm text-amber-300" x-show="taxDraft" x-text="taxDraft ? 'Будет учтён в прибыли: '+formatMonthName(taxDraft.paidDate.slice(0,7)) : ''"></p>
+        <p role="alert" class="text-sm text-rose-300" x-show="taxError" x-text="taxError"></p>
+        <div class="tax-form-actions"><button type="button" :disabled="saving" @click="taxDraft=null;taxToken=null;taxError=''">Отмена</button><button type="submit" :disabled="!canEdit()" x-text="saving ? 'Сохранение…' : 'Сохранить'">Сохранить</button></div>
+      </form></template>
+    </div>
     <div x-show="renewalClient" x-cloak style="z-index:75" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4">
       <div role="dialog" aria-label="Нет подходящего абонемента" class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-2xl p-6 space-y-4">
         <h3 class="text-lg font-bold">Нет действующего подходящего абонемента</h3>
@@ -469,11 +494,11 @@
     <script src="vendor/firebase-app-compat.js"></script>
 <script src="vendor/firebase-auth-compat.js"></script>
 <script src="vendor/firebase-firestore-compat.js"></script>
-<script src="firebase-adapter.js"></script>
-<script src="cloud.js?v=mobile-20261018-1"></script>
-    <script src="backup.js"></script>
-    <script src="write-safety.js?v=mobile-20261018-1"></script>
-    <script src="persistence.js?v=online-20261018-1"></script>
+<script src="firebase-adapter.js?v=npd-20261019-1"></script>
+<script src="cloud.js?v=npd-20261019-1"></script>
+    <script src="backup.js?v=npd-20261019-1"></script>
+    <script src="write-safety.js?v=npd-20261019-1"></script>
+    <script src="persistence.js?v=npd-20261019-1"></script>
     <script>
         const workspace = FitPPCloud.start(firebase);
         const stagingApp = {auth: () => workspace.auth};
@@ -507,6 +532,7 @@
                     this.chosenWorkout = "";
                     this.addingWorkout=false; this.newWorkoutDate=''; this.newWorkoutTime=''; this.newWorkoutLocation='zarya';
                     this.freezeToken = null;
+                    this.taxDraft=null;this.taxToken=null;this.taxError='';this.taxPayments={};
                     this.rentDraft = null;
                     this.rentFormToken = null;
                     this.detailClient = null;
@@ -684,6 +710,7 @@
                     }
                 },
                 finances: {},
+                taxPayments: {}, taxDraft:null, taxToken:null, taxError:'',
                 rentMonths: {},
                 rentDraft: null,
                 rentFormToken: null,
@@ -1059,14 +1086,33 @@ this.currentMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '
                     }
                     return totalRent;
                 },
-                getMonthProfit() { return this.getMonthIncome() - this.getMonthRent(); },
+                getMonthTax() { return FitPPStore.taxTotal(this.taxPayments,this.currentMonth); },
+                getMonthProfit() { return Math.round((this.getMonthIncome() - this.getMonthRent() - this.getMonthTax())*100)/100; },
+                taxHistory() { return Object.values(this.taxPayments||{}).sort((a,b)=>b.paidDate.localeCompare(a.paidDate)||a.id.localeCompare(b.id)); },
+                openTax(payment=null) {
+                    if(!this.canEdit() || this.taxDraft)return;
+                    this.taxToken=store.token();this.taxError='';
+                    this.taxDraft={paymentId:payment?.id || 'tax-'+crypto.randomUUID(),expected:FitPPStore.fingerprint(payment||null),amount:payment ? String(payment.amount/100) : '',paidDate:payment?.paidDate||this.today,period:payment?.period||this.currentMonth};
+                },
+                async saveTax() {
+                    const draft=this.taxDraft,token=this.taxToken;
+                    if(!draft || !this.canEdit())return;
+                    if(draft.expected!==FitPPStore.fingerprint(null) && !confirm('Сохранить изменения налогового платежа? Чистая прибыль будет пересчитана.'))return;
+                    const ok=await store.run({type:'taxPayment',mode:'save',...draft,amount:this.parseAmount(draft.amount)},token);
+                    if(ok && this.taxDraft===draft){this.taxDraft=null;this.taxToken=null;this.taxError='';}
+                    else if(this.taxDraft===draft)this.taxError=this.syncError;
+                },
+                async deleteTax(payment) {
+                    if(!this.canEdit() || !confirm('Удалить ошибочный налоговый платёж '+payment.amount/100+' ₽ от '+payment.paidDate+'? Чистая прибыль будет пересчитана.'))return;
+                    await store.run({type:'taxPayment',mode:'delete',paymentId:payment.id,expected:FitPPStore.fingerprint(payment)},store.token());
+                },
                 clearDatabase() {
                     this.syncError = 'Массовое удаление отключено.';
                 },
             }
         }
     </script>
-<script src="pwa.js?v=pwa-20261019-1"></script>
+<script src="pwa.js?v=npd-20261019-1"></script>
 </body>
 </html>
 

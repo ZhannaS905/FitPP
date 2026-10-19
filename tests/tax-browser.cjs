@@ -1,0 +1,33 @@
+const {chromium,webkit}=require('playwright'),assert=require('node:assert/strict');
+const cloud=`globalThis.FitPPCloud={start(){
+ const W=FitPPWorkspace,S=FitPPStore;
+ const initial={...S.read({clients:[{id:'test',name:'Тестовый клиент',locations:['zarya'],subscriptions:[]}],finances:{'2026-09':10000,'2026-10':20000}}),ownerUid:W.ownerUid,datasetId:W.datasetId,schemaVersion:1};
+ let raw=structuredClone(initial);
+ const snapshot=()=>({exists:true,metadata:{fromCache:false},data:()=>structuredClone(raw)});
+ const auth={currentUser:{uid:W.ownerUid},onAuthStateChanged(cb){cb(this.currentUser);return()=>{}},async signOut(){this.currentUser=null;}};
+ return {writesEnabled:true,local:false,auth,check(){},validate:W.validate,reference(){return{get:async()=>snapshot()}},db:{async runTransaction(cb){let candidate;const result=await cb({get:async()=>snapshot(),set(ref,next){W.validate(next);candidate=next}});if(candidate){raw=candidate;globalThis.testTaxWrites=(globalThis.testTaxWrites||0)+1;}return result;}}};
+}};`;
+(async()=>{for(const engine of [chromium,webkit]){const browser=await engine.launch();for(const width of [320,390]){
+ const page=await browser.newPage({viewport:{width,height:844},isMobile:true,hasTouch:true,serviceWorkers:'block'}),errors=[],external=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.route('**/cloud.js*',r=>r.fulfill({contentType:'text/javascript',body:cloud}));await page.route(/https:\/\//,r=>{external.push(r.request().url());return r.abort()});
+ await page.goto(process.env.FITPP_TEST_URL);await page.waitForFunction(()=>window.Alpine&&Alpine.$data(document.body).dataReady);await page.evaluate(()=>{const d=Alpine.$data(document.body);d.activeTab='finances';d.currentMonth='2026-10'});
+ await page.getByText('Налог НПД',{exact:true}).waitFor();const initial=await page.evaluate(()=>{const d=Alpine.$data(document.body);return{profit:d.getMonthProfit(),income:d.getMonthIncome(),rent:d.getMonthRent(),finances:JSON.stringify(d.finances),clients:JSON.stringify(d.clients)}});
+ const dialog=page.getByRole('dialog',{name:'Налоговый платёж',exact:true});await page.getByRole('button',{name:'+ Налоговый платёж',exact:true}).click();await dialog.getByLabel('Сумма налога').fill('879');await dialog.getByLabel('Дата оплаты налога').fill('2026-10-14');await dialog.getByLabel('Налоговый период',{exact:true}).fill('2026-09');
+ assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));if(process.env.FITPP_SCREENSHOTS&&engine.name()==='webkit')await page.screenshot({path:process.env.FITPP_SCREENSHOTS+'/FitPP-tax-form-'+width+'.png'});
+ await dialog.getByRole('button',{name:'Сохранить',exact:true}).evaluate(b=>{b.click();b.click()});await page.waitForFunction(()=>!Alpine.$data(document.body).taxDraft);
+ assert.deepEqual(await page.evaluate(()=>{const d=Alpine.$data(document.body);return{tax:d.getMonthTax(),profit:d.getMonthProfit(),writes:window.testTaxWrites,count:d.taxHistory().length}}),{tax:879,profit:initial.profit-879,writes:1,count:1});
+ await page.getByRole('button',{name:'Предыдущий месяц',exact:true}).click();await page.waitForFunction(()=>Alpine.$data(document.body).currentMonth==='2026-09');assert.equal(await page.evaluate(()=>Alpine.$data(document.body).getMonthTax()),0);
+ await page.getByRole('button',{name:'Следующий месяц',exact:true}).click();await page.waitForFunction(()=>Alpine.$data(document.body).currentMonth==='2026-10');
+ await page.getByRole('button',{name:'Детализация финансов',exact:true}).click();
+ assert.equal(await page.locator('#finance-details .tax-history').count(),1);assert.equal(await page.getByText(/Способ не указан \/ требуется сверка|Доход — фактические поступления/).count(),0);
+ await page.locator('.tax-history summary').click();const row=page.locator('.tax-row');await row.waitFor();assert.match(await row.innerText(),/14.10.26/);assert.match(await row.innerText(),/сентябрь 2026/);
+ if(process.env.FITPP_SCREENSHOTS&&engine.name()==='webkit')await page.screenshot({path:process.env.FITPP_SCREENSHOTS+'/FitPP-tax-history-'+width+'.png',fullPage:true});
+ await row.getByRole('button',{name:'Изменить',exact:true}).click();assert.equal(await dialog.getByLabel('Сумма налога').inputValue(),'879');await dialog.getByLabel('Сумма налога').fill('900.55');await dialog.getByLabel('Дата оплаты налога').fill('2026-09-30');
+ page.once('dialog',d=>d.dismiss());await dialog.getByRole('button',{name:'Сохранить',exact:true}).click();assert.equal(await page.evaluate(()=>Alpine.$data(document.body).getMonthTax()),879);
+ page.once('dialog',d=>d.accept());await dialog.getByRole('button',{name:'Сохранить',exact:true}).click();await page.waitForFunction(()=>!Alpine.$data(document.body).taxDraft);assert.equal(await page.evaluate(()=>Alpine.$data(document.body).getMonthTax()),0);
+ assert.equal(await page.evaluate(()=>FitPPStore.taxTotal(Alpine.$data(document.body).taxPayments,'2026-09')),900.55);
+ if(!await page.locator('#finance-details').isVisible())await page.getByRole('button',{name:'Детализация финансов',exact:true}).click();
+ page.once('dialog',d=>d.dismiss());await row.getByRole('button',{name:'Удалить',exact:true}).click();assert.equal(await row.count(),1);
+ page.once('dialog',d=>d.accept());await row.getByRole('button',{name:'Удалить',exact:true}).click();await page.waitForFunction(()=>!Alpine.$data(document.body).taxHistory().length);
+ assert.deepEqual(await page.evaluate(()=>{const d=Alpine.$data(document.body);return{profit:d.getMonthProfit(),income:d.getMonthIncome(),rent:d.getMonthRent(),finances:JSON.stringify(d.finances),clients:JSON.stringify(d.clients)}}),initial);
+ assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert.deepEqual(errors,[]);assert.deepEqual(external,[]);console.log(engine.name(),width,'PASS: 879 October payment for September; profit/month; double click; edit/delete confirmations; income/rent/client money unchanged; offline');await page.close();}await browser.close();}})().catch(e=>{console.error(e);process.exit(1)});
