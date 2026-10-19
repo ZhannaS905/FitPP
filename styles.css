@@ -888,3 +888,15 @@ header.app-header > div, .detail-shell, .bottom-nav { padding-left: max(16px, en
 .client-profile .detail-top .client-actions-menu button {display:block;width:100%;height:auto;min-height:42px;margin:0;padding:9px 10px;text-align:left;font-size:13px;line-height:1.4;border:0;border-radius:8px;background:transparent;color:#d4e8f4;white-space:normal;}
 .client-profile .detail-top .client-actions-menu .client-menu-delete {color:#ff9faa;}
 .client-profile .client-actions-menu button:hover {background:#163447;}
+
+/* Calendar-month disclosure groups in the client visit history. */
+.client-profile .history-month {margin-top:8px;border:1px solid #20394b;border-radius:12px;background:#061623;}
+.client-profile .history-month summary {display:flex;align-items:center;gap:8px;min-height:44px;padding:10px;cursor:pointer;list-style:none;font-size:13px;color:#d8eaf5;}
+.client-profile .history-month summary::-webkit-details-marker {display:none;}
+.client-profile .history-month summary:focus-visible {outline:2px solid var(--green);outline-offset:2px;border-radius:12px;}
+.client-profile .history-month-name {flex:1;min-width:0;overflow-wrap:anywhere;}
+.client-profile .history-month-name::first-letter {text-transform:uppercase;}
+.client-profile .history-month-count {font-size:11px;color:#9db6ca;}
+.client-profile .history-month-arrow {font-size:21px;line-height:1;color:#12e7a1;transition:transform .15s;}
+.client-profile .history-month[open]>summary .history-month-arrow {transform:rotate(90deg);}
+.client-profile .history-month-items {padding:2px 10px 10px;}
