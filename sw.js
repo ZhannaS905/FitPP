@@ -8,6 +8,13 @@ self.addEventListener('fetch', event => {
   // Only in-scope page navigation. All APIs and other requests use normal networking.
   if (request.method === 'GET' && request.mode === 'navigate' &&
       url.origin === scope.origin && url.pathname.startsWith(scope.pathname)) {
-    event.respondWith(fetch(request));
+    const fresh = new URL(request.url);
+    fresh.searchParams.set('__fitpp_build', 'compat-reader-20261020-1');
+    event.respondWith(fetch(fresh.href, { cache: 'no-store', credentials: 'same-origin' }));
   }
+});
+
+// Read-only build handshake for update verification.
+self.addEventListener('message', event => {
+  if (event.data === 'FITPP_BUILD' && event.ports[0]) event.ports[0].postMessage('compat-reader-20261020-1');
 });

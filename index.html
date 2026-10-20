@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="fitpp-build" content="compat-reader-20261020-1">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; font-src 'self'">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>FitPP</title>
@@ -19,7 +20,7 @@
 
 
 
-<link rel="stylesheet" href="styles.css?v=npd-20261019-1">
+<link rel="stylesheet" href="styles.css?v=compat-reader-20261020-1">
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased" x-data="trainerApp()" x-init="init()">
 
@@ -46,7 +47,7 @@
     <dialog id="settings-dialog" class="settings-dialog" aria-labelledby="settings-title" @close="document.getElementById('settings-trigger').focus()">
         <div class="settings-heading"><h2 id="settings-title">Настройки</h2><button aria-label="Закрыть настройки" @click="document.getElementById('settings-dialog').close()">✕</button></div>
         <section class="settings-section">
-            <h3>Аккаунт</h3>
+            <h3>Аккаунт</h3><p id="app-build">Версия: compat-reader-20261020-1</p>
             <p x-text="authWarning"></p>
             <p x-show="currentUser" x-text="currentUser?.email"></p>
             <p x-show="!currentUser">Войдите, чтобы загрузить свои данные.</p>
@@ -315,7 +316,7 @@
           <template x-for="entry in paymentHistory(detailClient)" :key="entry.id"><div class="history-row"><span x-text="entry.date + ' · ' + ({sale:'Покупка',legacy:'Старая оплата',cancel:'Отмена → баланс',refund:'Возврат'})[entry.kind]"></span><span x-text="(entry.method ? ({cash:'Наличные',transfer:'Перевод'})[entry.method] : 'Без поступления') + ': ' + entry.received / 100 + ' ₽'"></span><small x-show="entry.kind === 'sale'" x-text="'Стоимость ' + entry.price/100 + ' ₽ · зачтено ' + entry.used/100 + ' ₽'"></small></div></template>
           <template x-for="row in oldPayments(detailClient)" :key="row.key"><div class="history-row"><span x-text="row.date + ' · ' + row.label + ' · ' + (row.price ?? 'Сумма неизвестна') + ' ₽ · Способ не указан'"></span><button :disabled="!canEdit() || row.price == null" @click="openLegacyPayment(detailClient,row)" class="border p-2 rounded">Уточнить оплату</button></div></template>
         </div>
-        <div class="detail-card" x-show="detailTab === 'subs'"><h3 class="font-semibold">Абонементы</h3><p x-show="!(detailClient?.subscriptions || []).length">Абонементов пока нет</p><template x-for="(sub, i) in (detailClient?.subscriptions || [])" :key="i"><div class="history-row"><span x-text="(isFrozen(sub) || isFreezePending(sub) ? 'Плановый срок до ' : 'До ') + (sub.expires || '—')"></span><span class="text-emerald-400" x-text="sub.cancelledAt ? 'Продажа отменена ' + sub.cancelledAt : 'Остаток: ' + sub.left"></span><button :disabled="!canEdit()" @click="editUnusedSubscription(detailClient, sub)" class="px-3 py-2">Изменить начало</button><button :disabled="!canEdit()" @click="cancelUnusedSubscription(detailClient, sub)" class="px-3 py-2 text-rose-400">Отменить продажу</button><button :disabled="!canEdit() || extensionLeft(sub) === 0 || isFrozen(sub) || isFreezePending(sub) || !!detailClient?.archivedAt" x-show="sub.left > 0" @click="extendSub(detailClient, sub, i)" class="bg-emerald-700 px-3 py-2 rounded-lg">Продлить</button><span x-show="sub.left > 0" x-text="'Доступно продление: ' + extensionLeft(sub) + ' дн. из 14 суммарно'"></span><span x-show="isFrozen(sub)" x-text="'❄️ Возвращение: ' + (sub.freezes || []).at(-1)?.end"></span><button :disabled="!canEdit()" x-show="!isFrozen(sub) && !isFreezePending(sub) && sub.left > 0 && sub.expires >= today && (!sub.startDate || sub.startDate <= today)" @click="openFreeze(detailClient, sub, i)" class="bg-sky-700 px-3 py-2 rounded-lg">Заморозить</button><span x-show="isFreezePending(sub)" x-text="'❄️ Запланирована с ' + (sub.freezes || []).at(-1)?.start + ', возвращение ' + (sub.freezes || []).at(-1)?.end"></span><button :disabled="!canEdit()" x-show="isFrozen(sub) || isFreezePending(sub)" @click="unfreeze(detailClient, i)" class="bg-emerald-700 px-3 py-2 rounded-lg" x-text="isFreezePending(sub) ? 'Отменить заморозку' : 'Разморозить'">Разморозить</button></div></template></div>
+        <div class="detail-card" x-show="detailTab === 'subs'"><h3 class="font-semibold">Абонементы</h3><p x-show="!(detailClient?.subscriptions || []).length">Абонементов пока нет</p><template x-for="(sub, i) in (detailClient?.subscriptions || [])" :key="i"><div class="history-row"><span x-show="sub.termsVersion === 1" x-text="sub.termsVersion === 1 ? sub.terms.name + ' · ' + sub.terms.priceKopecks/100 + ' ₽ · ' + sub.terms.sessions + ' занятий · ' + sub.terms.durationDays + ' дней · ' + sub.terms.locations.map(h=>({zarya:'Заря',pole:'Поле чудес',online:'Онлайн'})[h]).join(', ') : ''"></span><span x-text="(isFrozen(sub) || isFreezePending(sub) ? 'Плановый срок до ' : 'До ') + (sub.expires || '—')"></span><span class="text-emerald-400" x-text="sub.cancelledAt ? 'Продажа отменена ' + sub.cancelledAt : 'Остаток: ' + sub.left"></span><button :disabled="!canEdit()" @click="editUnusedSubscription(detailClient, sub)" class="px-3 py-2">Изменить начало</button><button :disabled="!canEdit()" @click="cancelUnusedSubscription(detailClient, sub)" class="px-3 py-2 text-rose-400">Отменить продажу</button><button :disabled="!canEdit() || extensionLeft(sub) === 0 || isFrozen(sub) || isFreezePending(sub) || !!detailClient?.archivedAt" x-show="sub.left > 0" @click="extendSub(detailClient, sub, i)" class="bg-emerald-700 px-3 py-2 rounded-lg">Продлить</button><span x-show="sub.left > 0" x-text="'Доступно продление: ' + extensionLeft(sub) + ' дн. из 14 суммарно'"></span><span x-show="isFrozen(sub)" x-text="'❄️ Возвращение: ' + (sub.freezes || []).at(-1)?.end"></span><button :disabled="!canEdit()" x-show="!isFrozen(sub) && !isFreezePending(sub) && sub.left > 0 && sub.expires >= today && (!sub.startDate || sub.startDate <= today)" @click="openFreeze(detailClient, sub, i)" class="bg-sky-700 px-3 py-2 rounded-lg">Заморозить</button><span x-show="isFreezePending(sub)" x-text="'❄️ Запланирована с ' + (sub.freezes || []).at(-1)?.start + ', возвращение ' + (sub.freezes || []).at(-1)?.end"></span><button :disabled="!canEdit()" x-show="isFrozen(sub) || isFreezePending(sub)" @click="unfreeze(detailClient, i)" class="bg-emerald-700 px-3 py-2 rounded-lg" x-text="isFreezePending(sub) ? 'Отменить заморозку' : 'Разморозить'">Разморозить</button></div></template></div>
         <p class="history-meta" x-show="detailClient?.archivedAt">Клиент в архиве · история сохранена</p>
       </div></template>
     </section>
@@ -494,11 +495,11 @@
     <script src="vendor/firebase-app-compat.js"></script>
 <script src="vendor/firebase-auth-compat.js"></script>
 <script src="vendor/firebase-firestore-compat.js"></script>
-<script src="firebase-adapter.js?v=npd-20261019-1"></script>
-<script src="cloud.js?v=npd-20261019-1"></script>
-    <script src="backup.js?v=npd-20261019-1"></script>
-    <script src="write-safety.js?v=npd-20261019-1"></script>
-    <script src="persistence.js?v=npd-20261019-1"></script>
+<script src="firebase-adapter.js?v=compat-reader-20261020-1"></script>
+<script src="cloud.js?v=compat-reader-20261020-1"></script>
+    <script src="backup.js?v=compat-reader-20261020-1"></script>
+    <script src="write-safety.js?v=compat-reader-20261020-1"></script>
+    <script src="persistence.js?v=compat-reader-20261020-1"></script>
     <script>
         const workspace = FitPPCloud.start(firebase);
         const stagingApp = {auth: () => workspace.auth};
@@ -532,7 +533,7 @@
                     this.chosenWorkout = "";
                     this.addingWorkout=false; this.newWorkoutDate=''; this.newWorkoutTime=''; this.newWorkoutLocation='zarya';
                     this.freezeToken = null;
-                    this.taxDraft=null;this.taxToken=null;this.taxError='';this.taxPayments={};
+                    this.taxDraft=null;this.taxToken=null;this.taxError='';this.taxPayments={};delete this.pricingSettings;
                     this.rentDraft = null;
                     this.rentFormToken = null;
                     this.detailClient = null;
@@ -636,7 +637,7 @@
                         this.deletionError = 'Удаление не подтверждено. Повторите загрузку с сервера. ' + e.message;
                     }
                 },
-                sessionDataWithFinances() { return FitPPStore.read({clients:this.clients,attendance:this.attendance,attendanceOps:this.attendanceOps,workouts:this.workouts,visits:this.visits,visitOps:this.visitOps,legacyLinks:this.legacyLinks,legacySources:this.legacySources,finances:this.finances}); },
+                sessionDataWithFinances() { return FitPPStore.read({...(this.pricingSettings!==undefined?{pricingSettings:this.pricingSettings}:{}),clients:this.clients,attendance:this.attendance,attendanceOps:this.attendanceOps,workouts:this.workouts,visits:this.visits,visitOps:this.visitOps,legacyLinks:this.legacyLinks,legacySources:this.legacySources,finances:this.finances}); },
                 detailClient: null,
                 detailTab: 'visits',
                 hasCurrentSubscription(client) {
@@ -650,6 +651,7 @@
                     this.detailClient = client;
                     this.detailTab = 'visits';
                 },
+                pricingSettings: undefined,
                 activeTab: 'journal',
                 selectedDate: FitPPStore.localDate(),
                 currentMonth: FitPPStore.localDate().slice(0, 7),
@@ -873,7 +875,7 @@
                     await store.run({type:'linkLegacy',date:row.date,clientId:row.cid,location});
                 },
                 sessionData() {
-                    const d=FitPPStore.read({clients:this.clients,attendance:this.attendance,attendanceOps:this.attendanceOps,workouts:this.workouts,visits:this.visits,visitOps:this.visitOps,legacyLinks:this.legacyLinks,legacySources:this.legacySources});
+                    const d=FitPPStore.read({...(this.pricingSettings!==undefined?{pricingSettings:this.pricingSettings}:{}),clients:this.clients,attendance:this.attendance,attendanceOps:this.attendanceOps,workouts:this.workouts,visits:this.visits,visitOps:this.visitOps,legacyLinks:this.legacyLinks,legacySources:this.legacySources});
                     FitPPStore.migrate(d);return d;
                 },
                 dayWorkouts() { return this.currentLocation ? FitPPStore.workoutsOn(this.sessionData(),this.currentLocation,this.selectedDate).filter(w=>!w.cancelled) : []; },
@@ -974,7 +976,7 @@
                       // Changing «Был»/«Сгорело» keeps the original subscription.
                       if(items.length>1 && !items.some(item=>op?.subscriptionId && item.sub.id===op.subscriptionId)) {
                         this.subscriptionChoice={action,token:store.token(),items:items.map(({key,sub})=>({key,label:
-                          (sub.location==='zarya' || (!sub.location && sub.price===4400) ? 'Заря' : 'Поле чудес')+
+                          FitPPStore.subscriptionTerms(sub).name+
                           ' · '+sub.price+' ₽ · остаток '+sub.left+' · с '+(sub.startDate || '—')+' до '+sub.expires}))};
                         return false;
                       }
@@ -1112,7 +1114,7 @@ this.currentMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '
             }
         }
     </script>
-<script src="pwa.js?v=npd-20261019-1"></script>
+<script src="pwa.js?v=compat-reader-20261020-1"></script>
 </body>
 </html>
 

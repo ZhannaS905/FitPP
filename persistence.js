@@ -185,8 +185,46 @@
     }
   }
   const rentTotal = entry => entry ? entry.zarya.length * 800 + entry.pole.length * 600 : 0;
+  const catalogKeys = (v, keys) => plain(v) && Object.keys(v).every(k=>keys.includes(k)) && keys.every(k=>Object.hasOwn(v,k));
+  const positive = n => Number.isSafeInteger(n) && n > 0;
+  const operationId = v => typeof v === 'string' && /^[a-zA-Z0-9-]{1,80}$/.test(v) && !['constructor','prototype','__proto__'].includes(v);
+  function validateTerms(t) {
+    if(!catalogKeys(t,['name','priceKopecks','sessions','durationDays','locations']) || typeof t.name!=='string' || !t.name.trim() || t.name!==t.name.trim() || t.name.length>80 ||
+      !positive(t.priceKopecks) || t.priceKopecks>10000000000 || !positive(t.sessions) || !positive(t.durationDays) ||
+      !Array.isArray(t.locations) || !t.locations.length || new Set(t.locations).size!==t.locations.length || t.locations.some(h=>!Object.hasOwn(prices,h))) throw fail('Некорректные условия шаблона.');
+  }
+  const termsOf = t => copy(Object.fromEntries(['name','priceKopecks','sessions','durationDays','locations'].map(k=>[k,t[k]])));
+  function validatePricing(c) {
+    if(!catalogKeys(c,['version','revision','templates','singlePrices']) || c.version!==1 || !Number.isSafeInteger(c.revision) || c.revision<0 || !plain(c.templates)) throw fail('Некорректные настройки цен.');
+    for(const [key,t] of Object.entries(c.templates)) {
+      if(!catalogKeys(t,['id','revision','name','priceKopecks','sessions','durationDays','locations','archived','lastOperationId','lastOperationKind']) || !operationId(key) || t.id!==key || !positive(t.revision) || typeof t.archived!=='boolean' || !['save','archive'].includes(t.lastOperationKind) || !operationId(t.lastOperationId)) throw fail('Некорректный шаблон.');
+      validateTerms(termsOf(t));
+    }
+    const v=c.singlePrices;
+    if(!catalogKeys(v,['revision','zarya','pole','online','lastOperationId']) || !positive(v.revision) || !operationId(v.lastOperationId) || Object.keys(prices).some(h=>!positive(v[h]) || v[h]>10000000000)) throw fail('Некорректные разовые цены.');
+  }
+  function hasSoldTerms(sub) { return ['termsVersion','terms','templateId','templateRevision','saleOperationId','saleRequest'].some(k=>Object.hasOwn(sub,k)); }
+  function subscriptionTerms(sub) {
+    if(hasSoldTerms(sub)){validSold(sub);return copy(sub.terms);}
+    return {name:sub.location==='zarya' || (!sub.location && sub.price===4400)?'Заря':'Поле чудес',priceKopecks:Number.isFinite(sub.price)&&sub.price>=0?money(sub.price):null,sessions:8,durationDays:28,locations:Object.keys(prices)};
+  }
+  function validateCompatibleData(raw) {
+    if(Object.hasOwn(raw,'pricingSettings'))validatePricing(raw.pricingSettings);
+    for(const c of raw.clients || [])for(const sub of c.subscriptions || [])if(hasSoldTerms(sub))validSold(sub);
+    return raw;
+  }
+  function validSold(sub) {
+    if(sub.termsVersion!==1 || !operationId(sub.templateId) || !positive(sub.templateRevision) || !operationId(sub.saleOperationId) || typeof sub.saleRequest!=='string') throw fail('Некорректный снимок абонемента.');
+    validateTerms(sub.terms);
+    if(typeof sub.id!=='string' || !sub.id || typeof sub.paymentId!=='string' || !sub.paymentId)throw fail('Нет идентификаторов проданного абонемента.');
+    dayNumber(sub.startDate);dayNumber(sub.expires);
+    if(sub.expires<sub.startDate)throw fail('Некорректный срок абонемента.');
+    if(sub.price!==sub.terms.priceKopecks/100 || !Number.isSafeInteger(sub.left) || sub.left<0 || sub.left>sub.terms.sessions) throw fail('Некорректный остаток или цена абонемента.');
+  }
+
   function read(raw = {}) {
     const data = {
+      ...(Object.hasOwn(raw,"pricingSettings") ? {pricingSettings:raw.pricingSettings} : {}),
       ...(Object.hasOwn(raw, "taxPayments") ? {taxPayments:raw.taxPayments} : {}),
       clients: raw.clients ?? [],
       attendance: raw.attendance ?? {},
@@ -231,10 +269,12 @@
       throw fail(
         "Повторяющиеся идентификаторы клиентов. Запись заблокирована.",
       );
+    if(Object.hasOwn(data,"pricingSettings"))validatePricing(data.pricingSettings);
     validateTaxPayments(data.taxPayments);
     for (const [month, entry] of Object.entries(data.rentMonths)) validateRent(month, entry);
     for (const c of data.clients) for (const sub of c.subscriptions || []) {
       if (!plain(sub)) throw fail("Повреждённый абонемент.");
+      if(hasSoldTerms(sub))validSold(sub);
       validateFreezes(sub);
     }
     for (const c of data.clients) ledger(c);
@@ -357,6 +397,7 @@
     return client;
   }
   function covers(sub, location, date) {
+    if(hasSoldTerms(sub)) { validSold(sub);return sub.terms.locations.includes(location) && !sub.cancelledAt && sub.left>0 && (!sub.startDate || sub.startDate<=date) && sub.expires>=date && !frozenOn(sub,date); }
     const hall = sub.location || (sub.price === 4400 ? 'zarya' : sub.price === 3800 ? 'pole' : null);
     // Both existing plans cover every FitPP location, including legacy records.
     return ['zarya','pole'].includes(hall) && Object.hasOwn(prices, location) && !sub.cancelledAt && Number.isSafeInteger(sub.left) && sub.left > 0 &&
@@ -560,6 +601,7 @@
   }
   function reduce(input, action, today = localDate()) {
     const data = copy(input);
+    if(['template','singlePrices'].includes(action.type) || (action.type==='subscription' && Object.hasOwn(action,'templateId')))throw fail('Конструктор выключен в рабочем режиме.');
     if (action.type==='refund') {
       const c=clientOf(data,action.clientId), amount=money(action.received);
       if(!['cash','transfer'].includes(action.method)||amount<=0||amount>money(balance(c))) throw fail('Возврат должен быть больше нуля и не превышать баланс.');
@@ -679,14 +721,14 @@
       if(!sub || fingerprint(sub)!==action.expected) throw fail('Абонемент изменился. Откройте заново.');
       const linked = [data.attendanceOps,data.visitOps].some(map=>Object.values(map).some(entries=>Object.values(entries).some(op=>op.subscriptionId===sub.id)));
       if(sub.cancelledAt)throw fail('Продажа уже отменена.');
-      if(sub.left!==8 || linked || sub.freezes?.length || sub.extensionDays) throw fail('Изменять или отменять можно только неиспользованный абонемент без заморозок и продлений.');
+      if(sub.left!==(hasSoldTerms(sub)?(validSold(sub),sub.terms.sessions):8) || linked || sub.freezes?.length || sub.extensionDays) throw fail('Изменять или отменять можно только неиспользованный абонемент без заморозок и продлений.');
       dayNumber(sub.startDate);
       if(action.type==='cancelSubscription') {
         if(!sub.paymentId)throw fail('Сначала уточните способ старой оплаты.');
         cancelMoney(data,c,sub.paymentId,today);sub.left=0;sub.cancelledAt=today;
       } else {
         if(!sub.paymentId || action.price!==sub.price)throw fail('Изменение цены отключено. Для исправления оплаты отмените продажу и оформите заново.');
-        dayNumber(action.date);sub.startDate=action.date;sub.expires=addDays(action.date,28);
+        dayNumber(action.date);sub.startDate=action.date;sub.expires=addDays(action.date,hasSoldTerms(sub)?sub.terms.durationDays:28);
       }
     } else if (action.type === "subscription") {
       const client = clientOf(data, action.clientId);
@@ -770,7 +812,7 @@
     }
     function reset(user) {
       // Optional tax history must not survive logout or loading another snapshot.
-      delete state.taxPayments;
+      delete state.taxPayments;delete state.pricingSettings;
       epoch++;
       loadId++;
       baseline = null;
@@ -930,5 +972,5 @@
       },
     };
   }
-  return { taxTotal, covers, availableSubscriptions, balance, report, legacyPayments, ledger, extensionRemaining, subscriptionTitle, deletionPlan, subscriptionWarnings, create, read, reduce, prices, fingerprint, rentDates, rentTotal, localDate, dayNumber, addDays, frozenOn, freezeStart, pendingFreeze, schedule, workoutsOn, migrate, unresolved };
+  return { subscriptionTerms,validateCompatibleData, taxTotal, covers, availableSubscriptions, balance, report, legacyPayments, ledger, extensionRemaining, subscriptionTitle, deletionPlan, subscriptionWarnings, create, read, reduce, prices, fingerprint, rentDates, rentTotal, localDate, dayNumber, addDays, frozenOn, freezeStart, pendingFreeze, schedule, workoutsOn, migrate, unresolved };
 });
