@@ -1,7 +1,7 @@
 /* Installation only. No data access, offline writes or application cache. */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js?v=fitpp-stage2-rc-20261021-3', {
+    navigator.serviceWorker.register('./sw.js?v=fitpp-stage2-catalog-rc-20261021-1', {
       scope: './',
       updateViaCache: 'none',
     }).catch(error => console.warn('FitPP: не удалось зарегистрировать PWA.', error));

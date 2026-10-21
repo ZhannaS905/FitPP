@@ -80,13 +80,16 @@ function catalogPolicy(raw,auth,check){
    throw error;
   }
  }
- async function requireCatalog(){
+ async function readSalesMode(){
   check();const user=auth.currentUser,epoch=auth.sessionGeneration;
   const snap=await raw.doc(policyPath).get({source:'server'});
   check();if(auth.currentUser!==user || auth.sessionGeneration!==epoch)throw Error('Сессия изменилась');
-  if(mode(snap)!=='catalog')throw Object.assign(Error('Продажи по шаблонам ещё не включены. Обновите режим после подтверждения каталога.'),{code:'catalog-inactive'});
+  return mode(snap);
  }
- return Object.freeze({activateCatalog,requireCatalog});
+ async function requireCatalog(){
+  if(await readSalesMode()!=='catalog')throw Object.assign(Error('Продажи по шаблонам ещё не включены. Обновите режим после подтверждения каталога.'),{code:'catalog-inactive'});
+ }
+ return Object.freeze({activateCatalog,requireCatalog,readSalesMode});
 }
 function bind(app,{local=false}={}){
  if(app.options?.projectId!==projectId)throw Error('Недопустимый Firebase project ID');
