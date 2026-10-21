@@ -2,7 +2,9 @@
 'use strict';
 const config=Object.freeze({apiKey:'AIzaSyAmj_fvbKHbeT4LAzfo5Rrq1g8TO8yYSl4',authDomain:'fitpp-165a2.firebaseapp.com',projectId:'fitpp-165a2',storageBucket:'fitpp-165a2.firebasestorage.app',messagingSenderId:'410259745597',appId:'1:410259745597:web:48e7ad3110961cbf72f354'});
 function start(firebase,W=globalThis.FitPPWorkspace){
+ if(!globalThis.FitPPRuntime || FitPPRuntime.mode!=='production')throw Error('Конфигурация FitPP не загружена. Подключение заблокировано.');
 
+ if(typeof location!=='undefined' && ['127.0.0.1','localhost','[::1]'].includes(location.hostname))throw Error('Производственный Firebase заблокирован локально');
  const app=firebase.initializeApp(config,'fitpp-165a2-full');
  const rawAuth=app.auth(),rawDB=app.firestore();
  // No enablePersistence(): Firestore uses its default in-memory cache only.
@@ -11,6 +13,7 @@ function start(firebase,W=globalThis.FitPPWorkspace){
  let generation=0;
  const check=()=>{if(app.options.projectId!=='fitpp-165a2'||W.projectId!=='fitpp-165a2'||W.ownerUid!=='fGu8QWqBQofTRQ8SxHBonbuEVjr2'||W.path!=='trainerWorkspaces/fGu8QWqBQofTRQ8SxHBonbuEVjr2/datasets/manual-history-2026-09-v1'||rawAuth.currentUser?.uid!==W.ownerUid)throw Error('Недопустимый проект или аккаунт владельца');};
  const auth=Object.freeze({get currentUser(){return rawAuth.currentUser;},
+ get sessionGeneration(){return generation;},
  get persistenceWarning(){return persistenceError;},
  onAuthStateChanged(cb){let cancelled=false,unsubscribe;void ready.then(()=>{if(cancelled)return;unsubscribe=rawAuth.onAuthStateChanged(user=>{generation++;if(user&&user.uid!==W.ownerUid){cb(null);void rawAuth.signOut();}else cb(user);});});return ()=>{cancelled=true;unsubscribe?.();};},
  async signOut(){generation++;await rawAuth.signOut();},
@@ -24,7 +27,7 @@ function start(firebase,W=globalThis.FitPPWorkspace){
    guard();return result;
   });
  }});
- const bound=W.bind({options:app.options,auth:()=>auth,firestore:()=>db});
+ const bound=W.bind({options:app.options,auth:()=>auth,firestore:()=>db,financialFirestore:()=>rawDB});
  return Object.freeze({...bound,writesEnabled:true,initialize:undefined});
 }
 return Object.freeze({start,config});

@@ -3,7 +3,7 @@
   const api = factory();
   if (typeof module === "object" && module.exports) module.exports = api;
   else root.FitPPStore = api;
-})(typeof globalThis !== "undefined" ? globalThis : this, function () {
+})(typeof globalThis !== "undefined" ? globalThis : this, function buildStore(catalogMode) {
   "use strict";
   const prices = Object.freeze({ zarya: 700, pole: 600, online: 500 });
   const fail = (message, code = "invalid") =>
@@ -185,6 +185,8 @@
     }
   }
   const rentTotal = entry => entry ? entry.zarya.length * 800 + entry.pole.length * 600 : 0;
+
+  // Explicit local-only model. The application never enables this factory.
   const catalogKeys = (v, keys) => plain(v) && Object.keys(v).every(k=>keys.includes(k)) && keys.every(k=>Object.hasOwn(v,k));
   const positive = n => Number.isSafeInteger(n) && n > 0;
   const operationId = v => typeof v === 'string' && /^[a-zA-Z0-9-]{1,80}$/.test(v) && !['constructor','prototype','__proto__'].includes(v);
@@ -194,6 +196,9 @@
       !Array.isArray(t.locations) || !t.locations.length || new Set(t.locations).size!==t.locations.length || t.locations.some(h=>!Object.hasOwn(prices,h))) throw fail('Некорректные условия шаблона.');
   }
   const termsOf = t => copy(Object.fromEntries(['name','priceKopecks','sessions','durationDays','locations'].map(k=>[k,t[k]])));
+  function defaultPricing() {
+    return {version:1,revision:0,templates:Object.fromEntries(['zarya','pole'].map(h=>['plan-'+h,{id:'plan-'+h,revision:1,name:h==='zarya'?'Заря':'Поле чудес',priceKopecks:h==='zarya'?440000:380000,sessions:8,durationDays:28,locations:Object.keys(prices),archived:false,lastOperationId:'initial',lastOperationKind:'save'}])),singlePrices:{revision:1,zarya:70000,pole:60000,online:50000,lastOperationId:'initial'}};
+  }
   function validatePricing(c) {
     if(!catalogKeys(c,['version','revision','templates','singlePrices']) || c.version!==1 || !Number.isSafeInteger(c.revision) || c.revision<0 || !plain(c.templates)) throw fail('Некорректные настройки цен.');
     for(const [key,t] of Object.entries(c.templates)) {
@@ -203,6 +208,7 @@
     const v=c.singlePrices;
     if(!catalogKeys(v,['revision','zarya','pole','online','lastOperationId']) || !positive(v.revision) || !operationId(v.lastOperationId) || Object.keys(prices).some(h=>!positive(v[h]) || v[h]>10000000000)) throw fail('Некорректные разовые цены.');
   }
+  function pricing(data) { const c=copy(data.pricingSettings ?? defaultPricing());validatePricing(c);return c; }
   function hasSoldTerms(sub) { return ['termsVersion','terms','templateId','templateRevision','saleOperationId','saleRequest'].some(k=>Object.hasOwn(sub,k)); }
   function subscriptionTerms(sub) {
     if(hasSoldTerms(sub)){validSold(sub);return copy(sub.terms);}
@@ -220,6 +226,34 @@
     dayNumber(sub.startDate);dayNumber(sub.expires);
     if(sub.expires<sub.startDate)throw fail('Некорректный срок абонемента.');
     if(sub.price!==sub.terms.priceKopecks/100 || !Number.isSafeInteger(sub.left) || sub.left<0 || sub.left>sub.terms.sessions) throw fail('Некорректный остаток или цена абонемента.');
+  }
+  function catalogAction(data,a) {
+    const c=pricing(data);
+    if(!operationId(a.operationId))throw fail('Не указан идентификатор операции.');
+    if(a.type==='singlePrices') {
+      if(!catalogKeys(a.prices,Object.keys(prices)))throw fail('Некорректные поля разовых цен.');
+      const current=c.singlePrices;
+      if(current.lastOperationId===a.operationId) {
+        if(Object.keys(prices).some(h=>current[h]!==a.prices?.[h]))throw fail('Повтор с другими условиями.');return data;
+      }
+      if(current.revision!==a.expectedRevision)throw fail('Разовые цены изменены. Обновите данные.','conflict');
+      c.singlePrices={revision:current.revision+1,...a.prices,lastOperationId:a.operationId};
+    } else {
+      if(!operationId(a.templateId))throw fail('Некорректный ID шаблона.');
+      const old=c.templates[a.templateId];
+      if(a.mode==='save' && a.expectedRevision===0 && a.templateId!==a.operationId)throw fail('ID создания должен совпадать с ID операции.');
+      const same=()=>old.lastOperationKind===a.mode && (a.mode==='save'?fingerprint(termsOf(old))===fingerprint(a.terms):old.archived===a.archived);
+      if(old?.lastOperationId===a.operationId){if(!same())throw fail('Повтор с другими условиями.');return data;}
+      if(a.mode==='save') {
+        validateTerms(a.terms);
+        if((old?.revision ?? 0)!==a.expectedRevision)throw fail('Шаблон изменён. Обновите данные.','conflict');
+        c.templates[a.templateId]={id:a.templateId,revision:(old?.revision ?? 0)+1,...copy(a.terms),archived:old?.archived ?? false,lastOperationId:a.operationId,lastOperationKind:'save'};
+      } else if(a.mode==='archive' && old && typeof a.archived==='boolean') {
+        if(old.revision!==a.expectedRevision)throw fail('Шаблон изменён. Обновите данные.','conflict');
+        c.templates[a.templateId]={...old,revision:old.revision+1,archived:a.archived,lastOperationId:a.operationId,lastOperationKind:'archive'};
+      } else throw fail('Некорректная операция шаблона.');
+    }
+    c.revision++;validatePricing(c);data.pricingSettings=c;return data;
   }
 
   function read(raw = {}) {
@@ -309,7 +343,7 @@
     if(!Number.isSafeInteger(cents))throw fail('Сумма налога слишком велика.');
     return cents/100;
   }
-  // Money history lives inside the existing clients list: no dataset/rules migration.
+  // Money history remains in the clients list; financial verification records are separate.
   function money(value) {
     if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > 100000000 || Math.abs(value*100-Math.round(value*100)) > 0.000001) throw fail('Укажите сумму в рублях, не более двух знаков после запятой.');
     return Math.round(value*100);
@@ -359,12 +393,12 @@
     if(!['cash','transfer'].includes(action.method)) throw fail('Выберите один способ оплаты: Перевод или Наличные.');
     const received=money(action.received), used=Math.min(cost,available);
     if(received+used<cost) throw fail('Недоплата: требуется '+rubles(cost-used)+' ₽. Продажа не сохранена.');
-    return addMoney(data,client,{kind:'sale',date:action.paymentDate || action.date,method:action.method,received,price:cost,used,delta:received-cost,ref},today);
+    return addMoney(data,client,{kind:'sale',date:action.paymentDate || action.date,method:action.method,received,price:cost,used,delta:received-cost,ref,...(action.balanceProofId?{balanceProofId:action.balanceProofId}:{})},today);
   }
-  function cancelMoney(data,client,paymentId,today) {
+  function cancelMoney(data,client,paymentId,today,action) {
     const e=ledger(client).find(e=>e.id===paymentId);
     if(!e || !['sale','legacy'].includes(e.kind) || ledger(client).some(x=>x.kind==='cancel'&&x.ref===paymentId)) throw fail('Исходная оплата не найдена или уже отменена.');
-    addMoney(data,client,{kind:'cancel',date:today,method:null,received:0,price:e.price,used:0,delta:e.price,ref:paymentId},today);
+    addMoney(data,client,{kind:'cancel',date:today,method:null,received:0,price:e.price,used:0,delta:e.price,ref:paymentId,...(action.balanceProofId?{balanceProofId:action.balanceProofId}:{})},today);
   }
   function report(data,month) {
     const result={cash:0,transfer:0,cashRefund:0,transferRefund:0,unknown:0,total:data.finances[month]||0};
@@ -397,7 +431,10 @@
     return client;
   }
   function covers(sub, location, date) {
-    if(hasSoldTerms(sub)) { validSold(sub);return sub.terms.locations.includes(location) && !sub.cancelledAt && sub.left>0 && (!sub.startDate || sub.startDate<=date) && sub.expires>=date && !frozenOn(sub,date); }
+    if(hasSoldTerms(sub)) {
+      validSold(sub);
+      return sub.terms.locations.includes(location) && !sub.cancelledAt && sub.left>0 && (!sub.startDate || sub.startDate<=date) && sub.expires>=date && !frozenOn(sub,date);
+    }
     const hall = sub.location || (sub.price === 4400 ? 'zarya' : sub.price === 3800 ? 'pole' : null);
     // Both existing plans cover every FitPP location, including legacy records.
     return ['zarya','pole'].includes(hall) && Object.hasOwn(prices, location) && !sub.cancelledAt && Number.isSafeInteger(sub.left) && sub.left > 0 &&
@@ -450,7 +487,7 @@
         if (!Number.isFinite(operation.price) || operation.price < 0)
           throw fail("Неизвестна исходная сумма оплаты.");
         if(!operation.paymentId) throw fail('Сначала уточните старую оплату в карточке клиента.');
-        cancelMoney(data,client,operation.paymentId,today);
+        cancelMoney(data,client,operation.paymentId,today,action);
       }
     }
     if (previous === status) {
@@ -475,7 +512,7 @@
       next.subscriptionId = sub.id;
       sub.left--;
     } else if (status === "razov") {
-      next.price = prices[location];
+      next.price = catalogMode ? pricing(data).singlePrices[location]/100 : prices[location];
       next.paymentId=sell(data,client,action,next.price,next.operationId,today);
     }
     day[clientId] = status; // Keep the original string format for existing readers.
@@ -584,6 +621,7 @@
     data.attendance={[w.date]:copy(data.visits[w.id] || {})};
     data.attendanceOps={[w.date]:copy(data.visitOps[w.id] || {})};
     attendance(data,action,today);
+    if(data.attendanceOps[w.date]?.[action.clientId]){data.attendanceOps[w.date][action.clientId].workoutId=w.id;if(catalogMode==='catalog' && action.status==='razov')data.attendanceOps[w.date][action.clientId].singlePriceRevision=pricing(data).singlePrices.revision;}
     data.visits[w.id]=data.attendance[w.date];data.visitOps[w.id]=data.attendanceOps[w.date];
     data.attendance=legacyAttendance;data.attendanceOps=legacyOps;
     data.workouts[w.id]=w;
@@ -601,11 +639,14 @@
   }
   function reduce(input, action, today = localDate()) {
     const data = copy(input);
-    if(['template','singlePrices'].includes(action.type) || (action.type==='subscription' && Object.hasOwn(action,'templateId')))throw fail('Конструктор выключен в рабочем режиме.');
+    if(!catalogMode && (['initializePricing','template','singlePrices'].includes(action.type) || (action.type==='subscription' && Object.hasOwn(action,'templateId'))))throw fail('Конструктор выключен в рабочем режиме.');
+    if(catalogMode && action.type==='initializePricing'){if(Object.hasOwn(data,'pricingSettings'))return data;data.pricingSettings=defaultPricing();return data;}
+    if(catalogMode==='catalog' && ['template','singlePrices'].includes(action.type) && !Object.hasOwn(data,'pricingSettings'))throw fail('Сначала инициализируйте каталог.');
+    if(catalogMode && ['template','singlePrices'].includes(action.type))return catalogAction(data,action);
     if (action.type==='refund') {
       const c=clientOf(data,action.clientId), amount=money(action.received);
       if(!['cash','transfer'].includes(action.method)||amount<=0||amount>money(balance(c))) throw fail('Возврат должен быть больше нуля и не превышать баланс.');
-      addMoney(data,c,{kind:'refund',date:action.date,method:action.method,received:-amount,price:0,used:0,delta:-amount,ref:''},today);
+      addMoney(data,c,{kind:'refund',date:action.date,method:action.method,received:-amount,price:0,used:0,delta:-amount,ref:'',...(action.balanceProofId?{balanceProofId:action.balanceProofId}:{})},today);
     } else if(action.type==='classifyLegacy') {
       const c=clientOf(data,action.clientId), row=legacyPayments(data,c).find(r=>r.key===action.key);
       if(!row || row.expected!==action.expected || !['cash','transfer'].includes(action.method))throw fail('Старая запись изменилась или способ оплаты не выбран.');
@@ -721,36 +762,57 @@
       if(!sub || fingerprint(sub)!==action.expected) throw fail('Абонемент изменился. Откройте заново.');
       const linked = [data.attendanceOps,data.visitOps].some(map=>Object.values(map).some(entries=>Object.values(entries).some(op=>op.subscriptionId===sub.id)));
       if(sub.cancelledAt)throw fail('Продажа уже отменена.');
-      if(sub.left!==(hasSoldTerms(sub)?(validSold(sub),sub.terms.sessions):8) || linked || sub.freezes?.length || sub.extensionDays) throw fail('Изменять или отменять можно только неиспользованный абонемент без заморозок и продлений.');
+      if(sub.left!==(hasSoldTerms(sub) ? (validSold(sub),sub.terms.sessions) : 8) || linked || sub.freezes?.length || sub.extensionDays) throw fail('Изменять или отменять можно только неиспользованный абонемент без заморозок и продлений.');
       dayNumber(sub.startDate);
       if(action.type==='cancelSubscription') {
         if(!sub.paymentId)throw fail('Сначала уточните способ старой оплаты.');
-        cancelMoney(data,c,sub.paymentId,today);sub.left=0;sub.cancelledAt=today;
+        cancelMoney(data,c,sub.paymentId,today,action);sub.left=0;sub.cancelledAt=today;
       } else {
         if(!sub.paymentId || action.price!==sub.price)throw fail('Изменение цены отключено. Для исправления оплаты отмените продажу и оформите заново.');
-        dayNumber(action.date);sub.startDate=action.date;sub.expires=addDays(action.date,hasSoldTerms(sub)?sub.terms.durationDays:28);
+        dayNumber(action.date);sub.startDate=action.date;sub.expires=addDays(action.date,hasSoldTerms(sub) ? sub.terms.durationDays : 28);
       }
     } else if (action.type === "subscription") {
       const client = clientOf(data, action.clientId);
       if (client.archivedAt) throw fail('Клиент в архиве. Сначала восстановите его.');
+      let template=null;
+      if(catalogMode && action.templateId!==undefined) {
+        template=pricing(data).templates[action.templateId];
+        if(!operationId(action.operationId))throw fail('Не указан ID продажи.');
+        const previous=data.clients.flatMap(c=>c.subscriptions || []).find(s=>s.saleOperationId===action.operationId);
+        if(previous) {
+          if(!client.subscriptions.includes(previous) || previous.saleRequest!==fingerprint(Object.fromEntries(Object.entries(action).filter(([key])=>key!=='balanceProofId'))))throw fail('Повтор продажи с другими условиями.');
+          return data;
+        }
+        if(!template || template.archived || template.revision!==action.expectedTemplateRevision)throw fail('Шаблон изменён или в архиве. Обновите данные.','conflict');
+      }
+      const legacyOperation=!template && action.templateId===undefined && action.operationId!==undefined;
+      if(legacyOperation){
+        if(!operationId(action.operationId))throw fail('Не указан ID обычной продажи.');
+        const previous=data.clients.flatMap(c=>c.subscriptions || []).find(s=>s.saleOperationId===action.operationId);
+        if(previous){
+          if(!client.subscriptions.includes(previous) || previous.saleRequest!==fingerprint(Object.fromEntries(Object.entries(action).filter(([key])=>key!=='balanceProofId'))))throw fail('Повтор обычной продажи с другими условиями.');
+          return data;
+        }
+      }
       if (
-        !["zarya", "pole"].includes(action.subscriptionType) ||
+        (!template && !["zarya", "pole"].includes(action.subscriptionType)) ||
         !/^\d{4}-\d{2}-\d{2}$/.test(action.date)
       )
         throw fail("Некорректный абонемент.");
-      const price = action.subscriptionType === "zarya" ? 4400 : 3800;
+      const price = template ? template.priceKopecks/100 : action.subscriptionType === "zarya" ? 4400 : 3800;
       const date = new Date(action.date + "T00:00:00Z");
       if (
         !Number.isFinite(date.getTime()) ||
         date.toISOString().slice(0, 10) !== action.date
       )
         throw fail("Некорректная дата.");
-      date.setUTCDate(date.getUTCDate() + 28);
-      const subId=id();
+      date.setUTCDate(date.getUTCDate() + (template ? template.durationDays : 28));
+      if(template && (!Number.isFinite(date.getTime()) || date.toISOString().slice(0,10).length!==10))throw fail('Срок вне допустимого календаря.');
+      const subId=template || legacyOperation ? 'subscription-'+action.operationId : id();
       const paymentId=sell(data,client,action,price,subId,today);
       (client.subscriptions ||= []).push({
-        id: subId,paymentId,location: action.subscriptionType,
-        left: 8,
+        id: subId,paymentId,...(template ? {termsVersion:1,templateId:template.id,templateRevision:template.revision,saleOperationId:action.operationId,saleRequest:fingerprint(Object.fromEntries(Object.entries(action).filter(([key])=>key!=='balanceProofId'))),terms:termsOf(template)} : {location: action.subscriptionType,...(legacyOperation?{termsVersion:1,templateId:'legacy-'+action.subscriptionType,templateRevision:1,saleOperationId:action.operationId,saleRequest:fingerprint(Object.fromEntries(Object.entries(action).filter(([key])=>key!=='balanceProofId'))),terms:subscriptionTerms({location:action.subscriptionType,price})}:{})}),
+        left: template ? template.sessions : 8,
         startDate: action.date,
         expires: date.toISOString().slice(0, 10),
         price,
@@ -770,6 +832,7 @@
     return data;
   }
   function create({ db, auth, workspace, clock = localDate, beforeWrite }) {
+    if(catalogMode && !(catalogMode==='catalog' && workspace?.production===true && workspace?.projectId==='fitpp-165a2' && workspace?.catalogEnabled===true && typeof workspace.requireCatalog==='function'))throw fail('Производственная модель каталога выключена или адаптер не подтверждён.');
     if (!workspace && db.offline !== true) throw fail('Требуется защищённый адаптер workspace.');
     const reference = uid => workspace ? workspace.reference() : db.collection('trainers').doc(uid);
     const validateSnapshot = snap => {
@@ -812,7 +875,8 @@
     }
     function reset(user) {
       // Optional tax history must not survive logout or loading another snapshot.
-      delete state.taxPayments;delete state.pricingSettings;
+      delete state.taxPayments;
+      delete state.pricingSettings;
       epoch++;
       loadId++;
       baseline = null;
@@ -886,6 +950,7 @@
       catch(error) {publish({syncError:'Не сохранено. '+error.message,saveStatus:''});return false;}
       publish({ saving: true, syncError: "", saveStatus: "" });
       try {
+        if(catalogMode && ((frozen.type==='subscription' && frozen.templateId!==undefined) || (frozen.type==='attendance' && frozen.status==='razov')))await workspace.requireCatalog();
         const ref = reference(t.uid);
         if (workspace && !workspace.local) {
           if (!beforeWrite) throw fail('Нет хранилища резервных копий. Запись заблокирована.');
@@ -894,6 +959,7 @@
           if (!valid(t) || fingerprint(read(snapshot.data())) !== fingerprint(base))
             throw fail('Данные сервера изменились. Обновите их перед повтором.', 'conflict');
           await beforeWrite(snapshot.data());
+          if(workspace.prepareWrite && ['subscription','attendance','refund','cancelSubscription'].includes(frozen.type))Object.assign(frozen,await workspace.prepareWrite(snapshot.data(),frozen));
           if (!valid(t)) throw fail('Сессия изменилась.', 'session');
         }
         const committed = await db.runTransaction(async (tx) => {
@@ -912,6 +978,8 @@
           if (!valid(t))
             throw fail("Аккаунт изменился. Операция отменена.", "session");
           const candidate = reduce(base, frozen, operationDay);
+          if(workspace?.authorizeWrite)await workspace.authorizeWrite(raw,candidate,frozen);
+          if((catalogMode || (frozen.type==='subscription' && frozen.templateId===undefined && operationId(frozen.operationId))) && fingerprint(candidate)===fingerprint(base))return base;
           const next = {
             ...candidate,
             _fitppRevision: base._fitppRevision + 1,
@@ -935,7 +1003,7 @@
           publish({
             saving: false,
             dataReady: false,
-            syncError: "Не сохранено. " + error.message,
+            syncError: String(error.code).includes("permission-denied") ? "Не сохранено. Обновите FitPP и загрузите актуальные цены. Сервер отклонил несовместимую операцию; история доступна." : "Не сохранено. " + error.message,
             saveStatus: "",
           });
         return false;
@@ -972,5 +1040,5 @@
       },
     };
   }
-  return { subscriptionTerms,validateCompatibleData, taxTotal, covers, availableSubscriptions, balance, report, legacyPayments, ledger, extensionRemaining, subscriptionTitle, deletionPlan, subscriptionWarnings, create, read, reduce, prices, fingerprint, rentDates, rentTotal, localDate, dayNumber, addDays, frozenOn, freezeStart, pendingFreeze, schedule, workoutsOn, migrate, unresolved };
+  return { pricing, subscriptionTerms, validateCompatibleData, ...(catalogMode ? {pricing} : {createProductionPricingModel:()=>buildStore('catalog')}), taxTotal, covers, availableSubscriptions, balance, report, legacyPayments, ledger, extensionRemaining, subscriptionTitle, deletionPlan, subscriptionWarnings, create, read, reduce, prices, fingerprint, rentDates, rentTotal, localDate, dayNumber, addDays, frozenOn, freezeStart, pendingFreeze, schedule, workoutsOn, migrate, unresolved };
 });

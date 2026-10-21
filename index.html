@@ -2,25 +2,25 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="fitpp-build" content="compat-reader-20261020-1">
+    <meta name="fitpp-build" content="fitpp-stage2-rc-20261021-3">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; font-src 'self'">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>FitPP</title>
     <!-- PWA Manifest & Meta -->
-    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="manifest" href="manifest.webmanifest?v=fitpp-stage2-rc-20261021-3">
     
     <meta name="theme-color" content="#10b981">
     <link rel="apple-touch-icon" href="icon-192.png">
     <!-- Tailwind CSS -->
-    <script src="vendor/tailwind-3.4.17.js"></script>
+    <script src="vendor/tailwind-3.4.17.js?v=fitpp-stage2-rc-20261021-3"></script>
     <!-- Offline only: no remote SDK -->
     <!-- Alpine.js -->
-    <script defer src="vendor/alpine-3.14.9.js"></script>
+    <script defer src="vendor/alpine-3.14.9.js?v=fitpp-stage2-rc-20261021-3"></script>
 
 
 
 
-<link rel="stylesheet" href="styles.css?v=compat-reader-20261020-1">
+<link rel="stylesheet" href="styles.css?v=fitpp-stage2-rc-20261021-3">
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased" x-data="trainerApp()" x-init="init()">
 
@@ -29,13 +29,14 @@
       <symbol id="icon-calendar" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="3"/><path d="M8 3v4m8-4v4M4 10h16m-12 4h1m3 0h1m3 0h1m-9 3h1m3 0h1"/></symbol>
       <symbol id="icon-users" viewBox="0 0 24 24"><circle cx="10" cy="7" r="4"/><path d="M3 21v-3a7 7 0 0 1 14 0v3Zm15-17a4 4 0 0 1 0 8m2 3a6 6 0 0 1 2 6"/></symbol>
       <symbol id="icon-wallet" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="4"/><path d="M3 9h18m-6 4h6m-6 4h2"/></symbol>
-    </defs></svg>
+    <symbol id="icon-ticket" viewBox="0 0 24 24"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2m0 10v2m0-8v2"/></symbol></defs></svg>
     <header class="app-header sticky top-0 z-30">
         <div class="max-w-4xl mx-auto">
             <h1><svg class="brand-icon" aria-hidden="true"><use href="#icon-barbell"/></svg>FitPP</h1>
             <nav class="desktop-nav" aria-label="Навигация для больших экранов">
                 <button @click="activeTab = 'journal'" :class="activeTab === 'journal' ? 'bg-emerald-600' : ''">Журнал</button>
                 <button @click="activeTab = 'clients'" :class="activeTab === 'clients' ? 'bg-emerald-600' : ''">Клиенты</button>
+                <button @click="activeTab = 'subscriptions'" :class="activeTab === 'subscriptions' ? 'bg-emerald-600' : ''">Абонементы</button>
                 <button @click="activeTab = 'finances'" :class="activeTab === 'finances' ? 'bg-emerald-600' : ''">Финансы</button>
             </nav>
             <div class="header-actions">
@@ -47,7 +48,7 @@
     <dialog id="settings-dialog" class="settings-dialog" aria-labelledby="settings-title" @close="document.getElementById('settings-trigger').focus()">
         <div class="settings-heading"><h2 id="settings-title">Настройки</h2><button aria-label="Закрыть настройки" @click="document.getElementById('settings-dialog').close()">✕</button></div>
         <section class="settings-section">
-            <h3>Аккаунт</h3><p id="app-build">Версия: compat-reader-20261020-1</p>
+            <h3>Аккаунт</h3><p id="app-build">Версия: fitpp-stage2-rc-20261021-3</p>
             <p x-text="authWarning"></p>
             <p x-show="currentUser" x-text="currentUser?.email"></p>
             <p x-show="!currentUser">Войдите, чтобы загрузить свои данные.</p>
@@ -78,7 +79,7 @@
         <span x-text="syncError"></span>
         <button @click="reloadData()" :disabled="saving || loading || !currentUser">Обновить данные</button>
     </div>
-    <div class="sync-status" x-show="loading || saving || saveStatus" x-cloak role="status" aria-live="polite" x-text="loading ? 'Загрузка данных…' : saving ? 'Сохранение в Firebase…' : saveStatus"></div>
+    <div class="sync-status" x-show="loading || saving || saveStatus" x-cloak role="status" aria-live="polite" x-text="loading ? 'Загрузка данных…' : saving ? 'Сохранение данных…' : saveStatus"></div>
 
     <dialog class="workout-move-dialog" x-ref="workoutMove" aria-labelledby="workout-move-title" @close="clearWorkoutMove()" @cancel="if(moveSaving)$event.preventDefault()">
         <form @submit.prevent="saveWorkoutMove()">
@@ -280,14 +281,16 @@
 
             </div>
         </div>
+<section id="subscriptions-panel" x-show="activeTab === 'subscriptions'" x-cloak class="constructor-panel"><div class="constructor-heading"><h2>Абонементы и цены</h2></div><section><section id="ctor-recovery-notice" class="recovery-notice" role="status" hidden><p id="ctor-recovery-status"></p><div id="ctor-operation-list"></div><button id="ctor-refresh" type="button">Проверить сохранение</button></section><div class="plans-section-head"><h2>Шаблоны абонементов</h2><span id="ctor-count" class="plans-count"></span></div><button id="ctor-create" class="primary">+ Новый абонемент</button><div id="ctor-templates"></div><p class="plans-footnote"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 3 7v6c0 4 9 8 9 8s9-4 9-8V7Z"/><path d="m8 12 3 3 5-6"/></svg>Изменения шаблонов не затрагивают уже проданные абонементы.</p><div id="ctor-catalog-setup" hidden><button id="ctor-initialize" class="primary">Подготовить каталог</button></div><p id="ctor-status" class="sr-only"></p><section class="plans-single" aria-labelledby="single-title"><div class="plans-section-head"><h2 id="single-title">Разовые тренировки</h2><button type="button" id="ctor-edit-singles">Изменить</button></div><div id="ctor-single-prices"></div></section><details id="ctor-archive" class="plans-archive"><summary><span>Архив</span><span id="ctor-archive-count" class="plans-count">0</span></summary><div id="ctor-archived-templates"></div><p id="ctor-archive-empty">Архив пуст</p></details></section></section>
     </main>
 
 
     <nav class="bottom-nav" aria-label="Основная навигация">
-        <button @click="activeTab = 'journal'" :aria-current="activeTab === 'journal' ? 'page' : null"><span aria-hidden="true"><svg class="nav-icon"><use href="#icon-calendar"/></svg></span>Журнал</button>
-        <button @click="activeTab = 'clients'" :aria-current="activeTab === 'clients' ? 'page' : null"><span aria-hidden="true"><svg class="nav-icon"><use href="#icon-users"/></svg></span>Клиенты</button>
-        <button @click="activeTab = 'finances'" :aria-current="activeTab === 'finances' ? 'page' : null"><span aria-hidden="true"><svg class="nav-icon"><use href="#icon-wallet"/></svg></span>Финансы</button>
-        <button :disabled="!canEdit()" @click="openClientModal()" aria-label="Добавить клиента">+</button>
+        <button aria-label="Журнал" @click="activeTab = 'journal'" :aria-current="activeTab === 'journal' ? 'page' : null"><span aria-hidden="true"><svg class="nav-icon"><use href="#icon-calendar"/></svg></span></button>
+        <button aria-label="Клиенты" @click="activeTab = 'clients'" :aria-current="activeTab === 'clients' ? 'page' : null"><span aria-hidden="true"><svg class="nav-icon"><use href="#icon-users"/></svg></span></button>
+        <button aria-label="Абонементы" @click="activeTab = 'subscriptions'" :aria-current="activeTab === 'subscriptions' ? 'page' : null"><span aria-hidden="true"><svg class="nav-icon"><use href="#icon-ticket"/></svg></span></button>
+        <button aria-label="Финансы" @click="activeTab = 'finances'" :aria-current="activeTab === 'finances' ? 'page' : null"><span aria-hidden="true"><svg class="nav-icon"><use href="#icon-wallet"/></svg></span></button>
+        <button :disabled="!canEdit()" @click="openClientModal()" aria-label="Добавить клиента"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
     </nav>
     <section class="client-detail" x-show="detailClient" x-cloak @keydown.escape.window="detailClient = null" aria-label="Карточка клиента">
       <template x-if="detailClient"><div class="detail-shell client-profile">
@@ -435,11 +438,8 @@
             <h3 class="text-lg font-bold">Продажа абонемента</h3>
             <p class="text-xs text-slate-400" x-text="'Клиент: ' + (subClient ? subClient.name : '')"></p>
             <div>
-                <label class="text-xs text-slate-400 block mb-1">Тип абонемента</label>
-                <select x-model="subForm.type" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-3 py-2 text-sm text-white">
-                    <option value="zarya">мкр. Заря (8 занятий · 4 недели) — 4400 ₽</option>
-                    <option value="pole">Поле чудес (8 занятий · 4 недели) — 3800 ₽</option>
-                </select>
+                <label class="text-xs text-slate-400 block mb-1">Шаблон абонемента</label>
+                <select x-show="selectedSaleTemplateAvailable()" :disabled="subForm.requiresConfirmation && !subForm.catalogChecked" aria-label="Шаблон абонемента" x-model="subForm.templateId" @change="updateSaleTemplate()" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-3 py-2 text-sm text-white"><template x-for="t in saleTemplates()" :key="t.id"><option :value="t.id" x-text="t.name + ' · ' + t.sessions + ' занятий · ' + t.durationDays + ' дней · ' + (t.priceKopecks/100) + ' ₽'"></option></template></select><p x-show="!saleTemplates().length" class="text-amber-300 text-sm">Нет активных шаблонов. Добавьте шаблон во вкладке «Абонементы».</p><div id="sale-template-details" class="text-sm space-y-1 mt-2" x-show="subForm.templateSnapshot"><strong x-text="subForm.templateSnapshot?.name"></strong><p x-text="saleTemplateDescription()"></p><p x-text="'Локации: ' + (subForm.templateSnapshot?.locations || []).map(h=>({zarya:'Заря',pole:'Поле чудес',online:'Онлайн'})[h]).join(', ')"></p></div><p x-show="subForm.templateId && !selectedSaleTemplateAvailable()" class="text-amber-300 text-sm">Ранее выбранный шаблон недоступен. Новая продажа не отправлена.</p><section id="sale-catalog-confirmation" x-show="subForm.requiresConfirmation" class="text-sm space-y-2 mt-2"><p role="alert">Каталог изменился. Проверьте актуальные условия и подтвердите цену перед оформлением.</p><button type="button" class="bg-slate-700 px-3 py-2 rounded-xl" @click="checkSaleCatalog()" :disabled="loading || saving">Проверить актуальные условия</button><div x-show="subForm.catalogChecked && !selectedSaleTemplateAvailable()"><p>Выберите доступный шаблон:</p><template x-for="t in saleTemplates()" :key="t.id"><button type="button" class="border rounded-xl p-2 m-1" @click="subForm.templateId=t.id;updateSaleTemplate()" x-text="t.name + ' · ' + t.priceKopecks/100 + ' ₽'"></button></template></div><label x-show="subForm.catalogChecked && selectedSaleTemplateAvailable()" class="block"><input type="checkbox" x-model="subForm.priceConfirmed"> Подтверждаю актуальные условия и цену</label></section>
             </div>
             <div>
                 <label class="text-xs text-slate-400 block mb-1">Дата продажи</label>
@@ -451,8 +451,8 @@
             <p class="text-sm text-slate-400">Дата продажи — дата получения денег. Для истории выберите прошлую дату. Вносите покупки клиента по порядку дат. Недоплата не сохраняется.</p>
             <p x-show="syncError" role="alert" class="text-rose-300 text-sm" x-text="syncError"></p>
             <div class="flex justify-end space-x-3 pt-2">
-                <button :disabled="saving" @click="showSubModal = false; subVisit=null; subFormToken=null" class="bg-slate-700 px-4 py-2 rounded-xl text-sm">Отмена</button>
-                <button :disabled="!canEdit()" @click="saveSubscription()" class="bg-emerald-600 px-4 py-2 rounded-xl text-sm font-semibold">Оформить</button>
+                <button :disabled="saving" @click="closeSaleDraft()" class="bg-slate-700 px-4 py-2 rounded-xl text-sm">Отмена</button>
+                <button :disabled="!canEdit() || !saleCanSubmit()" @click="saveSubscription()" class="bg-emerald-600 px-4 py-2 rounded-xl text-sm font-semibold">Оформить</button>
             </div>
         </div>
     </div>
@@ -492,15 +492,19 @@
         </div>
     </div>
 
-    <script src="vendor/firebase-app-compat.js"></script>
-<script src="vendor/firebase-auth-compat.js"></script>
-<script src="vendor/firebase-firestore-compat.js"></script>
-<script src="firebase-adapter.js?v=compat-reader-20261020-1"></script>
-<script src="cloud.js?v=compat-reader-20261020-1"></script>
-    <script src="backup.js?v=compat-reader-20261020-1"></script>
-    <script src="write-safety.js?v=compat-reader-20261020-1"></script>
-    <script src="persistence.js?v=compat-reader-20261020-1"></script>
+<dialog id="ctor-single-editor" class="plans-single-editor" aria-label="Цены разовых тренировок"><form id="ctor-singles"><h2>Разовые тренировки</h2><p>Новые цены применяются к новым оплатам. История сохраняется.</p><label>Заря, ₽<input name="zarya" type="number" min="0.01" step="0.01" required></label><label>Поле чудес, ₽<input name="pole" type="number" min="0.01" step="0.01" required></label><label>Онлайн, ₽<input name="online" type="number" min="0.01" step="0.01" required></label><p id="ctor-singles-error" role="alert"></p><div class="row"><button id="ctor-singles-close" type="button">Отмена</button><button class="primary" type="submit">Сохранить цены</button></div></form></dialog><dialog id="ctor-editor"><form id="ctor-edit"><h2>Шаблон абонемента</h2><section id="ctor-conflict-actions" hidden><p id="ctor-conflict-message" role="alert">Настройки изменены на другом устройстве или в другом окне. Новая серверная версия не перезаписана. Ваши изменения сохранены.</p><div class="row"><button type="button" id="ctor-load-current">Загрузить актуальную версию</button><button type="button" id="ctor-keep-draft">Сохранить мои изменения как черновик</button></div></section><section id="ctor-revision-check" hidden><p id="ctor-current-version"></p><button type="button" id="ctor-check-revision">Проверить актуальную версию</button><label><input type="checkbox" id="ctor-confirm-current">Я проверил актуальную версию и подтверждаю применение моих изменений</label></section><p id="ctor-editor-message" role="status"></p><label>Название<input name="name" maxlength="80" required></label><label>Цена, ₽<input name="price" type="number" min="0.01" step="0.01" required></label><label>Количество занятий<input name="sessions" type="number" min="1" step="1" required></label><label>Срок, дней<input name="days" type="number" min="1" step="1" required></label><fieldset class="location-options"><legend>Доступные локации</legend><label class="location-choice hall-zarya"><input type="checkbox" name="zarya" aria-label="Заря"><span class="location-choice-name"><i aria-hidden="true"></i>Заря</span><span class="location-choice-state" aria-hidden="true"></span></label><label class="location-choice hall-pole"><input type="checkbox" name="pole" aria-label="Поле чудес"><span class="location-choice-name"><i aria-hidden="true"></i>Поле чудес</span><span class="location-choice-state" aria-hidden="true"></span></label><label class="location-choice hall-online"><input type="checkbox" name="online" aria-label="Онлайн"><span class="location-choice-name"><i aria-hidden="true"></i>Онлайн</span><span class="location-choice-state" aria-hidden="true"></span></label></fieldset><div class="row"><button type="button" id="ctor-close">Отмена</button><button class="primary">Сохранить</button></div></form></dialog>
+    <script src="vendor/firebase-app-compat.js?v=fitpp-stage2-rc-20261021-3"></script>
+<script src="vendor/firebase-auth-compat.js?v=fitpp-stage2-rc-20261021-3"></script>
+<script src="vendor/firebase-firestore-compat.js?v=fitpp-stage2-rc-20261021-3"></script>
+<script src="runtime-config.js?v=fitpp-stage2-rc-20261021-3"></script>
+<script src="firebase-adapter.js?v=fitpp-stage2-rc-20261021-3"></script>
+<script src="cloud.js?v=fitpp-stage2-rc-20261021-3"></script>
+    <script src="backup.js?v=fitpp-stage2-rc-20261021-3"></script>
+    <script src="write-safety.js?v=fitpp-stage2-rc-20261021-3"></script>
+    <script src="persistence.js?v=fitpp-stage2-rc-20261021-3"></script>
+    <script src="recovery.js?v=fitpp-stage2-rc-20261021-3"></script><script src="constructor.js?v=fitpp-stage2-rc-20261021-3"></script><script src="sale-recovery.js?v=fitpp-stage2-rc-20261021-3"></script>
     <script>
+        if(FitPPRuntime.catalogEnabled)globalThis.FitPPStore = FitPPStore.createProductionPricingModel();
         const workspace = FitPPCloud.start(firebase);
         const stagingApp = {auth: () => workspace.auth};
         const db = workspace.db;
@@ -508,7 +512,8 @@
 
         function trainerApp() {
             const store = FitPPStore.create({ db, auth: stagingApp.auth(), workspace, beforeWrite: data => FitPPWriteSafety.save(data) });
-            let started = false;
+            let started = false, constructorController;
+            globalThis.FitPPApplication={store,workspace,raw:async()=> (await workspace.reference().get({source:'server'})).data()};
             return {
                 authWarning: '',
                 dataReady: false,
@@ -903,7 +908,7 @@
                     return w ? this.sessionData().visits[w.id]?.[clientId] || null : null;
                 },
                 getRazovPrice() {
-                    return this.currentLocation === 'zarya' ? 700 : (this.currentLocation === 'pole' ? 600 : 500);
+                    return FitPPRuntime.catalogEnabled && this.pricingSettings ? this.pricingSettings.singlePrices[this.currentLocation]/100 : FitPPStore.prices[this.currentLocation];
                 },
 
                 init() {
@@ -911,14 +916,32 @@
                     started = true;
                     this.updateLocationByDate();
                     if (typeof setInterval === 'function') this.calendarTimer = setInterval(() => { this.today = FitPPStore.localDate(); }, 1000);
+                    constructorController=FitPPConstructor.mount({store,E:FitPPStore,workspace,canEdit:()=>FitPPRuntime.catalogEnabled&&this.canEdit(),navigate:()=>{this.activeTab='subscriptions'}});
+                    this.$watch('subForm',()=>this.persistSaleDraft());
                     store.start(state => {
                         if (this.sessionEpoch !== state.sessionEpoch) this.resetSessionUI();
                         Object.assign(this, state);
+                        constructorController.onState(state);
+                        if(state.dataReady && !this.saleRecoveryChecked){this.saleRecoveryChecked=true;this.restoreSaleDraft();}
                         if(state.dataReady && !this.currentLocation) this.updateLocationByDate();
                         if (this.detailClient) this.detailClient = this.clients.find(c => c.id === this.detailClient?.id) || null;
                     });
                 },
                 destroy() { if (this.calendarTimer) clearInterval(this.calendarTimer); store.stop(); },
+                catalogActivationError:null,
+                async activateCatalog() {
+                    if(!this.canEdit())return false;
+                    this.syncError='';this.saveStatus='';this.catalogActivationError=null;
+                    try {
+                        const result=await workspace.activateCatalog();
+                        this.saveStatus=result.message;
+                        return true;
+                    }catch(error){
+                        this.catalogActivationError=error;
+                        this.syncError='Не удалось включить каталог. '+error.message;
+                        return false;
+                    }
+                },
                 async reloadData() { this.backupVerified=false; this.backupChecking=false; this.backupCheckId++; this.backupStatus=''; await store.load(); },
                 async logout() { await store.logout(); },
                 async handleAuth() {
@@ -932,7 +955,17 @@
                 paymentHistory(c) { return c ? FitPPStore.ledger(c) : []; },
                 oldPayments(c) { return c ? FitPPStore.legacyPayments(this.sessionDataWithFinances(),c) : []; },
                 moneyReport() { return FitPPStore.report(this.sessionDataWithFinances(),this.currentMonth); },
-                subDue() { return Math.max(0,(this.subForm.type==='zarya'?4400:3800)-this.moneyBalance(this.subClient)); },
+                activeTemplates() { return this.pricingSettings ? Object.values(this.pricingSettings.templates).filter(t=>!t.archived) : []; },
+                saleTemplates() { return FitPPRuntime.catalogEnabled ? this.activeTemplates() : [{id:'legacy-zarya',name:'Заря',priceKopecks:440000,sessions:8,durationDays:28,locations:['zarya','pole','online']},{id:'legacy-pole',name:'Поле чудес',priceKopecks:380000,sessions:8,durationDays:28,locations:['zarya','pole','online']}]; },
+                selectedSaleTemplateAvailable() { return this.saleTemplates().some(t=>t.id===this.subForm.templateId); },
+                saleTemplateDescription() { const t=this.subForm.templateSnapshot;return t ? (t.priceKopecks/100)+' ₽ · '+t.sessions+' занятий · '+t.durationDays+' дней' : ''; },
+                subDue() { return Math.max(0,(this.subForm.templateSnapshot?.priceKopecks||0)/100-this.moneyBalance(this.subClient)); },
+                saleCanSubmit() { return this.selectedSaleTemplateAvailable() && (!this.subForm.requiresConfirmation || (this.subForm.catalogChecked && this.subForm.priceConfirmed)); },
+                updateSaleTemplate() { const t=this.saleTemplates().find(t=>t.id===this.subForm.templateId);if(!t || t.archived)return;this.subForm.expectedTemplateRevision=t.revision;this.subForm.templateSnapshot=JSON.parse(JSON.stringify(t));this.subForm.priceConfirmed=false;this.persistSaleDraft(); },
+                async checkSaleCatalog() { const form=JSON.parse(JSON.stringify(this.subForm)),clientId=this.subClient.id,visit=this.subVisit,id=this.saleOperationId;form.requiresConfirmation=true;form.priceConfirmed=false;if(!await store.load())return;this.subClient=this.clients.find(c=>c.id===clientId);this.subVisit=visit;this.saleOperationId=id;this.subFormToken=store.token();const t=this.pricingSettings?.templates[form.templateId];if(t&&!t.archived){form.expectedTemplateRevision=t.revision;form.templateSnapshot=JSON.parse(JSON.stringify(t));}form.catalogRevision=this.pricingSettings?.revision;form.catalogChecked=true;this.subForm=form;this.showSubModal=true;this.syncError='';this.persistSaleDraft(); },
+                saleRecoveryChecked:false,saleOperationId:null,saleDraftError:'',
+                async persistSaleDraft() { if(this.subForm?.legacy)return true;if(this.saleOperationId && this.showSubModal)try{await FitPPSaleRecovery.save({operationId:this.saleOperationId,clientId:this.subClient.id,form:JSON.parse(JSON.stringify(this.subForm)),visit:this.subVisit,phase:'draft'});}catch(e){this.syncError=e.message;return false;}return true; },
+                async restoreSaleDraft() { try{const draft=await FitPPSaleRecovery.unfinished();if(!draft)return;if(draft.phase==='pending' && draft.action?.subscriptionType && !draft.action.templateId)return await this.restoreLegacySale(draft);if(!FitPPRuntime.catalogEnabled)return;const c=this.clients.find(c=>c.id===draft.clientId);if(!c)return;this.saleOperationId=draft.operationId;this.subClient=c;this.subForm=draft.form;if(!this.subForm.templateSnapshot){const t=this.pricingSettings?.templates[this.subForm.templateId];if(t&&t.revision===this.subForm.expectedTemplateRevision)this.subForm.templateSnapshot=JSON.parse(JSON.stringify(t));this.subForm.requiresConfirmation=true;this.subForm.catalogChecked=false;this.subForm.priceConfirmed=false;}this.subVisit=draft.visit;this.subFormToken=store.token();const raw=await FitPPApplication.raw();if(raw.clients.some(c=>(c.subscriptions||[]).some(s=>s.saleOperationId===draft.operationId))){await FitPPSaleRecovery.confirm(draft.operationId);this.saleOperationId=null;this.saveStatus='Предыдущее оформление подтверждено. Повторная продажа не создана.';return;}const selected=raw.pricingSettings?.templates[this.subForm.templateId];if(!selected||selected.archived||selected.revision!==this.subForm.expectedTemplateRevision||raw.pricingSettings.revision!==this.subForm.catalogRevision){this.subForm.requiresConfirmation=true;this.subForm.catalogChecked=false;this.subForm.priceConfirmed=false;}this.showSubModal=true;await this.persistSaleDraft();}catch(error){this.syncError='Не удалось восстановить продажу. '+error.message;} },
                 paymentError:'',
                 openRefund(c) {
                     if(!this.canEdit())return;
@@ -982,7 +1015,7 @@
                       }
                     }
                     if(status==='razov' && previous!==status){
-                      const c=this.clients.find(c=>c.id===clientId),price=FitPPStore.prices[this.currentLocation];
+                      const c=this.clients.find(c=>c.id===clientId),price=this.getRazovPrice();
                       this.paymentToken=store.token();this.paymentError='';
                       this.paymentDraft={...action,paymentDate:this.selectedDate,method:'',received:'',title:'Разовое посещение',note:'Стоимость '+price+' ₽ · баланс '+this.moneyBalance(c)+' ₽ · к оплате '+Math.max(0,price-this.moneyBalance(c))+' ₽. Дата оплаты может отличаться от даты посещения.'};return;
                     }
@@ -1045,21 +1078,83 @@
                     if (saved && this.clientFormToken === token) { this.showClientModal = false; this.clientFormToken = null; }
                 },
                 async deleteClient() { await this.removeClient(this.editingClient); },
-                openSubModal(client, visit = null) {
-                    if (!this.canEdit() || client.archivedAt || !this.clients.includes(client)) return;
+                async restoreLegacySale(draft) {
+                    try{
+                        const raw=await FitPPApplication.raw();
+                        const found=raw.clients.flatMap(c=>(c.subscriptions||[]).map(sub=>({clientId:c.id,sub}))).find(x=>x.sub.saleOperationId===draft.operationId);
+                        const request=FitPPStore.fingerprint(Object.fromEntries(Object.entries(draft.action).filter(([key])=>key!=='balanceProofId')));
+                        if(found){
+                            if(found.clientId!==draft.clientId || found.sub.saleRequest!==request)throw Error('ID продажи связан с другими условиями. Повторная отправка заблокирована.');
+                            await FitPPSaleRecovery.confirm(draft.operationId);this.saleOperationId=null;this.showSubModal=false;
+                            this.saveStatus='Предыдущая продажа подтверждена сервером. Повторное начисление не выполнялось.';return true;
+                        }
+                        const client=this.clients.find(c=>c.id===draft.clientId);if(!client)throw Error('Клиент операции отсутствует. Повторная отправка заблокирована.');
+                        this.subClient=client;this.subVisit=draft.visit;this.subForm=JSON.parse(JSON.stringify(draft.form));this.subFormToken=store.token();this.saleOperationId=draft.operationId;this.showSubModal=true;
+                        this.saveStatus='Сервер пока не подтвердил отправленную продажу. Повтор использует прежний ID.';return false;
+                    }catch(error){this.syncError='Результат отправленной продажи не подтверждён. '+error.message;throw error;}
+                },
+                async closeSaleDraft() { try{if(this.saleOperationId)await FitPPSaleRecovery.close(this.saleOperationId);this.showSubModal=false;this.subVisit=null;this.subFormToken=null;}catch(error){this.syncError=error.message;} },
+                async openSubModal(client, visit = null) {
+                    if(!FitPPRuntime.catalogEnabled){
+                        if(!this.canEdit() || client.archivedAt || !this.clients.includes(client))return;
+                        try{const pending=await FitPPSaleRecovery.unfinished();if(pending){await this.restoreSaleDraft();return;}}catch(error){this.syncError=error.message;return;}
+                        this.subClient=client;this.subVisit=visit;this.renewalClient=null;this.subFormToken=store.token();this.saleOperationId=null;
+                        const first=this.saleTemplates().find(t=>t.id===(visit?.location==='pole'?'legacy-pole':'legacy-zarya'));
+                        this.subForm={legacy:true,templateId:first.id,templateSnapshot:JSON.parse(JSON.stringify(first)),requiresConfirmation:false,date:visit?.date||this.selectedDate,method:'',received:''};
+                        this.syncError='';this.showSubModal=true;return;
+                    }
+                    try{if (!this.canEdit() || client.archivedAt || !this.clients.includes(client)) return;
                     this.subClient = client;
                     this.subVisit = visit;this.renewalClient=null;
                     this.subFormToken = store.token();
-                    this.subForm = {type:visit?.location==='pole'?'pole':'zarya',date:visit?.date || this.selectedDate,method:'',received:''};
-                    this.showSubModal = true;
+                    const unfinished=await FitPPSaleRecovery.unfinished();if(unfinished){await this.restoreSaleDraft();return;}
+                    this.saleOperationId='sale-'+crypto.randomUUID();
+                    const first=this.activeTemplates().find(t=>!visit || t.locations.includes(visit.location));
+                    this.subForm = {templateId:first?.id||'',expectedTemplateRevision:first?.revision,templateSnapshot:first?JSON.parse(JSON.stringify(first)):null,catalogRevision:this.pricingSettings?.revision,requiresConfirmation:false,priceConfirmed:false,catalogChecked:false,date:visit?.date || this.selectedDate,method:'',received:''};
+                    this.showSubModal = true;await this.persistSaleDraft();
+                    }catch(error){this.syncError='Черновик продажи недоступен. '+error.message;}
                 },
                 async saveSubscription() {
-                    if (!this.canEdit() || !this.subClient || !this.subFormToken) return;
+                    try{
+                    if(!FitPPRuntime.catalogEnabled){
+                        if(!this.canEdit() || !this.subClient || !this.subFormToken)return;
+                        if(!this.subForm.legacy || !['legacy-zarya','legacy-pole'].includes(this.subForm.templateId)){this.syncError='Продажи по новым шаблонам ещё не включены.';return;}
+                        const token=this.subFormToken,visit=this.subVisit;
+                        const pending=await FitPPSaleRecovery.unfinished();
+                        if(pending && (pending.operationId!==this.saleOperationId || !pending.action?.subscriptionType)){await this.restoreSaleDraft();return;}
+                        const operationId=pending?.operationId || 'sale-'+crypto.randomUUID();
+                        const action={type:'subscription',visit,clientId:this.subClient.id,subscriptionType:this.subForm.templateId==='legacy-zarya'?'zarya':'pole',date:this.subForm.date||this.selectedDate,method:this.subForm.method,received:this.parseAmount(this.subForm.received),operationId};
+                        if(pending){
+                            const canonical=a=>FitPPStore.fingerprint(Object.fromEntries(Object.entries(a).filter(([key])=>key!=='balanceProofId')));
+                            if(canonical(pending.action)!==canonical(action)){this.syncError='Уже отправленная продажа имеет другие условия. Сначала проверьте её результат.';return;}
+                            if(await this.restoreLegacySale(pending))return;
+                        }
+                        const raw=await FitPPApplication.raw();
+                        FitPPStore.reduce(FitPPStore.read(raw),action,FitPPStore.localDate());
+                        await FitPPSaleRecovery.save({operationId,clientId:action.clientId,form:JSON.parse(JSON.stringify(this.subForm)),visit:JSON.parse(JSON.stringify(visit??null)),action,phase:'pending'});
+                        this.saleOperationId=operationId;
+                        const sendToken=this.subFormToken;
+                        const saved=await store.run(action,sendToken);
+                        if(saved){await FitPPSaleRecovery.confirm(operationId);this.saleOperationId=null;}
+                        if(saved && this.subFormToken===sendToken){this.showSubModal=false;this.subFormToken=null;this.subVisit=null;}
+                        return;
+                    }
+                    if (!this.canEdit() || !this.subClient || !this.subFormToken || !this.saleCanSubmit()) return;
                     const token = this.subFormToken, visit=this.subVisit;
-                    const saved = await store.run({ type: 'subscription', visit, clientId: this.subClient.id, subscriptionType: this.subForm.type, date: this.subForm.date || this.selectedDate, method:this.subForm.method, received:this.parseAmount(this.subForm.received) }, token);
+                    if(!await this.persistSaleDraft())return;
+                    const draft=await FitPPSaleRecovery.read(this.saleOperationId);if(!draft){this.syncError='Черновик недоступен. Оформление заблокировано.';return;}
+                    const raw=await FitPPApplication.raw(),previous=raw.clients.flatMap(c=>c.subscriptions||[]).find(s=>s.saleOperationId===this.saleOperationId);
+                    if(previous){await FitPPSaleRecovery.confirm(this.saleOperationId);this.saleOperationId=null;this.showSubModal=false;return;}
+                    const t=raw.pricingSettings?.templates[this.subForm.templateId];
+                    if(!t || t.archived || t.revision!==this.subForm.expectedTemplateRevision || raw.pricingSettings.revision!==this.subForm.catalogRevision){this.subForm.requiresConfirmation=true;this.subForm.catalogChecked=false;this.subForm.priceConfirmed=false;this.persistSaleDraft();this.syncError='Шаблон изменён на другом устройстве. Выберите актуальный шаблон и проверьте цену.';return;}
+                    const action={type:'subscription',visit,clientId:this.subClient.id,templateId:t.id,expectedTemplateRevision:t.revision,operationId:this.saleOperationId,date:this.subForm.date||this.selectedDate,method:this.subForm.method,received:this.parseAmount(this.subForm.received)};
+                    await FitPPSaleRecovery.save({...draft,form:JSON.parse(JSON.stringify(this.subForm)),action,phase:'pending'});
+                    const saved = await store.run(action,store.token());
+                    if(saved){await FitPPSaleRecovery.confirm(this.saleOperationId);this.saleOperationId=null;}
                     if (saved && this.subFormToken === token) { this.showSubModal = false; this.subFormToken = null;this.subVisit=null;
                       if(visit && this.sessionData().visits[visit.workoutId]?.[visit.clientId]!=='attended') alert('Абонемент оформлен. Посещение не отмечено: абонемент не действует на дату тренировки.');
                     }
+                    }catch(error){this.syncError='Сохранение продажи не подтверждено. ID операции сохранён. '+error.message;}
                 },
                 changeMonth(dir) {
                     if (this.saving || this.rentDraft) return;
@@ -1114,7 +1209,8 @@ this.currentMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '
             }
         }
     </script>
-<script src="pwa.js?v=compat-reader-20261020-1"></script>
+
+<script src="pwa.js?v=fitpp-stage2-rc-20261021-3"></script>
 </body>
 </html>
 

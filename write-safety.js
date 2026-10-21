@@ -2,11 +2,11 @@
    of a fresh server snapshot and the existing transaction conflict check. */
 (function(root){
 'use strict';
-const key='fitpp-165a2-owner-write-intent-v1';
+const key=FitPPRuntime.namespace+'-owner-write-intent-v1';
 function intent(){try{return localStorage.getItem(key)!=='off';}catch(_){return true;}}
 function remember(value){try{localStorage.setItem(key,value?'on':'off');}catch(_){}}
 async function database(){return new Promise((resolve,reject)=>{
- const request=indexedDB.open('fitpp-165a2-safety-v1',1);
+ const request=indexedDB.open(FitPPRuntime.namespace+'-safety-v1',1);
  request.onupgradeneeded=()=>request.result.createObjectStore('backups');
  request.onerror=()=>reject(Error('Хранилище резервных копий недоступно. Запись заблокирована.'));
  request.onblocked=()=>reject(Error('Закройте другие вкладки FitPP для доступа к копиям.'));

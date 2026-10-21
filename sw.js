@@ -9,12 +9,12 @@ self.addEventListener('fetch', event => {
   if (request.method === 'GET' && request.mode === 'navigate' &&
       url.origin === scope.origin && url.pathname.startsWith(scope.pathname)) {
     const fresh = new URL(request.url);
-    fresh.searchParams.set('__fitpp_build', 'compat-reader-20261020-1');
+    fresh.searchParams.set('__fitpp_build', 'fitpp-stage2-rc-20261021-3');
     event.respondWith(fetch(fresh.href, { cache: 'no-store', credentials: 'same-origin' }));
   }
 });
 
 // Read-only build handshake for update verification.
 self.addEventListener('message', event => {
-  if (event.data === 'FITPP_BUILD' && event.ports[0]) event.ports[0].postMessage('compat-reader-20261020-1');
+  if (event.data === 'FITPP_BUILD' && event.ports[0]) event.ports[0].postMessage('fitpp-stage2-rc-20261021-3');
 });

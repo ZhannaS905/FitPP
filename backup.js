@@ -1,4 +1,4 @@
-(function(root,factory){const api=factory(typeof module==='object'&&module.exports?require('./firebase-adapter.js'):root.FitPPWorkspace);if(typeof module==='object'&&module.exports)module.exports=api;else root.FitPPBackup=api;})(globalThis,function(W){
+(function(root,factory){const api=factory(typeof module==='object'&&module.exports?require('./firebase-adapter.js'):root.FitPPWorkspace);if(typeof module==='object'&&module.exports)module.exports=api;else root.FitPPBackup=api;})(globalThis,function buildBackup(W){
 'use strict';
 function canonical(v){if(Array.isArray(v))return v.map(canonical);if(v&&typeof v==='object')return Object.fromEntries(Object.keys(v).sort().map(k=>[k,canonical(v[k])]));return v;}
 async function hash(v){const bytes=new TextEncoder().encode(JSON.stringify(canonical(v)));return Array.from(new Uint8Array(await globalThis.crypto.subtle.digest('SHA-256',bytes)),b=>b.toString(16).padStart(2,'0')).join('');}
