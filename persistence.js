@@ -80,7 +80,7 @@
     const warnings = [];
     if (display?.left === 1) warnings.push({key:'balance', kind:'balance', text:'Осталось 1 занятие', title:'Осталось 1 занятие'});
     const remaining = subs.filter(s => s.left > 0);
-    const candidates = remaining.length ? remaining : display ? [display] : [];
+    const candidates = remaining;
     candidates.forEach(sub => {
       try {
         if ((sub.startDate && (dayNumber(sub.startDate), sub.startDate > today)) || frozenOn(sub, today)) return;
